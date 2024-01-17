@@ -428,6 +428,7 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
 
     // Program templates to use.
     var programTemplates = profile.additionalProgramTemplates
+    /*
     for template in ProgramTemplates {
         guard let weight = programTemplateWeights[template.name] else {
             print("Missing weight for program template \(template.name) in ProgramTemplateWeights.swift")
@@ -436,6 +437,7 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
 
         programTemplates.append(template, withWeight: weight)
     }
+    */
 
     // The environment containing available builtins, property names, and method names.
     let environment = JavaScriptEnvironment(additionalBuiltins: profile.additionalBuiltins, additionalObjectGroups: [])

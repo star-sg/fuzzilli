@@ -51,4 +51,5 @@ let profiles = [
     "xs": xsProfile,
     "v8holefuzzing": v8HoleFuzzingProfile,
     "serenity": serenityProfile,
+    "jsc_nanbug": jsc_nanbug_profile,
 ]

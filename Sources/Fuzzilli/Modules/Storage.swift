@@ -96,7 +96,16 @@ public class Storage: Module {
         }
 
         fuzzer.registerEventListener(for: fuzzer.events.InterestingProgramFound) { ev in
-            let filename = "program_\(self.formatDate())_\(ev.program.id)"
+            let state: String
+            switch fuzzer.state {
+            case .corpusGeneration:
+                state = fuzzer.corpusGenerationEngine.name
+            case .fuzzing:
+                state = fuzzer.engine.name
+            default:
+                state = ""
+            }
+            let filename = "program_\(self.formatDate())_\(ev.program.id)_\(state)"
             self.storeProgram(ev.program, as: filename, in: self.corpusDir)
         }
 
