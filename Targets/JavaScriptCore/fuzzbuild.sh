@@ -16,8 +16,11 @@
 
 export WEBKIT_OUTPUTDIR=FuzzBuild
 
+clang_path=$LLVM_PATH/usr/bin/clang
+clangpp_path=$LLVM_PATH/usr/bin/clang++
+
 if [ "$(uname)" == "Linux" ]; then
-    ./Tools/Scripts/build-jsc --jsc-only --debug --cmakeargs="-DENABLE_STATIC_JSC=ON -DCMAKE_C_COMPILER='/usr/bin/clang' -DCMAKE_CXX_COMPILER='/usr/bin/clang++' -DCMAKE_CXX_FLAGS='-fsanitize-coverage=trace-pc-guard -O3 -lrt'"
+    ./Tools/Scripts/build-jsc --jsc-only --debug --cmakeargs="-DDEVELOPER_MODE=OFF -DENABLE_FUZZILLI=ON -DENABLE_STATIC_JSC=ON -DCMAKE_C_COMPILER='${clang_path}' -DCMAKE_CXX_COMPILER='${clangpp_path}' -DCMAKE_CXX_FLAGS='-Wno-multichar -Wno-error -Wno-format-truncation'"
 else
     echo "Unsupported operating system"
 fi
