@@ -97,6 +97,7 @@ Options:
     --additionalArguments=args   : Pass additional arguments to the JS engine. If multiple arguments are passed, they should be separated by a comma.
     --tag=tag                    : Optional string tag associated with this instance which will be stored in the settings.json file as well as in crashing samples.
                                    This can for example be used to remember the target revision that is being fuzzed.
+    --builtinTemplates            : Use built-in templates also
 """)
     exit(0)
 }
@@ -152,6 +153,7 @@ let swarmTesting = args.has("--swarmTesting")
 let argumentRandomization = args.has("--argumentRandomization")
 let additionalArguments = args["--additionalArguments"] ?? ""
 let tag = args["--tag"]
+var builtinTemplates = args["--builtinTemplate"]
 
 guard numJobs >= 1 else {
     configError("Must have at least 1 job")
@@ -428,13 +430,16 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
 
     // Program templates to use.
     var programTemplates = profile.additionalProgramTemplates
-    for template in ProgramTemplates {
-        guard let weight = programTemplateWeights[template.name] else {
-            print("Missing weight for program template \(template.name) in ProgramTemplateWeights.swift")
-            exit(-1)
-        }
 
-        programTemplates.append(template, withWeight: weight)
+    if builtinTemplates != nil {
+        for template in ProgramTemplates {
+            guard let weight = programTemplateWeights[template.name] else {
+                print("Missing weight for program template \(template.name) in ProgramTemplateWeights.swift")
+                exit(-1)
+            }
+
+            programTemplates.append(template, withWeight: weight)
+        }
     }
 
     // The environment containing available builtins, property names, and method names.

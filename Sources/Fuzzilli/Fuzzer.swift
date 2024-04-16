@@ -145,7 +145,7 @@ public class Fuzzer {
     /// Currently active corpus import job, if any.
     private var currentCorpusImportJob = CorpusImportJob(corpus: [], mode: .full)
 
-    private var iterationsSinceLastInterestingProgram: Int {
+    public var iterationsSinceLastInterestingProgram: Int {
         assert(iterations >= iterationOfLastInteratingSample)
         return iterations - iterationOfLastInteratingSample
     }
@@ -657,6 +657,7 @@ public class Fuzzer {
             // iterations. The rough order of magnitude of N has been determined experimentally: run two instances with
             // different values (e.g. 10 and 100) for roughly the same number of iterations (approximately until both
             // have finished the initial corpus generation), then compare the corpus size and coverage.
+
             if iterationsSinceLastInterestingProgram > 100 {
                 guard !corpus.isEmpty else {
                     logger.fatal("Initial corpus generation failed, corpus is still empty. Is the evaluator working correctly?")
