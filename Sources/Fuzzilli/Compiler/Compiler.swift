@@ -922,7 +922,33 @@ public class JavaScriptCompiler {
 
             if unaryExpression.operator == "typeof" {
                 return emit(TypeOf(), withInputs: [argument]).output
+            } else if unaryExpression.operator == "delete" {
+                guard let member = unaryExpression.argument.expression else {
+                    throw CompilerError.invalidNodeError("expected member expression in delete unary expression")
+                }
+
+                switch member {
+                case .memberExpression(let memberExpression):
+                    let object = try compileExpression(memberExpression.object)
+                    guard let property = memberExpression.property else { throw CompilerError.invalidNodeError("missing property in member expression in delete unary expression") }
+
+                    switch property {
+                    case .name(let name):
+                        return emit(DeleteProperty(propertyName: name, isGuarded: true), withInputs: [object]).output
+                    case .expression(let expr):
+                        if case .numberLiteral(let literal) = expr.expression, let index = Int64(exactly: literal.value) {
+                            return emit(DeleteElement(index: index, isGuarded: true), withInputs: [object]).output
+                        } else {
+                            let property = try compileExpression(expr)
+                            return emit(DeleteComputedProperty(isGuarded: true), withInputs: [object, property]).output
+                        }
+                    }
+                           
+                default:
+                    throw CompilerError.unsupportedFeatureError("Only member expressions are currently supported in delete unary expressions")
+                }
             }
+
             guard let op = UnaryOperator(rawValue: unaryExpression.operator) else {
                 throw CompilerError.invalidNodeError("invalid unary operator: \(unaryExpression.operator)")
             }

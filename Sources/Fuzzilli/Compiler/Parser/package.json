@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@babel/parser": "^7.20.7",
+    "@babel/parser": "^7.24.4",
     "protobufjs": "^7.1.2"
   }
 }
