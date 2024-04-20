@@ -15,9 +15,11 @@
 import Fuzzilli
 
 let duktapeProfile = Profile(
-    processArgs: { randomize in
+    processArgs: { (randomize: Bool, differentialTesting: Bool) -> [String] in
         ["--reprl"]
     },
+
+    processArgumentsReference: ["--reprl"],
 
     processEnv: ["UBSAN_OPTIONS": "handle_segv=0"],
 
@@ -26,6 +28,8 @@ let duktapeProfile = Profile(
     timeout: 250,
 
     codePrefix: """
+                function placeholder(){}
+                const fhash = placeholder;
                 """,
 
     codeSuffix: """
@@ -41,6 +45,12 @@ let duktapeProfile = Profile(
         ("fuzzilli('FUZZILLI_CRASH', 0)", .shouldCrash),
         ("fuzzilli('FUZZILLI_CRASH', 1)", .shouldCrash),
     ],
+
+    differentialTests: [],
+
+    differentialTestsInvariant: [],
+
+    differentialPoison: [],
 
     additionalCodeGenerators: [],
 

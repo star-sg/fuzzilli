@@ -123,6 +123,7 @@ enum Opcode {
     case beginConstructor(BeginConstructor)
     case endConstructor(EndConstructor)
     case `return`(Return)
+    case differentialHash(DifferentialHash)
     case yield(Yield)
     case yieldEach(YieldEach)
     case await(Await)

@@ -87,6 +87,7 @@ public class Statistics: Module {
             data.validSamples += node.validSamples
             data.timedOutSamples += node.timedOutSamples
             data.totalExecs += node.totalExecs
+            data.totalDifferentialTests += node.totalDifferentialTests
 
             if !inactiveNodes.contains(id) {
                 // Add fields that only have meaning for active nodes
@@ -128,6 +129,11 @@ public class Statistics: Module {
         fuzzer.registerEventListener(for: fuzzer.events.CrashFound) { _ in
             self.ownData.crashingSamples += 1
         }
+
+        fuzzer.registerEventListener(for: fuzzer.events.DifferentialFound) { _ in
+            self.ownData.differentialSamples += 1
+        }
+
         fuzzer.registerEventListener(for: fuzzer.events.TimeOutFound) { _ in
             self.ownData.timedOutSamples += 1
             self.correctnessRate.add(0.0)
@@ -167,6 +173,11 @@ public class Statistics: Module {
             let overhead = 1.0 - (exec.execTime / totalTime)
             self.fuzzerOverheadAvg.add(overhead)
         }
+
+        fuzzer.registerEventListener(for: fuzzer.events.PostDifferentialExecute) { exec in
+            self.ownData.totalDifferentialTests += 1
+        }
+
         fuzzer.registerEventListener(for: fuzzer.events.InterestingProgramFound) { ev in
             self.ownData.interestingSamples += 1
             self.ownData.coverage = fuzzer.evaluator.currentScore

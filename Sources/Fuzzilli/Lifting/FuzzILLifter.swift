@@ -407,6 +407,9 @@ public class FuzzILLifter: Lifter {
                 w.emit("Return")
             }
 
+        case .differentialHash:
+            w.emit("DifferentialHash \(input(0))")
+
         case .yield(let op):
             if op.hasArgument {
                 w.emit("\(output()) <- Yield \(input(0))")

@@ -36,6 +36,9 @@ public class Fuzzer {
     /// The script runner used to execute generated scripts.
     public let runner: ScriptRunner
 
+    /// The script runners used to compare against in differential executions.
+    public let referenceRunner: ScriptRunner?
+
     /// The fuzzer engine producing new programs from existing ones and executing them.
     public let engine: FuzzEngine
 
@@ -155,7 +158,7 @@ public class Fuzzer {
 
     /// Constructs a new fuzzer instance with the provided components.
     public init(
-        configuration: Configuration, scriptRunner: ScriptRunner, engine: FuzzEngine, mutators: WeightedList<Mutator>,
+        configuration: Configuration, scriptRunner: ScriptRunner, referenceRunner: ScriptRunner?, engine: FuzzEngine, mutators: WeightedList<Mutator>,
         codeGenerators: WeightedList<CodeGenerator>, programTemplates: WeightedList<ProgramTemplate>, evaluator: ProgramEvaluator,
         environment: Environment, lifter: Lifter, corpus: Corpus, minimizer: Minimizer, queue: DispatchQueue? = nil
     ) {
@@ -175,6 +178,7 @@ public class Fuzzer {
         self.lifter = lifter
         self.corpus = corpus
         self.runner = scriptRunner
+        self.referenceRunner = referenceRunner
         self.minimizer = minimizer
         self.logger = Logger(withLabel: "Fuzzer")
 
@@ -236,6 +240,10 @@ public class Fuzzer {
 
         // Initialize the script runner first so we are able to execute programs.
         runner.initialize(with: self)
+
+        if let referenceRunner = referenceRunner {
+            referenceRunner.initialize(with: self)
+        }
 
         // Then initialize all components.
         engine.initialize(with: self)
@@ -383,6 +391,9 @@ public class Fuzzer {
             // from another instance triggers a crash in this instance.
             processCrash(program, withSignal: termsig, withStderr: execution.stderr, withStdout: execution.stdout, origin: origin, withExectime: execution.execTime)
 
+        case .differential:
+            processDifferential(program, withStderr: execution.stderr, withStdout: execution.stdout, origin: origin)
+
         case .succeeded:
             var imported = false
             if let aspects = evaluator.evaluate(execution) {
@@ -401,6 +412,24 @@ public class Fuzzer {
         }
 
         return execution.outcome
+    }
+
+    public func importDifferential(_ program: Program, origin: ProgramOrigin) {
+        dispatchPrecondition(condition: .onQueue(queue))
+
+        let execution = execute(program, purpose: .differentialTest, differentialResult: true)
+        if case .differential = execution.outcome {
+            processDifferential(program, withStderr: execution.stderr, withStdout: execution.stdout, origin: origin)
+        } else {
+            // Non-deterministic differential
+            dispatchEvent(events.DifferentialFound, data: (program, behaviour: .flaky, isUnique: true, origin: origin))
+        }
+    }
+
+    private func containsPoison(execution: Execution, differentialPoison: [String]) -> Bool {
+        return differentialPoison.contains { poison in
+            return execution.stderr.contains(poison)
+        }
     }
 
     /// Imports a crashing program into this fuzzer.
@@ -458,15 +487,37 @@ public class Fuzzer {
     ///   - timeout: The timeout after which to abort execution. If nil, the default timeout of this fuzzer will be used.
     ///   - purpose: The purpose of this program execution.
     /// - Returns: An Execution structure representing the execution outcome.
-    public func execute(_ program: Program, withTimeout timeout: UInt32? = nil, purpose: ExecutionPurpose) -> Execution {
+    public func execute(_ program: Program, withTimeout timeout: UInt32? = nil, purpose: ExecutionPurpose, differentialResult: Bool = false) -> Execution {
         dispatchPrecondition(condition: .onQueue(queue))
         assert(runner.isInitialized)
 
         let script = lifter.lift(program)
 
         dispatchEvent(events.PreExecute, data: (program, purpose))
-        let execution = runner.run(script, withTimeout: timeout ?? config.timeout)
+        var execution = runner.run(script, withTimeout: timeout ?? config.timeout)
         dispatchEvent(events.PostExecute, data: execution)
+
+        if differentialResult && containsPoison(execution: execution, differentialPoison: config.differentialPoison) {
+            execution.outcome = .failed(0)
+        }
+        else if differentialResult && execution.outcome == .succeeded &&
+           !containsPoison(execution: execution, differentialPoison: config.differentialPoison) {
+
+            assert(referenceRunner != nil)
+            assert(referenceRunner!.isInitialized)
+            let diff = referenceRunner!.run(script, withTimeout: timeout ?? config.timeout)
+            dispatchEvent(events.PostExecute, data: diff)
+            dispatchEvent(events.PostDifferentialExecute, data: diff)
+
+            if diff.outcome == .succeeded &&
+               !containsPoison(execution: diff, differentialPoison: config.differentialPoison) {
+
+               if execution.differentialResult != diff.differentialResult {
+                  execution.outcome = .differential
+               }
+            }
+            execution.execTime += diff.execTime
+        }
 
         return execution
     }
@@ -557,6 +608,9 @@ public class Fuzzer {
                 program.comments.add(stdout.trimmingCharacters(in: .newlines), at: .footer)
                 program.comments.add("FUZZER ARGS: \(config.arguments.joined(separator: " "))", at: .footer)
                 program.comments.add("TARGET ARGS: \(runner.processArguments.joined(separator: " "))", at: .footer)
+                if let referenceRunner = referenceRunner {
+                    program.comments.add("REFERENCE ARGS: \(referenceRunner.processArguments.joined(separator: " "))\n", at: .footer)
+                }
                 program.comments.add("CONTRIBUTORS: \(program.contributors.map({ $0.name }).joined(separator: ", "))", at: .footer)
                 program.comments.add("EXECUTION TIME: \(Int(exectime * 1000))ms", at: .footer)
             }
@@ -580,6 +634,41 @@ public class Fuzzer {
         minimizer.withMinimizedCopy(program, withAspects: ProgramAspects(outcome: .crashed(termsig))) { minimizedProgram in
             self.fuzzGroup.leave()
             processCommon(minimizedProgram)
+        }
+    }
+
+    func processDifferential(_ program: Program, withStderr stderr: String, withStdout stdout: String, origin: ProgramOrigin) {
+        func processCommon(_ program: Program) {
+            let hasDiffInfo = program.comments.at(.footer)?.contains("DIFFERENTIAL INFO") ?? false
+            if !hasDiffInfo {
+                program.comments.add("DIFFERENTIAL INFO\n==========\n", at: .footer)
+
+                program.comments.add("STDERR:\n" + stderr, at: .footer)
+                program.comments.add("STDOUT:\n" + stdout, at: .footer)
+                program.comments.add("ARGS: \(runner.processArguments.joined(separator: " "))\n", at: .footer)
+                program.comments.add("REFERENCE ARGS: \(referenceRunner!.processArguments.joined(separator: " "))\n", at: .footer)
+            }
+            assert(program.comments.at(.footer)?.contains("DIFFERENTIAL INFO") ?? false)
+
+            // Check for uniqueness only after minimization
+            let execution = execute(program, withTimeout: self.config.timeout * 2, purpose: .differentialTest, differentialResult: true)
+            if case .differential = execution.outcome {
+                // TODO don't use crash eval
+                let isUnique = evaluator.evaluateCrash(execution) != nil
+                dispatchEvent(events.DifferentialFound, data: (program, .deterministic, isUnique, origin))
+            } else {
+                dispatchEvent(events.DifferentialFound, data: (program, .flaky, true, origin))
+            }
+        }
+
+        if !origin.requiresMinimization() {
+            return processCommon(program)
+        }
+
+        fuzzGroup.enter()
+        minimizer.withMinimizedCopy(program, withAspects: ProgramAspects(outcome: .differential), limit: 0) { minimizedProgram in
+            self.fuzzGroup.leave()
+             processCommon(minimizedProgram)
         }
     }
 
@@ -758,6 +847,35 @@ public class Fuzzer {
             logger.warning("Cannot check if crashes are detected as there are no startup tests that should cause a crash")
         }
 
+        if config.differentialRate > 0.0 ||
+           config.differentialWeaveRate > 0.0 {
+            for test in config.differentialTests {
+                b = makeBuilder()
+                b.eval(test)
+                execution = execute(b.finalize(), purpose: .differentialTest, differentialResult: true)
+                guard case .differential = execution.outcome else {
+                    logger.fatal("Testcase \"\(test)\" did not produce a differential")
+                }
+                maxExecutionTime = max(maxExecutionTime, execution.execTime)
+            }
+            if config.differentialTests.isEmpty {
+                logger.warning("Cannot check if differentials are detected")
+            }
+
+            for test in config.differentialTestsInvariant {
+                b = makeBuilder()
+                b.eval(test)
+                execution = execute(b.finalize(), purpose: .differentialTest, differentialResult: true)
+                if case .differential = execution.outcome {
+                    logger.fatal("Testcase \"\(test)\" did produce a differential")
+                }
+                maxExecutionTime = max(maxExecutionTime, execution.execTime)
+            }
+            if config.differentialTestsInvariant.isEmpty {
+                logger.warning("Cannot check if common sources of entropy are ignored")
+            }
+        }
+
         // Determine recommended timeout value (rounded up to nearest multiple of 10ms)
         let maxExecutionTimeMs = (Int(maxExecutionTime * 1000 + 9) / 10) * 10
         let recommendedTimeout = 10 * maxExecutionTimeMs
@@ -786,6 +904,7 @@ public class Fuzzer {
         private(set) var numberOfProgramsThatFailedDuringImport = 0
         private(set) var numberOfProgramsThatTimedOutDuringImport = 0
         private(set) var numberOfProgramsThatExecutedSuccessfullyDuringImport = 0
+        private(set) var numberOfProgramsDifferentialDuringImport = 0
 
         init(corpus: [Program], mode: CorpusImportMode) {
             self.corpusToImport = corpus.reversed()         // Programs are taken from the end.
@@ -814,6 +933,8 @@ public class Fuzzer {
                 numberOfProgramsThatExecutedSuccessfullyDuringImport += 1
             case .timedOut:
                 numberOfProgramsThatTimedOutDuringImport += 1
+            case .differential:
+                numberOfProgramsDifferentialDuringImport += 1
             }
         }
 

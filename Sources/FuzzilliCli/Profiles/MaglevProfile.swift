@@ -30,7 +30,7 @@ fileprivate let MaglevFuzzer = ProgramTemplate("MaglevFuzzer") { b in
 }
 
 let maglevProfile = Profile(
-    processArgs: { randomize in 
+    processArgs: { (randomize, differentialTesting) in 
         var args = [
             "--expose-gc",
             "--fuzzing",
@@ -42,6 +42,7 @@ let maglevProfile = Profile(
 
         return args;
     },
+    processArgumentsReference: [""],
     processEnv: [:],
     maxExecsBeforeRespawn: 1,
     timeout: 250,
@@ -58,6 +59,13 @@ let maglevProfile = Profile(
         ("fuzzilli('FUZZILLI_CRASH', 2)", .shouldCrash),
         ("fuzzilli('FUZZILLI_CRASH', 3)", .shouldCrash),
     ],
+
+    differentialTests: [],
+
+    differentialTestsInvariant: [],
+
+    differentialPoison: [],
+
 
     additionalCodeGenerators: [
         (GcGenerator, 10)

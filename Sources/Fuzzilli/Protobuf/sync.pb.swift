@@ -174,6 +174,18 @@ public struct Fuzzilli_Protobuf_Statistics {
     set {_uniqueStorage()._timeoutRate = newValue}
   }
 
+  //// Number of differential samples found.
+  public var differentialSamples: UInt64 {
+    get {return _storage._differentialSamples}
+    set {_uniqueStorage()._differentialSamples = newValue}
+  }
+
+  /// Number of differential tests performed.
+  public var totalDifferentialTests: UInt64 {
+    get {return _storage._totalDifferentialTests}
+    set {_uniqueStorage()._totalDifferentialTests = newValue}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -299,6 +311,8 @@ extension Fuzzilli_Protobuf_Statistics: SwiftProtobuf.Message, SwiftProtobuf._Me
     15: .same(proto: "coverage"),
     16: .same(proto: "correctnessRate"),
     17: .same(proto: "timeoutRate"),
+    18: .same(proto: "differentialSamples"),
+    19: .same(proto: "totalDifferentialTests"),
   ]
 
   fileprivate class _StorageClass {
@@ -319,6 +333,8 @@ extension Fuzzilli_Protobuf_Statistics: SwiftProtobuf.Message, SwiftProtobuf._Me
     var _coverage: Double = 0
     var _correctnessRate: Double = 0
     var _timeoutRate: Double = 0
+    var _differentialSamples: UInt64 = 0
+    var _totalDifferentialTests: UInt64 = 0
 
     static let defaultInstance = _StorageClass()
 
@@ -377,6 +393,8 @@ extension Fuzzilli_Protobuf_Statistics: SwiftProtobuf.Message, SwiftProtobuf._Me
         case 15: try { try decoder.decodeSingularDoubleField(value: &_storage._coverage) }()
         case 16: try { try decoder.decodeSingularDoubleField(value: &_storage._correctnessRate) }()
         case 17: try { try decoder.decodeSingularDoubleField(value: &_storage._timeoutRate) }()
+        case 18: try { try decoder.decodeSingularUInt64Field(value: &_storage._differentialSamples) }()
+        case 19: try { try decoder.decodeSingularUInt64Field(value: &_storage._totalDifferentialTests) }()
         default: break
         }
       }
@@ -436,6 +454,12 @@ extension Fuzzilli_Protobuf_Statistics: SwiftProtobuf.Message, SwiftProtobuf._Me
       if _storage._timeoutRate != 0 {
         try visitor.visitSingularDoubleField(value: _storage._timeoutRate, fieldNumber: 17)
       }
+      if _storage._differentialSamples != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._differentialSamples, fieldNumber: 18)
+      }
+      if _storage._totalDifferentialTests != 0 {
+        try visitor.visitSingularUInt64Field(value: _storage._totalDifferentialTests, fieldNumber: 19)
+      }
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -462,6 +486,8 @@ extension Fuzzilli_Protobuf_Statistics: SwiftProtobuf.Message, SwiftProtobuf._Me
         if _storage._coverage != rhs_storage._coverage {return false}
         if _storage._correctnessRate != rhs_storage._correctnessRate {return false}
         if _storage._timeoutRate != rhs_storage._timeoutRate {return false}
+        if _storage._differentialSamples != rhs_storage._differentialSamples {return false}
+        if _storage._totalDifferentialTests != rhs_storage._totalDifferentialTests {return false}
         return true
       }
       if !storagesAreEqual {return false}

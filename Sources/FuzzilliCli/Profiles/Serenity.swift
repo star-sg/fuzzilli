@@ -15,7 +15,8 @@
 import Fuzzilli
 
 let serenityProfile = Profile(
-    processArgs: { randomize in return [""] },
+    processArgs: { (randomize, differentialTesting) in return [""] },
+    processArgumentsReference: [""],
     processEnv: [
         "UBSAN_OPTIONS": "handle_segv=0 handle_abrt=0",
         "ASAN_OPTIONS": "abort_on_error=1",
@@ -39,6 +40,13 @@ let serenityProfile = Profile(
         ("fuzzilli('FUZZILLI_CRASH', 0)", .shouldCrash),
         ("fuzzilli('FUZZILLI_CRASH', 1)", .shouldCrash),
     ],
+
+    differentialTests: [],
+
+    differentialTestsInvariant: [],
+
+    differentialPoison: [],
+
 
     additionalCodeGenerators: [],
     additionalProgramTemplates: WeightedList<ProgramTemplate>([]),

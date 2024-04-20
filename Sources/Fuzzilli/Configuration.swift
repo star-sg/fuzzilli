@@ -30,6 +30,28 @@ public struct Configuration {
     ///   - Check that known-safe crashes are ignored (with `.shouldNotCrash`)
     public let startupTests: [(String, ExpectedStartupTestResult)]
 
+    /// Code snippets that cause an observable difference of output
+    /// in the target engine. Used to verify that crashes can be detected.
+    public let differentialTests: [String]
+
+    /// Code snippets that must not cause an observable difference of output
+    /// in the target engine. Used to verify that common sources of
+    /// entrpy (Math.random, ...) are deterministic.
+    public let differentialTestsInvariant: [String]
+
+    /// During differential fuzzing, this is the rate of variables probed
+    /// at the end of the generated programs.
+    public let differentialRate: Double
+
+    /// During differential fuzzing, this is the rate of variables probed
+    /// throughout the generated programs.
+    public let differentialWeaveRate: Double
+
+    // List of Strings searched for in stderr of the engine.
+    // If found, differential execution results are ignored. Useful to supress
+    // known benign differentials.
+    public let differentialPoison: [String]
+
     /// The fraction of instruction to keep from the original program when minimizing.
     /// This setting is useful to avoid "over-minimization", which can negatively impact the fuzzer's
     /// performance if program features are removed that could later be mutated to trigger new
@@ -66,6 +88,11 @@ public struct Configuration {
                 skipStartupTests: Bool = false,
                 logLevel: LogLevel = .info,
                 startupTests: [(String, ExpectedStartupTestResult)] = [],
+                differentialTests: [String] = [],
+                differentialTestsInvariant: [String] = [],
+                differentialRate: Double = 0.0,
+                differentialWeaveRate: Double = 0.0,
+                differentialPoison: [String] = [],
                 minimizationLimit: Double = 0.0,
                 dropoutRate: Double = 0,
                 collectRuntimeTypes: Bool = false,
@@ -77,6 +104,11 @@ public struct Configuration {
         self.timeout = timeout
         self.logLevel = logLevel
         self.startupTests = startupTests
+        self.differentialTests = differentialTests
+        self.differentialTestsInvariant = differentialTestsInvariant
+        self.differentialRate = differentialRate
+        self.differentialWeaveRate = differentialWeaveRate
+        self.differentialPoison = differentialPoison
         self.dropoutRate = dropoutRate
         self.minimizationLimit = minimizationLimit
         self.enableDiagnostics = enableDiagnostics

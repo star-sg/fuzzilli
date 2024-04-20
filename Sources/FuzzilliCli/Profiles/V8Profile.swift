@@ -412,7 +412,7 @@ fileprivate let RegExpFuzzer = ProgramTemplate("RegExpFuzzer") { b in
 }
 
 let v8Profile = Profile(
-    processArgs: { randomize in
+    processArgs: { (randomize: Bool, differentialTesting: Bool) -> [String] in
         var args = [
             "--expose-gc",
             "--omit-quit",
@@ -423,6 +423,11 @@ let v8Profile = Profile(
             "--harmony",
             "--js-staging"
         ]
+
+        if differentialTesting {
+            args.append("--predictable")
+            args.append("--correctness-fuzzer-suppressions")
+        }
 
         guard randomize else { return args }
 
@@ -556,6 +561,19 @@ let v8Profile = Profile(
         return args
     },
 
+    processArgumentsReference: [
+        "--expose-gc",
+        "--future",
+        "--harmony",
+        "--assert-types",
+        "--harmony-rab-gsab",
+        "--allow-natives-syntax",
+        "--interrupt-budget=1024",
+        "--jitless",
+        "--predictable",
+        "--correctness-fuzzer-suppressions",
+        "--fuzzing"],
+
     // We typically fuzz without any sanitizer instrumentation, but if any sanitizers are active, "abort_on_error=1" must probably be set so that sanitizer errors can be detected.
     processEnv: [:],
 
@@ -564,6 +582,7 @@ let v8Profile = Profile(
     timeout: 250,
 
     codePrefix: """
+                const fhash = fuzzilli_hash;
                 """,
 
     codeSuffix: """
@@ -587,6 +606,13 @@ let v8Profile = Profile(
 
         // TODO we could try to check that OOM crashes are ignored here ( with.shouldNotCrash).
     ],
+
+    differentialTests: ["fuzzilli_hash(fuzzilli('FUZZILLI_RANDOM'))",],
+
+    differentialTestsInvariant: ["fuzzilli_hash(Math.random())",
+                                 "fuzzilli_hash(Date.now())",],
+
+    differentialPoison: ["Aborting on "],
 
     additionalCodeGenerators: [
         (ForceJITCompilationThroughLoopGenerator,  5),

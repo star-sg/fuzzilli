@@ -81,4 +81,8 @@ message Statistics {
 
         /// The timeout rate of recently generated programs (number of timeouts divided by number of generated programs).
         double timeoutRate = 17;
+
+        uint64 differentialSamples = 18;
+
+        uint64 totalDifferentialTests = 19;
 }

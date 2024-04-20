@@ -15,9 +15,11 @@
 import Fuzzilli
 
 let jerryscriptProfile = Profile(
-    processArgs: { randomize in
+    processArgs: { (randomize: Bool, differentialTesting: Bool) -> [String] in
         ["--reprl-fuzzilli"]
     },
+
+    processArgumentsReference: ["--reprl-fuzzilli"],
 
     processEnv: ["UBSAN_OPTIONS":"handle_segv=0"],
 
@@ -26,6 +28,8 @@ let jerryscriptProfile = Profile(
     timeout: 250,
 
     codePrefix: """
+                function placeholder(){}
+                const fhash = placeholder;
                 """,
 
     codeSuffix: """
@@ -41,6 +45,12 @@ let jerryscriptProfile = Profile(
         ("fuzzilli('FUZZILLI_CRASH', 0)", .shouldCrash),
         ("fuzzilli('FUZZILLI_CRASH', 1)", .shouldCrash),
     ],
+
+    differentialTests: [],
+
+    differentialTestsInvariant: [],
+
+    differentialPoison: [],
 
     additionalCodeGenerators: [],
 

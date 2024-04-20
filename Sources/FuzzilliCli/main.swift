@@ -98,6 +98,8 @@ Options:
     --tag=tag                    : Optional string tag associated with this instance which will be stored in the settings.json file as well as in crashing samples.
                                    This can for example be used to remember the target revision that is being fuzzed.
     --builtinTemplates            : Use built-in templates also
+    --differentialRate=p        : Rate at which variables are probed for differential testing at the end of generated programs (default: 0.0)
+    --differentialWeaveRate=p   : Rate at which variables are probed for differential testing throughout the generated programs (default: 0.0)
 """)
     exit(0)
 }
@@ -154,6 +156,8 @@ let argumentRandomization = args.has("--argumentRandomization")
 let additionalArguments = args["--additionalArguments"] ?? ""
 let tag = args["--tag"]
 var builtinTemplates = args["--builtinTemplate"]
+let differentialRate = args.double(for: "--differentialRate") ?? 0.0
+let differentialWeaveRate = args.double(for: "--differentialWeaveRate") ?? 0.0
 
 guard numJobs >= 1 else {
     configError("Must have at least 1 job")
@@ -203,6 +207,14 @@ if (resume || overwrite) && storagePath == nil {
 
 if corpusName == "markov" && staticCorpus {
     configError("Markov corpus is not compatible with --staticCorpus")
+}
+
+if differentialRate < 0 || differentialRate > 1 {
+    configError("The differentialRate must be between 0 and 1")
+}
+
+if differentialWeaveRate < 0 || differentialWeaveRate > 1 {
+    configError("The differentialWeaveRate must be between 0 and 1")
 }
 
 if let path = storagePath {
@@ -365,12 +377,25 @@ func loadCorpus(from dirPath: String) -> [Program] {
 // When using multiple jobs, all Fuzzilli instances should use the same arguments for the JS shell, even if
 // argument randomization is enabled. This way, their corpora are "compatible" and crashes that require
 // (a subset of) the randomly chosen flags can be reproduced on the main instance.
-let jsShellArguments = profile.processArgs(argumentRandomization) + additionalArguments.split(separator: ",").map(String.init)
+let differentialTesting = isNetworkChildNode || isNetworkParentNode || differentialRate > 0.0 || differentialWeaveRate > 0.0
+let jsShellArguments = profile.processArgs(argumentRandomization, differentialTesting) + additionalArguments.split(separator: ",").map(String.init)
 logger.info("Using the following arguments for the target engine: \(jsShellArguments)")
 
 func makeFuzzer(with configuration: Configuration) -> Fuzzer {
+
     // A script runner to execute JavaScript code in an instrumented JS engine.
     let runner = REPRL(executable: jsShellPath, processArguments: jsShellArguments, processEnvironment: profile.processEnv, maxExecsBeforeRespawn: profile.maxExecsBeforeRespawn)
+
+    var referenceRunner: ScriptRunner? = nil
+    if differentialTesting {
+        referenceRunner = REPRL(executable: jsShellPath,
+                                processArguments: profile.processArgumentsReference,
+                                processEnvironment: profile.processEnv,
+                                maxExecsBeforeRespawn: profile.maxExecsBeforeRespawn)
+        // we never actually evaluate the coverage no need to attach the
+        // evaluators to the fuzzer
+        let _ = ProgramCoverageEvaluator(runner: referenceRunner!)
+    }
 
     /// The mutation fuzzer responsible for mutating programs from the corpus and evaluating the outcome.
     let disabledMutators = Set(profile.disabledMutators)
@@ -476,6 +501,7 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
     // Construct the fuzzer instance.
     return Fuzzer(configuration: configuration,
                   scriptRunner: runner,
+                  referenceRunner: referenceRunner,
                   engine: engine,
                   mutators: mutators,
                   codeGenerators: codeGenerators,
@@ -492,6 +518,11 @@ let mainConfig = Configuration(arguments: CommandLine.arguments,
                                timeout: UInt32(timeout),
                                logLevel: logLevel,
                                startupTests: profile.startupTests,
+                               differentialTests: profile.differentialTests,
+                               differentialTestsInvariant: profile.differentialTestsInvariant,
+                               differentialRate: differentialRate,
+                               differentialWeaveRate: differentialWeaveRate,
+                               differentialPoison: profile.differentialPoison,
                                minimizationLimit: minimizationLimit,
                                enableDiagnostics: diagnostics,
                                enableInspection: inspect,
@@ -625,6 +656,11 @@ let workerConfig = Configuration(arguments: CommandLine.arguments,
                                  timeout: UInt32(timeout),
                                  logLevel: .warning,
                                  startupTests: profile.startupTests,
+                                 differentialTests: profile.differentialTests,
+                                 differentialTestsInvariant: profile.differentialTestsInvariant,
+                                 differentialRate: differentialRate,
+                                 differentialWeaveRate: differentialWeaveRate,
+                                 differentialPoison: profile.differentialPoison,
                                  minimizationLimit: minimizationLimit,
                                  enableDiagnostics: false,
                                  enableInspection: inspect,

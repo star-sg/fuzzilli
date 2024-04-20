@@ -36,6 +36,7 @@ public class RuntimeAssistedMutator: Mutator {
         case instrumentedProgramTimedOut = "Instrumented program timed out"
         case noResults = "No results received"
         case unexpectedError = "Unexpected Error"
+        case differentialNotSupported = "Differential testing not supported"
     }
     private var outcomeCounts = [Outcome: Int]()
 
@@ -111,6 +112,9 @@ public class RuntimeAssistedMutator: Mutator {
             // report the instrumented program as crashing here. We may therefore end up with two crashes from one mutation.
             let stdout = execution.fuzzout + "\n" + execution.stdout
             fuzzer.processCrash(instrumentedProgram, withSignal: signal, withStderr: execution.stderr, withStdout: stdout, origin: .local, withExectime: execution.execTime)
+        case .differential:
+            // Differential testing is not supported for runtime-assisted mutators.
+            return failure(.differentialNotSupported)
         case .succeeded:
             // The expected case.
             break

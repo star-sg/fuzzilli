@@ -724,6 +724,9 @@ public class JavaScriptLifter: Lifter {
                     w.emit("return;")
                 }
 
+            case .differentialHash:
+                w.emit("fhash(\(input(0)));")
+
             case .yield(let op):
                 let expr: Expression
                 if op.hasArgument {

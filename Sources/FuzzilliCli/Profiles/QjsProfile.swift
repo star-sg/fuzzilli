@@ -15,9 +15,10 @@
 import Fuzzilli
 
 let qjsProfile = Profile(
-    processArgs: { randomize in
+    processArgs: { (randomize: Bool, differentialTesting: Bool) -> [String] in
         ["--reprl"]
     },
+    processArgumentsReference: ["--reprl"],
 
     processEnv: ["UBSAN_OPTIONS": "handle_segv=0"],
 
@@ -42,6 +43,13 @@ let qjsProfile = Profile(
         ("fuzzilli('FUZZILLI_CRASH', 1)", .shouldCrash),
         ("fuzzilli('FUZZILLI_CRASH', 2)", .shouldCrash),
     ],
+
+    differentialTests: [],
+
+    differentialTestsInvariant: [],
+
+    differentialPoison: [],
+
 
     additionalCodeGenerators: [],
 

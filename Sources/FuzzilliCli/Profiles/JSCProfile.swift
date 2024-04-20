@@ -37,7 +37,7 @@ fileprivate let GcGenerator = CodeGenerator("GcGenerator") { b in
 }
 
 let jscProfile = Profile(
-    processArgs: { randomize in
+    processArgs: { (randomize: Bool, differentialTesting: Bool) -> [String] in
         var args = [
             "--validateOptions=true",
             // No need to call functions thousands of times before they are JIT compiled
@@ -69,6 +69,24 @@ let jscProfile = Profile(
         return args
     },
 
+    processArgumentsReference: [
+                        "--validateOptions=true",
+                       "--useConcurrentJIT=false",
+                       "--useConcurrentGC=false",
+                       // No need to call functions thousands of times before they are JIT compiled
+                       "--thresholdForJITSoon=10",
+                       "--thresholdForJITAfterWarmUp=10",
+                       "--thresholdForOptimizeAfterWarmUp=100",
+                       "--thresholdForOptimizeAfterLongWarmUp=100",
+                       "--thresholdForOptimizeAfterLongWarmUp=100",
+                       "--thresholdForFTLOptimizeAfterWarmUp=1000",
+                       "--thresholdForFTLOptimizeSoon=1000",
+                       // Disable JIT
+                       "--useFTLJIT=false",
+                       "--useBaselineJIT=false",
+                       "--useDFGJIT=false",
+                       "--reprl"],
+
     processEnv: ["UBSAN_OPTIONS":"handle_segv=0"],
 
     maxExecsBeforeRespawn: 1000,
@@ -76,6 +94,7 @@ let jscProfile = Profile(
     timeout: 250,
 
     codePrefix: """
+                const fhash = fuzzilli_hash;
                 """,
 
     codeSuffix: """
@@ -95,6 +114,13 @@ let jscProfile = Profile(
 
         // TODO we could try to check that OOM crashes are ignored here ( with.shouldNotCrash).
     ],
+
+    differentialTests: ["fuzzilli_hash(fuzzilli('FUZZILLI_RANDOM'))",],
+
+    differentialTestsInvariant: ["fuzzilli_hash(Math.random())",
+                                 "fuzzilli_hash(Date.now())",],
+
+    differentialPoison: [],
 
     additionalCodeGenerators: [
         (ForceDFGCompilationGenerator, 5),

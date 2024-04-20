@@ -816,6 +816,14 @@ public struct Fuzzilli_Protobuf_Instruction {
     set {operation = .return(newValue)}
   }
 
+  public var differentialHash: Fuzzilli_Protobuf_DifferentialHash {
+    get {
+      if case .differentialHash(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_DifferentialHash()
+    }
+    set {operation = .differentialHash(newValue)}
+  }
+
   public var yield: Fuzzilli_Protobuf_Yield {
     get {
       if case .yield(let v)? = operation {return v}
@@ -1571,6 +1579,7 @@ public struct Fuzzilli_Protobuf_Instruction {
     case beginConstructor(Fuzzilli_Protobuf_BeginConstructor)
     case endConstructor(Fuzzilli_Protobuf_EndConstructor)
     case `return`(Fuzzilli_Protobuf_Return)
+    case differentialHash(Fuzzilli_Protobuf_DifferentialHash)
     case yield(Fuzzilli_Protobuf_Yield)
     case yieldEach(Fuzzilli_Protobuf_YieldEach)
     case await(Fuzzilli_Protobuf_Await)
@@ -2042,6 +2051,10 @@ public struct Fuzzilli_Protobuf_Instruction {
       }()
       case (.return, .return): return {
         guard case .return(let l) = lhs, case .return(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.differentialHash, .differentialHash): return {
+        guard case .differentialHash(let l) = lhs, case .differentialHash(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       case (.yield, .yield): return {
@@ -2609,6 +2622,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
     177: .same(proto: "explore"),
     178: .same(proto: "probe"),
     179: .same(proto: "fixup"),
+    180: .same(proto: "differentialHash"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4927,6 +4941,19 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .fixup(v)
         }
       }()
+      case 180: try {
+        var v: Fuzzilli_Protobuf_DifferentialHash?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .differentialHash(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .differentialHash(v)
+        }
+      }()
       default: break
       }
     }
@@ -5652,6 +5679,10 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
     case .fixup?: try {
       guard case .fixup(let v)? = self.operation else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 179)
+    }()
+    case .differentialHash?: try {
+      guard case .differentialHash(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 106)
     }()
     case nil: break
     }

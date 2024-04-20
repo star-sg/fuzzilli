@@ -28,7 +28,7 @@ fileprivate let GcGenerator = CodeGenerator("GcGenerator") { b in
 }
 
 let spidermonkeyProfile = Profile(
-    processArgs: { randomize in
+    processArgs: { (randomize: Bool, differentialTesting: Bool) -> [String] in
         var args = [
             "--baseline-warmup-threshold=10",
             "--ion-warmup-threshold=100",
@@ -37,6 +37,10 @@ let spidermonkeyProfile = Profile(
             "--fuzzing-safe",
             "--disable-oom-functions",
             "--reprl"]
+
+        if differentialTesting {
+            args.append("--differential-testing")
+        }
 
         guard randomize else { return args }
 
@@ -70,6 +74,15 @@ let spidermonkeyProfile = Profile(
         return args
     },
 
+    processArgumentsReference: [
+        "--no-threads",
+        "--baseline-warmup-threshold=10",
+        "--fuzzing-safe",
+        "--differential-testing",
+        "--no-ion",
+        "--reprl",
+    ],
+
     processEnv: ["UBSAN_OPTIONS": "handle_segv=0"],
 
     maxExecsBeforeRespawn: 1000,
@@ -77,6 +90,7 @@ let spidermonkeyProfile = Profile(
     timeout: 250,
 
     codePrefix: """
+                const fhash = fuzzilli_hash;
                 """,
 
     codeSuffix: """
@@ -96,6 +110,16 @@ let spidermonkeyProfile = Profile(
 
         // TODO we could try to check that OOM crashes are ignored here ( with.shouldNotCrash).
     ],
+
+    differentialTests: ["for(let i=0; i<200; i++) {fuzzilli_hash(fuzzilli('FUZZILLI_RANDOM'))}",],
+
+    differentialTestsInvariant: ["for(let i=0; i < 200; i++) {fuzzilli_hash(Math.random())}",
+                                 "for(let i=0; i < 200; i++) {fuzzilli_hash(Date.now())}",],
+
+    differentialPoison : ["ReportOverRecursed called",
+                          "ReportOutOfMemory called",
+                          "ReportAllocationOverflow called",
+                          "[unhandlable oom]"],
 
     additionalCodeGenerators: [
         (ForceSpidermonkeyIonGenerator, 10),

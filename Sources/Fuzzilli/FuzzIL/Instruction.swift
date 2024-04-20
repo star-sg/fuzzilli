@@ -262,6 +262,10 @@ public struct Instruction {
         self.inouts_ = inouts_
     }
 
+    public var isDifferentialHash: Bool {
+        return op is DifferentialHash
+    }
+
     public init(_ op: Operation, output: Variable) {
         assert(op.numInputs == 0 && op.numOutputs == 1 && op.numInnerOutputs == 0)
         self.init(op, inouts: [output])
@@ -606,6 +610,8 @@ extension Instruction: ProtobufConvertible {
                 $0.endConstructor = Fuzzilli_Protobuf_EndConstructor()
             case .return:
                 $0.return = Fuzzilli_Protobuf_Return()
+            case .differentialHash(let op):
+                $0.differentialHash = Fuzzilli_Protobuf_DifferentialHash.with { $0.allowInnerScope = op.allowInnerScope }
             case .yield:
                 $0.yield = Fuzzilli_Protobuf_Yield()
             case .yieldEach:
@@ -1071,6 +1077,8 @@ extension Instruction: ProtobufConvertible {
         case .return:
             let hasReturnValue = inouts.count == 1
             op = Return(hasReturnValue: hasReturnValue)
+        case .differentialHash(let p):
+            op = DifferentialHash(allowInnerScope: p.allowInnerScope)
         case .yield:
             let hasArgument = inouts.count == 2
             op = Yield(hasArgument: hasArgument)

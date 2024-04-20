@@ -64,7 +64,7 @@ fileprivate let HoleLeakGenerator = ValueGenerator("HoleLeakGenerator") { b, arg
 }
 
 let v8HoleFuzzingProfile = Profile(
-    processArgs: { randomize in
+    processArgs: { (randomize, differentialTesting) in
         var args = [
             "--expose-gc",
             "--omit-quit",
@@ -77,6 +77,7 @@ let v8HoleFuzzingProfile = Profile(
         ]
         return args
     },
+    processArgumentsReference: [""],
     processEnv: [:],
     maxExecsBeforeRespawn: 1000,
     timeout: 250,
@@ -98,6 +99,12 @@ let v8HoleFuzzingProfile = Profile(
         ("fuzzilli('FUZZILLI_CRASH', 1)", .shouldNotCrash),
         ("fuzzilli('FUZZILLI_CRASH', 2)", .shouldNotCrash),
     ],
+
+    differentialTests: [],
+
+    differentialTestsInvariant: [],
+
+    differentialPoison: [],
 
     additionalCodeGenerators: [
         (ForceJITCompilationThroughLoopGenerator,  5),

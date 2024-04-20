@@ -83,6 +83,8 @@ enum MessageType: UInt32 {
 
     // Log messages are forwarded from child to parent nides.
     case log                 = 6
+
+    case differential   = 8
 }
 
 /// Distributed fuzzing nodes can be configured to only share their corpus in one direction in the tree.
@@ -279,6 +281,14 @@ public class DistributedFuzzingParentNode: DistributedFuzzingNode, Module {
              .sync:
             logger.error("Received unexpected message: \(messageType)")
 
+        case .differential:
+            do {
+                let proto = try Fuzzilli_Protobuf_Program(serializedData: data)
+                let program = try Program(from: proto)
+                fuzzer.importDifferential(program, origin: .child(id: child))
+            } catch {
+                logger.warning("Received malformed program from worker: \(error)")
+            }
         }
     }
 
@@ -355,6 +365,10 @@ public class DistributedFuzzingChildNode: DistributedFuzzingNode, Module {
 
         fuzzer.registerEventListener(for: fuzzer.events.CrashFound) { ev in
             self.sendProgram(ev.program, as: .crashingProgram)
+        }
+
+        fuzzer.registerEventListener(for: fuzzer.events.DifferentialFound) { ev in
+            self.sendProgram(ev.program, as: .differential)
         }
 
         fuzzer.registerEventListener(for: fuzzer.events.Shutdown) { _ in
@@ -462,13 +476,14 @@ public class DistributedFuzzingChildNode: DistributedFuzzingNode, Module {
 
         case .crashingProgram,
              .statistics,
+             .differential,
              .log:
             logger.error("Received unexpected message: \(messageType)")
         }
     }
 
     private func sendProgram(_ program: Program, as type: MessageType) {
-        assert(type == .interestingProgram || type == .crashingProgram)
+        assert(type == .interestingProgram || type == .crashingProgram || type == .differential)
         let proto = program.asProtobuf()
         guard let payload = try? proto.serializedData() else {
             return logger.error("Failed to serialize program")

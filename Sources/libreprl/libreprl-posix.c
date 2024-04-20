@@ -365,8 +365,11 @@ void reprl_destroy_context(struct reprl_context* ctx)
     free(ctx);
 }
 
-int reprl_execute(struct reprl_context* ctx, const char* script, uint64_t script_length, uint64_t timeout, uint64_t* execution_time, int fresh_instance)
+int reprl_execute(struct reprl_context* ctx, const char* script, uint64_t script_length, uint64_t timeout, uint64_t* execution_time, int fresh_instance, uint32_t* execHash, uint32_t* nInputs)
 {
+    *execHash = 0;
+    *nInputs = 0;
+
     if (!ctx->initialized) {
         return reprl_error(ctx, "REPRL context is not initialized");
     }
@@ -436,11 +439,18 @@ int reprl_execute(struct reprl_context* ctx, const char* script, uint64_t script
     }
 
     // Poll succeeded, so there must be something to read now (either the status or EOF).
+    struct {
+        int status;
+        uint32_t execHash;
+        uint32_t execHashInputs;
+    } s;
+    ssize_t rv = read(ctx->ctrl_in, &s, 12);
+
     int status;
-    ssize_t rv = read(ctx->ctrl_in, &status, 4);
+    // ssize_t rv = read(ctx->ctrl_in, &status, 4);
     if (rv < 0) {
         return reprl_error(ctx, "Failed to read from control pipe: %s", strerror(errno));
-    } else if (rv != 4) {
+    } else if (rv != 12) {
         // Most likely, the child process crashed and closed the write end of the control pipe.
         // Unfortunately, there probably is nothing that guarantees that waitpid() will immediately succeed now,
         // and we also don't want to block here. So just retry waitpid() a few times...
@@ -468,6 +478,10 @@ int reprl_execute(struct reprl_context* ctx, const char* script, uint64_t script
             // This shouldn't happen, since we don't specify WUNTRACED for waitpid...
             return reprl_error(ctx, "Waitpid returned unexpected child state %i", status);
         }
+    } else {
+        status = s.status;
+        *execHash = s.execHash;
+        *nInputs = s.execHashInputs;
     }
 
     // The status must be a positive number, see the status encoding format below.

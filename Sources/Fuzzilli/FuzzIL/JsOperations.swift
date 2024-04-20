@@ -1194,6 +1194,15 @@ final class Return: JsOperation {
     }
 }
 
+class DifferentialHash: JsOperation {
+    let allowInnerScope: Bool
+    init(allowInnerScope: Bool) {
+        self.allowInnerScope = allowInnerScope
+        let requiredContext: Context = allowInnerScope ? [] : [.javascript]
+        super.init(numInputs: 1, numOutputs: 0, attributes: [], requiredContext: requiredContext)
+    }
+}
+
 // A yield expression in JavaScript
 final class Yield: JsOperation {
     override var opcode: Opcode { .yield(self) }

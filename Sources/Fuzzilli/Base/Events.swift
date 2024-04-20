@@ -55,6 +55,8 @@ public class Events {
     /// Signals that a crashing program has been found. Dispatched after the crashing program has been minimized.
     public let CrashFound = Event<(program: Program, behaviour: CrashBehaviour, isUnique: Bool, origin: ProgramOrigin)>()
 
+    public let DifferentialFound = Event<(program: Program, behaviour: CrashBehaviour, isUnique: Bool, origin: ProgramOrigin)>()
+
     /// Signals that a program causing a timeout has been found.
     public let TimeOutFound = Event<Program>()
 
@@ -86,6 +88,9 @@ public class Events {
 
     /// Signals that a corpus import is complete.
     public let CorpusImportComplete = Event<()>()
+
+    /// Signals that a differential test was performed.
+    public let PostDifferentialExecute = Event<Execution>()
 }
 
 /// Crash behavior of a program.
@@ -138,6 +143,8 @@ public enum ExecutionPurpose {
     case startup
     /// The (instrumented) program is executed as part of a runtime-assisted mutation.
     case runtimeAssistedMutation
+    /// The program is executed as part of a differential test.
+    case differentialTest
     /// Any other reason.
     case other
 }

@@ -37,12 +37,17 @@ public class FuzzEngine: ComponentBase {
 
         fuzzer.dispatchEvent(fuzzer.events.ProgramGenerated, data: program)
 
-        let execution = fuzzer.execute(program, withTimeout: timeout, purpose: .fuzzing)
+        let differentialResult = program.code.contains { $0.isDifferentialHash }
+        let execution = fuzzer.execute(program, withTimeout: timeout, purpose: .fuzzing, differentialResult: differentialResult)
+
 
         switch execution.outcome {
             case .crashed(let termsig):
                 fuzzer.processCrash(program, withSignal: termsig, withStderr: execution.stderr, withStdout: execution.stdout, origin: .local, withExectime: execution.execTime)
                 program.contributors.generatedCrashingSample()
+
+            case .differential:
+                fuzzer.processDifferential(program, withStderr: execution.stderr, withStdout: execution.stdout, origin: .local)
 
             case .succeeded:
                 fuzzer.dispatchEvent(fuzzer.events.ValidProgramFound, data: program)

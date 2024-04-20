@@ -23,9 +23,11 @@ fileprivate let ForceQV4JITGenerator = CodeGenerator("ForceQV4JITGenerator", inp
 }
 
 let qtjsProfile = Profile(
-    processArgs: { randomize in
+    processArgs: { (randomize: Bool, differentialTesting: Bool) -> [String] in
         ["-reprl"]
     },
+
+    processArgumentsReference: ["-reprl"],
 
     processEnv: ["UBSAN_OPTIONS":"handle_segv=0"],
 
@@ -34,6 +36,8 @@ let qtjsProfile = Profile(
     timeout: 250,
 
     codePrefix: """
+                function placeholder(){}
+                const fhash = placeholder;
                 """,
 
     codeSuffix: """
@@ -49,6 +53,12 @@ let qtjsProfile = Profile(
         ("fuzzilli('FUZZILLI_CRASH', 0)", .shouldCrash),
     ],
 
+    differentialTests: [],
+
+    differentialTestsInvariant: [],
+
+    differentialPoison: [],
+
     additionalCodeGenerators: [
         (ForceQV4JITGenerator,    20),
     ],
@@ -61,6 +71,7 @@ let qtjsProfile = Profile(
 
     additionalBuiltins: [
         "gc"                : .function([] => .undefined),
+        "placeholder" : .function([] => .undefined),
     ],
 
     additionalObjectGroups: [],
