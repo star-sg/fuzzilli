@@ -358,6 +358,8 @@ extension Fuzzilli_Protobuf_Statistics: SwiftProtobuf.Message, SwiftProtobuf._Me
       _coverage = source._coverage
       _correctnessRate = source._correctnessRate
       _timeoutRate = source._timeoutRate
+      _differentialSamples = source._differentialSamples
+      _totalDifferentialTests = source._totalDifferentialTests
     }
   }
 

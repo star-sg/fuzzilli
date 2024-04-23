@@ -1195,6 +1195,7 @@ final class Return: JsOperation {
 }
 
 class DifferentialHash: JsOperation {
+    override var opcode: Opcode { .differentialHash(self) }
     let allowInnerScope: Bool
     init(allowInnerScope: Bool) {
         self.allowInnerScope = allowInnerScope
@@ -1441,8 +1442,10 @@ final class TernaryOperation: JsOperation {
 /// Reassigns an existing variable, essentially doing `input1 = input2;`
 final class Reassign: JsOperation {
     override var opcode: Opcode { .reassign(self) }
+    let isAdded: Bool
 
-    init() {
+    init(isAdded flag: Bool = false) {
+        self.isAdded = flag
         super.init(numInputs: 2)
     }
 }

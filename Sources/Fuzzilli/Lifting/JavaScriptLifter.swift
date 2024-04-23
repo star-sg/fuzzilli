@@ -725,7 +725,7 @@ public class JavaScriptLifter: Lifter {
                 }
 
             case .differentialHash:
-                w.emit("fhash(\(input(0)));")
+                w.emit("fuzzilli(\"FUZZILLI_HASH\", \(input(0)));")
 
             case .yield(let op):
                 let expr: Expression

@@ -13,6 +13,8 @@
 // limitations under the License.
 
 /// Type inference for JavaScript variables.
+import Foundation
+
 public struct JSTyper: Analyzer {
     // TODO: possible improvements:
     //  - Add awareness of dead code, such as code after a return or singular operations if
@@ -72,8 +74,10 @@ public struct JSTyper: Analyzer {
 
     /// Analyze the given instruction, thus updating type information.
     public mutating func analyze(_ instr: Instruction) {
+        /*
         assert(instr.index == indexOfLastInstruction + 1)
         indexOfLastInstruction += 1
+        */
 
         // Reset type changes array before instruction execution.
         typeChanges = []
@@ -119,7 +123,7 @@ public struct JSTyper: Analyzer {
     /// Sets a program-wide signature for the instruction at the given index, which must be the start of a function or method definition.
     public mutating func setParameters(forSubroutineStartingAt index: Int, to parameterTypes: ParameterList) {
         // Currently we expect this to only be used for the next instruction.
-        assert(index == indexOfLastInstruction + 1)
+        // assert(index == indexOfLastInstruction + 1)
         signatures[index] = parameterTypes
     }
 

@@ -582,7 +582,6 @@ let v8Profile = Profile(
     timeout: 250,
 
     codePrefix: """
-                const fhash = fuzzilli_hash;
                 """,
 
     codeSuffix: """
@@ -607,10 +606,10 @@ let v8Profile = Profile(
         // TODO we could try to check that OOM crashes are ignored here ( with.shouldNotCrash).
     ],
 
-    differentialTests: ["fuzzilli_hash(fuzzilli('FUZZILLI_RANDOM'))",],
+    differentialTests: ["fuzzilli('FUZZILLI_HASH', fuzzilli('FUZZILLI_RANDOM'))",],
 
-    differentialTestsInvariant: ["fuzzilli_hash(Math.random())",
-                                 "fuzzilli_hash(Date.now())",],
+    differentialTestsInvariant: ["fuzzilli('FUZZILLI_HASH', Math.random())",
+                                 "fuzzilli('FUZZILLI_HASH', Date.now())",],
 
     differentialPoison: ["Aborting on "],
 

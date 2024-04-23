@@ -184,8 +184,17 @@ public class ProgramBuilder {
         var probableLocations: [Int] = []
 
         var variableAnalyzer = VariableAnalyzer()
+        var contextAnalyzer = ContextAnalyzer()
         for instr in code {
             variableAnalyzer.analyze(instr)
+            contextAnalyzer.analyze(instr)
+
+            if contextAnalyzer.context == .objectLiteral || 
+                contextAnalyzer.context == .classDefinition ||
+                contextAnalyzer.context == .switchBlock {
+                continue
+            }
+
             if variableAnalyzer.visibleVariables.count > 0 {
                 probableLocations.append(instr.index)
             }
@@ -210,12 +219,14 @@ public class ProgramBuilder {
 
         var copied = 0
         variableAnalyzer = VariableAnalyzer()
+
         for instr in code {
             variableAnalyzer.analyze(instr)
             newCode.append(instr)
+
             if toProbe.contains(instr.index) {
                 let v = findVariable(with: variableAnalyzer)!
-                newCode.append(Instruction(Reassign(), inouts: [copyVars[copied], v]))
+                newCode.append(Instruction(Reassign(isAdded: true), inouts: [copyVars[copied], v]))
                 copied += 1
             }
         }
@@ -233,6 +244,13 @@ public class ProgramBuilder {
         if fuzzer.config.differentialRate > 0.0 {
             appendDifferentialProbes()
         }
+
+        /*
+        print("Dumped progam:")
+        code.enumerated().forEach { instr in
+            print("\(instr.offset): \(instr.element)")
+        }
+        */
 
         let program = Program(code: code, parent: parent, comments: comments, contributors: contributors)
         reset()
@@ -2496,6 +2514,7 @@ public class ProgramBuilder {
         guard Double(probesWeaved) < fuzzer.config.differentialWeaveRate * Double(code.count) else { return instr }
         if probability(fuzzer.config.differentialWeaveRate) {
             //guard scopeAnalyzer.visibleVariables.count > 0 else { return }
+            guard variablesInScope.count > 0 else { return instr }
             code.append(Instruction(DifferentialHash(allowInnerScope: true), inouts: [findVariable()!]))
             probesWeaved += 1
         }
