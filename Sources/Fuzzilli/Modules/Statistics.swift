@@ -77,7 +77,6 @@ public class Statistics: Module {
         ownData.minimizationOverhead = minimizationOverheadAvg.currentValue
         ownData.correctnessRate = correctnessRate.currentValue
         ownData.timeoutRate = timeoutRate.currentValue
-        print("TotalDiffTests owndata: \(ownData.totalDifferentialTests)")
 
         // Compute global statistics data
         var data = ownData
@@ -122,7 +121,6 @@ public class Statistics: Module {
         data.minimizationOverhead /= totalNumberOfNodes
         data.correctnessRate /= totalNumberOfNodes
         data.timeoutRate /= totalNumberOfNodes
-        print("TotalDiffTests data: \(data.totalDifferentialTests)")
 
         return data
     }
