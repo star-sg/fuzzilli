@@ -562,6 +562,10 @@ let v8Profile = Profile(
     },
 
     processArgumentsReference: [
+        "--no-sparkplug",
+        "--no-turbofan",
+        "--no-turboshaft",
+        "--no-maglev",
         "--expose-gc",
         "--future",
         "--harmony",
@@ -614,12 +618,12 @@ let v8Profile = Profile(
     differentialPoison: ["Aborting on "],
 
     additionalCodeGenerators: [
-        (ForceJITCompilationThroughLoopGenerator,  5),
-        (ForceTurboFanCompilationGenerator,        5),
-        (ForceMaglevCompilationGenerator,          5),
-        (TurbofanVerifyTypeGenerator,             10),
+        (ForceJITCompilationThroughLoopGenerator, 50),
+        (ForceTurboFanCompilationGenerator,       50),
+        (ForceMaglevCompilationGenerator,         50),
+        (TurbofanVerifyTypeGenerator,             50),
 
-        (WorkerGenerator,                         10),
+        // (WorkerGenerator,                         10),
         (GcGenerator,                             10),
     ],
 
@@ -631,12 +635,12 @@ let v8Profile = Profile(
 
     disabledCodeGenerators: [],
 
-    disabledMutators: [],
+    disabledMutators: ["ExplorationMutator"],
 
     additionalBuiltins: [
         "gc"                                            : .function([] => (.undefined | .jsPromise)),
         "d8"                                            : .object(),
-        "Worker"                                        : .constructor([.anything, .object()] => .object(withMethods: ["postMessage","getMessage"])),
+        // "Worker"                                        : .constructor([.anything, .object()] => .object(withMethods: ["postMessage","getMessage"])),
     ],
 
     additionalObjectGroups: [],
