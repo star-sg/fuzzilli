@@ -62,6 +62,9 @@ let package = Package(
         .target(name: "FuzzilliCli",
                 dependencies: ["Fuzzilli"]),
 
+        .target(name: "FuzzilliRep",
+                dependencies: ["Fuzzilli"]),
+
         .target(name: "FuzzILTool",
                 dependencies: ["Fuzzilli"]),
 
