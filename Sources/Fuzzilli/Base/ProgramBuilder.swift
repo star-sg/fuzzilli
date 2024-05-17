@@ -179,7 +179,13 @@ public class ProgramBuilder {
         probesWeaved = 0
     }
 
-    private func appendDifferentialProbes() {
+    public func probeEveryVars(from program: Program) -> Program {
+        append(program)
+        appendDifferentialProbes(with: 1.0)
+        return finalize()
+    }
+
+    private func appendDifferentialProbes(with differentialRate: Double) {
         var alreadyProbed = 0
         var probableLocations: [Int] = []
 
@@ -203,7 +209,7 @@ public class ProgramBuilder {
             }
         }
 
-        let expectedProbed = Int(fuzzer.config.differentialRate * Double(probableLocations.count))
+        let expectedProbed = Int(differentialRate * Double(probableLocations.count))
         guard alreadyProbed * 2 < expectedProbed else { return }
         let remainingProbed = expectedProbed - alreadyProbed
         probableLocations.shuffle()
@@ -242,7 +248,7 @@ public class ProgramBuilder {
     /// Finalizes and returns the constructed program, then resets this builder so it can be reused for building another program.
     public func finalize() -> Program {
         if fuzzer.config.differentialRate > 0.0 {
-            appendDifferentialProbes()
+            appendDifferentialProbes(with: fuzzer.config.differentialRate)
         }
 
         /*

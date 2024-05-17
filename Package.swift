@@ -63,7 +63,8 @@ let package = Package(
                 dependencies: ["Fuzzilli"]),
 
         .target(name: "FuzzilliRep",
-                dependencies: ["Fuzzilli"]),
+                dependencies: ["Fuzzilli"],
+                exclude: ["README.md"]),
 
         .target(name: "FuzzILTool",
                 dependencies: ["Fuzzilli"]),

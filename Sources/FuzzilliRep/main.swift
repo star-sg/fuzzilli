@@ -1,21 +1,53 @@
 import Foundation
 import Fuzzilli
 
-func importJSFile(from path: String) -> Program {
+let filteredFunctionsForCompiler = [
+    "assert*",
+    "print*",
+    "enterFunc",
+    "startTest"
+]
+
+func importTarget(from path: String) -> Program {
     guard FileManager.default.fileExists(atPath: path) else {
         emitError("Invalid input file path \"\(path)\", file does not exist")
     }
 
-    var program = Program()
-    do {
-        let data = try Data(contentsOf: URL(fileURLWithPath: path))
-        let pb = try Fuzzilli_Protobuf_Program(serializedData: data)
-        program = try Program.init(from: pb)
-    } catch {
-        emitError("Failed to import program from disk: \(error)")
-    }
+    if path.hasSuffix(".js") {
+        guard let nodejs = NodeJS() else {
+            emitError("Could not find the NodeJS executable.")
+        }
 
-    return program
+        guard let parser = JavaScriptParser(executor: nodejs) else {
+            emitError("The JavaScript parser does not appear to be working. See Sources/Fuzzilli/Compiler/Parser/README.md for instructions on how to set it up.")
+        }
+
+        let ast: JavaScriptParser.AST
+        do {
+            ast = try parser.parse(path)
+        } catch {
+            emitError("Failed to parse \(path): \(error)")
+        }
+
+        let compiler = JavaScriptCompiler(deletingCallTo: filteredFunctionsForCompiler)
+        do {
+            return try compiler.compile(ast)
+        } catch {
+            emitError("Failed to compile: \(error)")
+        }
+    } else if path.hasSuffix(".fzil") {
+        var program = Program()
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: path))
+            let pb = try Fuzzilli_Protobuf_Program(serializedData: data)
+            program = try Program.init(from: pb)
+        } catch {
+            emitError("Failed to import program from disk: \(error)")
+        }
+        return program
+    } else {
+        emitError("Invalid input file path \"\(path)\", file must have a .js or .fzil extension")
+    }
 }
 
 class MockEvaluator: ProgramEvaluator {
@@ -63,6 +95,7 @@ Usage:
 
 Options:
     -h, --help                  : Print this help message
+    --probe                     : Probe the target program for differential testing
     --target=name               : The name of the input file
     --differential              : If enabled, the fuzzer will use a differential testing on the provided input file
     --profile=name              : Select one of several preconfigured profiles.
@@ -94,12 +127,13 @@ if profile == nil || profileName == nil {
 
 var targetProgram: Program! = nil
 if let target = args["--target"] {
-    targetProgram = importJSFile(from: target)
+    targetProgram = importTarget(from: target)
 } else {
     emitError("Please provide a target file with --target=name")
 }
 
 let differentialTesting = args.has("--differential")
+let probe = args.has("--probe")
 
 let configuration = Configuration(logLevel: .warning)
 let runner = REPRL(executable: jsShellPath, processArguments: profile.processArgs(false, differentialTesting), processEnvironment: profile.processEnv, maxExecsBeforeRespawn: profile.maxExecsBeforeRespawn)
@@ -142,6 +176,11 @@ let fuzzer = Fuzzer(configuration: configuration,
                     queue: DispatchQueue.main)
 
 fuzzer.initialize()
+
+if probe && differentialTesting {
+    let b = fuzzer.makeBuilder()
+    targetProgram = b.probeEveryVars(from: targetProgram)
+}
 
 let script = lifter.lift(targetProgram)
 let execution = runner.run(script, withTimeout: 250)
