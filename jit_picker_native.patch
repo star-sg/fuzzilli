@@ -1,0 +1,281 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index 9a317ee3348..07b726e134f 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -428,6 +428,9 @@ declare_args() {
+   # Whether custom embedder snapshots may extend (= allocate new objects in)
+   # ReadOnlySpace.
+   v8_enable_extensible_ro_snapshot = true
++
++  # JIT picker
++  v8_jit_picker = false
+ }
+ 
+ # Derived defaults.
+@@ -1253,6 +1256,11 @@ config("features") {
+   if (v8_enable_local_off_stack_check) {
+     defines += [ "V8_ENABLE_LOCAL_OFF_STACK_CHECK" ]
+   }
++
++  if (v8_jit_picker) {
++    defines += [ "V8_FUZZILLI" ]
++    defines += [ "V8_JITPICKER" ]
++  }
+ }
+ 
+ config("toolchain") {
+@@ -1930,6 +1938,7 @@ torque_files = [
+   "src/builtins/frames.tq",
+   "src/builtins/frame-arguments.tq",
+   "src/builtins/function.tq",
++  "src/builtins/fuzzilli.tq",
+   "src/builtins/growable-fixed-array.tq",
+   "src/builtins/ic-callable.tq",
+   "src/builtins/ic.tq",
+diff --git a/src/compiler/typer.cc b/src/compiler/typer.cc
+index 9a346d134b9..2be54d6e21e 100644
+--- a/src/compiler/typer.cc
++++ b/src/compiler/typer.cc
+@@ -2032,6 +2032,10 @@ Type Typer::Visitor::JSCallTyper(Type fun, Typer* t) {
+     case Builtin::kWeakSetPrototypeDelete:
+     case Builtin::kWeakSetPrototypeHas:
+       return Type::Boolean();
++
++    case Builtin::kFuzzilliHash:
++      return Type::Undefined();
++
+     default:
+       return Type::NonInternal();
+   }
+diff --git a/src/d8/d8.cc b/src/d8/d8.cc
+index 715ee06c0d0..e97ac9c4c50 100644
+--- a/src/d8/d8.cc
++++ b/src/d8/d8.cc
+@@ -130,6 +130,9 @@ thread_local Worker* current_worker_ = nullptr;
+ 
+ #ifdef V8_FUZZILLI
+ bool fuzzilli_reprl = true;
++#ifdef V8_JITPICKER
++uint32_t execHash = 0;
++#endif
+ #else
+ bool fuzzilli_reprl = false;
+ #endif  // V8_FUZZILLI
+@@ -4127,6 +4130,9 @@ void Shell::RunShell(Isolate* isolate) {
+       success = ExecuteString(isolate, input, name, kReportExceptions,
+                               &global_result);
+       CHECK_EQ(success, !global_result.IsEmpty());
++#if defined(V8_JITPICKER) && defined(V8_FUZZILLI)
++      execHash = reinterpret_cast<i::Isolate*>(isolate)->native_context()->fuzzilli_hash().value();
++#endif
+     }
+     if (!FinishExecuting(isolate, context)) success = false;
+     if (success) {
+@@ -5216,6 +5222,7 @@ int Shell::RunMain(v8::Isolate* isolate, bool last_run) {
+     // reset this counter.
+     Shell::unhandled_promise_rejections_.store(0);
+   }
++
+   // In order to finish successfully, success must be != expected_to_throw.
+   if (Shell::options.no_fail) return 0;
+   // Fuzzers aren't expected to use --throws, but may pick it up from testcases.
+@@ -5958,6 +5965,7 @@ int Shell::Main(int argc, char* argv[]) {
+           FATAL("REPRL: Unknown action: %u", action);
+         }
+       }
++    i::FuzzilliExtension::execHash = 0;
+ #endif  // V8_FUZZILLI
+ 
+       result = 0;
+@@ -6095,13 +6103,28 @@ int Shell::Main(int argc, char* argv[]) {
+         // to be flushed after every execution
+         fflush(stdout);
+         fflush(stderr);
++#ifdef V8_JITPICKER
++        struct {
++            int status;
++            uint32_t execHash;
++            uint32_t execHashInputs;
++        } s;
++        s.status = status;
++        s.execHash = execHash;
++        s.execHashInputs = 0;  // execHashInputs not tracked for now
++        CHECK_EQ(write(REPRL_CWFD, &s, 12), 12);
++#else
+         CHECK_EQ(write(REPRL_CWFD, &status, 4), 4);
++#endif // V8_JITPICKER
+         sanitizer_cov_reset_edgeguards();
+         if (options.fuzzilli_enable_builtins_coverage) {
+           i::BasicBlockProfiler::Get()->ResetCounts(
+               reinterpret_cast<i::Isolate*>(isolate));
+         }
+       }
++#ifdef V8_JITPICKER
++        fprintf(stderr, "execHash is 0x%x\n", execHash);
++#endif // V8_JITPICKER
+ #endif  // V8_FUZZILLI
+     } while (fuzzilli_reprl);
+ 
+diff --git a/src/fuzzilli/fuzzilli.cc b/src/fuzzilli/fuzzilli.cc
+index 61f5e981ad1..32ef8aab9fc 100644
+--- a/src/fuzzilli/fuzzilli.cc
++++ b/src/fuzzilli/fuzzilli.cc
+@@ -4,6 +4,8 @@
+ 
+ #include "src/fuzzilli/fuzzilli.h"
+ 
++#include "src/api/api-inl.h"
++
+ #include "include/v8-extension.h"
+ #include "include/v8-primitive.h"
+ #include "include/v8-template.h"
+@@ -21,6 +23,8 @@
+ namespace v8 {
+ namespace internal {
+ 
++uint32_t FuzzilliExtension::execHash = 0;
++
+ v8::Local<v8::FunctionTemplate> FuzzilliExtension::GetNativeFunctionTemplate(
+     v8::Isolate* isolate, v8::Local<v8::String> str) {
+   return v8::FunctionTemplate::New(isolate, FuzzilliExtension::Fuzzilli);
+@@ -116,6 +120,41 @@ void FuzzilliExtension::Fuzzilli(const FunctionCallbackInfo<Value>& info) {
+     }
+     fprintf(fzliout, "%s\n", *string);
+     fflush(fzliout);
++  } else if (strcmp(*operation, "FUZZILLI_RANDOM") == 0) {
++    std::unique_ptr<base::RandomNumberGenerator> rng;
++    rng = std::make_unique<base::RandomNumberGenerator>();
++    double p = rng->NextDouble();
++    info.GetReturnValue().Set(v8::Number::New(info.GetIsolate(), p));
++  } else if (strcmp(*operation, "FUZZILLI_HASH") == 0) {
++      v8::Isolate* isolate = info.GetIsolate();
++      auto context = isolate->GetCurrentContext();
++      uint32_t cur_hash = execHash;
++
++      auto arg = info[1];
++
++      /*
++      auto obj = *Utils::OpenDirectHandle(*arg);
++      printf("[ DEBUG ] Object: 0x%lx\n", obj.ptr());
++      */
++
++      if (arg->IsNull()) cur_hash += 1;
++      else if (arg->IsTrue()) cur_hash += 2;
++      else if (arg->IsFalse()) cur_hash += 4;
++      else if (arg->IsUndefined()) cur_hash += 8;
++      else if (arg->IsString()) cur_hash += 16;
++      else if (arg->IsNumber()) {
++          cur_hash += 32;
++          double tmp = arg->NumberValue(context).FromMaybe(1.0);
++          uint32_t low, high;
++          memcpy(&low, &tmp, sizeof(uint32_t));
++          memcpy(&high, ((char*)&tmp) + sizeof(uint32_t), sizeof(uint32_t));
++          cur_hash += low;
++          cur_hash += high;
++      } else if (arg->IsObject()) cur_hash += 64;
++
++      cur_hash = (cur_hash << 30) | ((cur_hash >> 1) & 0x3FFFFFFF);
++      execHash = cur_hash;
++      printf("Hash: %u\n", execHash);
+   }
+ }
+ 
+diff --git a/src/fuzzilli/fuzzilli.h b/src/fuzzilli/fuzzilli.h
+index be88a3504f1..2e3376ce959 100644
+--- a/src/fuzzilli/fuzzilli.h
++++ b/src/fuzzilli/fuzzilli.h
+@@ -29,6 +29,8 @@ class FuzzilliExtension : public v8::Extension {
+       v8::Isolate* isolate, v8::Local<v8::String> name) override;
+   static void Fuzzilli(const v8::FunctionCallbackInfo<v8::Value>& info);
+ 
++  static uint32_t execHash;
++
+  private:
+   static const char* BuildSource(char* buf, size_t size, const char* fun_name) {
+     base::SNPrintF(base::Vector<char>(buf, static_cast<int>(size)),
+@@ -39,6 +41,16 @@ class FuzzilliExtension : public v8::Extension {
+   char buffer_[50];
+ };
+ 
++/*
++class FuzzilliHashExtension : public v8::Extension {
++public:
++    explicit FuzzilliHashExtension(const char* fun_name)
++        : v8::Extension("v8/fuzzilli_hash",
++                        BuildSource(buffer_, sizeof(buffer_), fun_name)) {}
++    v8::Local<v8::FunctionTemplate> GetNa
++};
++*/
++
+ }  // namespace internal
+ }  // namespace v8
+ 
+diff --git a/src/heap/factory.cc b/src/heap/factory.cc
+index 00c39d35b3d..ba7c35ca1cd 100644
+--- a/src/heap/factory.cc
++++ b/src/heap/factory.cc
+@@ -1292,6 +1292,9 @@ Handle<NativeContext> Factory::NewNativeContext() {
+   context->set_serialized_objects(*empty_fixed_array());
+   context->init_microtask_queue(isolate(), nullptr);
+   context->set_retained_maps(*empty_weak_array_list());
++#if defined(V8_JITPICKER) && defined(V8_FUZZILLI)
++  context->set_fuzzilli_hash(Smi::zero());
++#endif
+   return handle(context, isolate());
+ }
+ 
+diff --git a/src/init/bootstrapper.cc b/src/init/bootstrapper.cc
+index fffda5a44af..633413419f0 100644
+--- a/src/init/bootstrapper.cc
++++ b/src/init/bootstrapper.cc
+@@ -6011,6 +6011,11 @@ bool Genesis::InstallABunchOfRandomThings() {
+   InstallFunctionWithBuiltinId(isolate(), global_object, "unescape",
+                                Builtin::kGlobalUnescape, 1, false);
+ 
++#if defined(V8_JITPICKER) && defined(V8_FUZZILLI)
++  // Install Global.fuzzilli_hash
++  InstallFunctionWithBuiltinId(isolate(), global_object, "fuzzilli_hash", Builtin::kFuzzilliHash, 1, true);
++#endif
++
+   // Install Global.eval.
+   {
+     Handle<JSFunction> eval = SimpleInstallFunction(
+diff --git a/src/maglev/maglev-graph-builder.cc b/src/maglev/maglev-graph-builder.cc
+index e3986796d2f..fe5071b7dc1 100644
+--- a/src/maglev/maglev-graph-builder.cc
++++ b/src/maglev/maglev-graph-builder.cc
+@@ -2734,7 +2734,7 @@ ReduceResult MaglevGraphBuilder::TryBuildPropertyCellStore(
+       }
+       // Record a code dependency on the cell, and just deoptimize if the new
+       // value doesn't match the previous value stored inside the cell.
+-      broker()->dependencies()->DependOnGlobalProperty(property_cell);
++      // broker()->dependencies()->DependOnGlobalProperty(property_cell);
+       ValueNode* value = GetAccumulatorTagged();
+       return BuildCheckValue(value, property_cell_value);
+     }
+diff --git a/src/objects/contexts.h b/src/objects/contexts.h
+index fe13f57817d..929996e50bb 100644
+--- a/src/objects/contexts.h
++++ b/src/objects/contexts.h
+@@ -394,7 +394,8 @@ enum ContextLookupFlags {
+   V(WRAPPED_FUNCTION_MAP_INDEX, Map, wrapped_function_map)                     \
+   V(RETAINED_MAPS, Object, retained_maps)                                      \
+   V(SHARED_SPACE_JS_OBJECT_HAS_INSTANCE_INDEX, JSFunction,                     \
+-    shared_space_js_object_has_instance)
++    shared_space_js_object_has_instance)                                       \
++  V(FUZZILLI_HASH_INDEX, Smi, fuzzilli_hash)
+ 
+ #include "torque-generated/src/objects/contexts-tq.inc"
+ 
+diff --git a/src/objects/contexts.tq b/src/objects/contexts.tq
+index 37dc976f03d..2b5e6ffdfbb 100644
+--- a/src/objects/contexts.tq
++++ b/src/objects/contexts.tq
+@@ -183,6 +183,7 @@ extern enum ContextSlot extends intptr constexpr 'Context::Field' {
+   BOUND_FUNCTION_WITHOUT_CONSTRUCTOR_MAP_INDEX: Slot<NativeContext, Map>,
+ 
+   WRAPPED_FUNCTION_MAP_INDEX: Slot<NativeContext, Map>,
++  FUZZILLI_HASH_INDEX: Slot<NativeContext, Smi>,
+ 
+   @sameEnumValueAs(MIN_CONTEXT_SLOTS)
+   CONST_TRACKING_LET_SIDE_DATA_INDEX: Slot<Context, HeapObject>,
