@@ -100,6 +100,7 @@ Options:
     --differential              : If enabled, the fuzzer will use a differential testing on the provided input file
     --profile=name              : Select one of several preconfigured profiles.
                                   Available profiles: \(profiles.keys).
+    --minimize                 : If enabled, the fuzzer will minimize the input file
 """)
     exit(0)
 }
@@ -134,6 +135,7 @@ if let target = args["--target"] {
 
 let differentialTesting = args.has("--differential")
 let probe = args.has("--probe")
+let minimized = args.has("--minimize")
 
 let configuration = Configuration(logLevel: .warning)
 let runner = REPRL(executable: jsShellPath, processArguments: profile.processArgs(false, differentialTesting), processEnvironment: profile.processEnv, maxExecsBeforeRespawn: profile.maxExecsBeforeRespawn)
@@ -178,8 +180,49 @@ let fuzzer = Fuzzer(configuration: configuration,
 fuzzer.initialize()
 
 if probe && differentialTesting {
-    let b = fuzzer.makeBuilder()
-    targetProgram = b.probeEveryVars(from: targetProgram)
+    emitError("Option not supported: --probe")
+}
+
+func evaluate(with program: Program) -> Int {
+    let script = lifter.lift(program)
+    let execution = runner.run(script, withTimeout: 250)
+    let referenceExecution = referenceRunner!.run(script, withTimeout: 250)
+    if execution.outcome == referenceExecution.outcome && execution.outcome == .succeeded {
+        if execution.differentialResult != referenceExecution.differentialResult {
+            return 1
+        } else {
+            return 0
+        }
+    }
+    return -1
+}
+
+func getDocumentsDirectory() -> URL {
+    let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+    return paths[0]
+}
+
+if minimized {
+    var probe_num = fuzzer.makeBuilder().getNumberOfProbe(from: targetProgram)
+    var previous_program = Program()
+    while probe_num > 0 {
+        let b = fuzzer.makeBuilder()
+        previous_program = targetProgram
+        targetProgram = b.removeLastProbe(from: targetProgram)
+        let result = evaluate(with: targetProgram)
+        if result == 1 {
+            probe_num -= 1
+            continue
+        } else if result == 0 {
+            targetProgram = previous_program
+            let output = lifter.lift(targetProgram)
+            try output.write(to: URL(fileURLWithPath: "/tmp/minimized.js"), atomically: true, encoding: String.Encoding.utf8)
+            break
+        } else {
+            print("Reference execution failed")
+            break
+        }
+    }
 }
 
 let script = lifter.lift(targetProgram)

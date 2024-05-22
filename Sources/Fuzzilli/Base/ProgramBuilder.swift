@@ -179,6 +179,58 @@ public class ProgramBuilder {
         probesWeaved = 0
     }
 
+    public func removeLastProbe(from program: Program) -> Program {
+        append(program)
+        var newCode = Code()
+        var found = -1
+        for instr in code {
+            if let _ = instr.op as? DifferentialHash {
+                found = instr.index
+            }
+        }
+
+        for instr in code {
+            if instr.index != found {
+                newCode.append(instr)
+            }
+        }
+
+        newCode.removeNops()
+        code = newCode
+        return finalize()
+    }
+
+    public func removeAllProbeExcept(at index: Int, from program: Program) -> Program {
+        append(program)
+        var newCode = Code()
+        var i = 0
+        for instr in code {
+            if let _ = instr.op as? DifferentialHash {
+                if i == index {
+                    newCode.append(instr)
+                }
+                i += 1
+            } else {
+                newCode.append(instr)
+            }
+        }
+
+        newCode.removeNops()
+        code = newCode
+        return finalize()
+    }
+
+    public func getNumberOfProbe(from program: Program) -> Int {
+        append(program)
+        var result = 0
+        for instr in code {
+            if let _ = instr.op as? DifferentialHash {
+                result += 1
+            }
+        }
+        return result
+    }
+
     public func probeEveryVars(from program: Program) -> Program {
         append(program)
         appendDifferentialProbes(with: 1.0)
