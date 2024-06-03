@@ -303,13 +303,6 @@ public class ProgramBuilder {
             appendDifferentialProbes(with: fuzzer.config.differentialRate)
         }
 
-        /*
-        print("Dumped progam:")
-        code.enumerated().forEach { instr in
-            print("\(instr.offset): \(instr.element)")
-        }
-        */
-
         let program = Program(code: code, parent: parent, comments: comments, contributors: contributors)
         reset()
         return program

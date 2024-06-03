@@ -59,6 +59,10 @@ public class FixupMutator: RuntimeAssistedMutator {
     }
 
     override func instrument(_ program: Program, for fuzzer: Fuzzer) -> Program? {
+        if fuzzer.config.differentialRate > 0.0 {
+            return nil
+        }
+
         let b = fuzzer.makeBuilder()
 
         // Helper functions to emit the Fixup operations.

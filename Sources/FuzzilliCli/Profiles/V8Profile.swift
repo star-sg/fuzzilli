@@ -581,7 +581,7 @@ let v8Profile = Profile(
     // We typically fuzz without any sanitizer instrumentation, but if any sanitizers are active, "abort_on_error=1" must probably be set so that sanitizer errors can be detected.
     processEnv: [:],
 
-    maxExecsBeforeRespawn: 1000,
+    maxExecsBeforeRespawn: 0,
 
     timeout: 250,
 
