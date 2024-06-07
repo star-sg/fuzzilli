@@ -23,6 +23,23 @@ fileprivate let ForceJITCompilationThroughLoopGenerator = CodeGenerator("ForceJI
     }
 }
 
+fileprivate let ForceOSRThroughLoopGenerator = RecursiveCodeGenerator("ForceOSRThroughLoopGenerator") { b in
+    let numIterations = 100
+    b.buildRepeatLoop(n: numIterations) { i in
+        b.buildRecursive()
+        let selectedIteration = withEqualProbability({
+            assert(numIterations > 10)
+            return Int.random(in: (numIterations - 10)..<numIterations)
+        }, {
+            return Int.random(in: 0..<numIterations)
+        })
+        let cond = b.compare(i, with: b.loadInt(Int64(selectedIteration)), using: .equal)
+        b.buildIf(cond) {
+            b.eval("%OptimizeOsr()")
+        }
+    }
+}
+
 fileprivate let ForceTurboFanCompilationGenerator = CodeGenerator("ForceTurboFanCompilationGenerator", inputs: .required(.function())) { b, f in
     assert(b.type(of: f).Is(.function()))
     let arguments = b.randomArguments(forCalling: f)
@@ -618,13 +635,14 @@ let v8Profile = Profile(
     differentialPoison: ["Aborting on "],
 
     additionalCodeGenerators: [
-        (ForceJITCompilationThroughLoopGenerator, 50),
-        (ForceTurboFanCompilationGenerator,       50),
+        // (ForceJITCompilationThroughLoopGenerator, 50),
+        // (ForceTurboFanCompilationGenerator,       50),
         (ForceMaglevCompilationGenerator,         50),
-        (TurbofanVerifyTypeGenerator,             50),
+        // (TurbofanVerifyTypeGenerator,             50),
 
         // (WorkerGenerator,                         10),
         (GcGenerator,                             10),
+        (ForceOSRThroughLoopGenerator,            10),
     ],
 
     additionalProgramTemplates: WeightedList<ProgramTemplate>([
