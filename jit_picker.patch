@@ -1,42 +1,33 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 9a317ee3348..5259ff2af66 100644
+index 4e429908762..ce1a66eeacc 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -428,6 +428,9 @@ declare_args() {
-   # Whether custom embedder snapshots may extend (= allocate new objects in)
-   # ReadOnlySpace.
-   v8_enable_extensible_ro_snapshot = true
-+
-+  # JIT picker
-+  v8_jit_picker = false
- }
+@@ -25,6 +25,8 @@ target_is_simulator = (target_cpu != v8_target_cpu && !v8_multi_arch_build) ||
+ emit_builtins_as_inline_asm = is_win && is_clang
  
- # Derived defaults.
-@@ -1253,6 +1256,11 @@ config("features") {
-   if (v8_enable_local_off_stack_check) {
-     defines += [ "V8_ENABLE_LOCAL_OFF_STACK_CHECK" ]
-   }
+ declare_args() {
++  v8_jit_picker = false
 +
+   # Print to stdout on Android.
+   v8_android_log_stdout = false
+ 
+@@ -1048,6 +1050,11 @@ config("features") {
+     ":cppgc_header_features",
+   ]
+ 
 +  if (v8_jit_picker) {
 +    defines += [ "V8_FUZZILLI" ]
 +    defines += [ "V8_JITPICKER" ]
 +  }
- }
- 
- config("toolchain") {
++
+   if (cppgc_enable_verify_heap) {
+     defines += [ "CPPGC_VERIFY_HEAP" ]
+   }
 diff --git a/src/d8/d8.cc b/src/d8/d8.cc
-index 715ee06c0d0..3ba27b894d5 100644
+index ce1e6e7c741..ecc0f078e33 100644
 --- a/src/d8/d8.cc
 +++ b/src/d8/d8.cc
-@@ -5216,6 +5216,7 @@ int Shell::RunMain(v8::Isolate* isolate, bool last_run) {
-     // reset this counter.
-     Shell::unhandled_promise_rejections_.store(0);
-   }
-+
-   // In order to finish successfully, success must be != expected_to_throw.
-   if (Shell::options.no_fail) return 0;
-   // Fuzzers aren't expected to use --throws, but may pick it up from testcases.
-@@ -6095,12 +6096,28 @@ int Shell::Main(int argc, char* argv[]) {
+@@ -6159,7 +6159,20 @@ int Shell::Main(int argc, char* argv[]) {
          // to be flushed after every execution
          fflush(stdout);
          fflush(stderr);
@@ -57,19 +48,19 @@ index 715ee06c0d0..3ba27b894d5 100644
          sanitizer_cov_reset_edgeguards();
          if (options.fuzzilli_enable_builtins_coverage) {
            i::BasicBlockProfiler::Get()->ResetCounts(
-               reinterpret_cast<i::Isolate*>(isolate));
-         }
-+#ifdef V8_JITPICKER
-+        fprintf(stderr, "execHash is 0x%x\n", i::FuzzilliExtension::execHash);
-+#endif // V8_JITPICKER
-       }
- #endif  // V8_FUZZILLI
-     } while (fuzzilli_reprl);
 diff --git a/src/fuzzilli/fuzzilli.cc b/src/fuzzilli/fuzzilli.cc
-index 61f5e981ad1..13b4b935ae4 100644
+index 1eef8d15f22..29881388136 100644
 --- a/src/fuzzilli/fuzzilli.cc
 +++ b/src/fuzzilli/fuzzilli.cc
-@@ -21,6 +21,8 @@
+@@ -12,6 +12,7 @@
+ #include "src/execution/isolate.h"
+ #include "src/fuzzilli/cov.h"
+ #include "src/sandbox/sandbox.h"
++#include "v8-object.h"
+ #include "src/sandbox/testing.h"
+ 
+ #ifdef V8_OS_LINUX
+@@ -22,6 +23,8 @@
  namespace v8 {
  namespace internal {
  
@@ -78,7 +69,7 @@ index 61f5e981ad1..13b4b935ae4 100644
  v8::Local<v8::FunctionTemplate> FuzzilliExtension::GetNativeFunctionTemplate(
      v8::Isolate* isolate, v8::Local<v8::String> str) {
    return v8::FunctionTemplate::New(isolate, FuzzilliExtension::Fuzzilli);
-@@ -116,6 +118,36 @@ void FuzzilliExtension::Fuzzilli(const FunctionCallbackInfo<Value>& info) {
+@@ -127,6 +130,39 @@ void FuzzilliExtension::Fuzzilli(const FunctionCallbackInfo<Value>& info) {
      }
      fprintf(fzliout, "%s\n", *string);
      fflush(fzliout);
@@ -102,6 +93,8 @@ index 61f5e981ad1..13b4b935ae4 100644
 +      else if (arg->IsNumber()) {
 +          cur_hash += 32;
 +          double tmp = arg->NumberValue(context).FromMaybe(1.0);
++          if (std::isnan(tmp)) tmp = 1.0;
++          if (std::isinf(tmp)) tmp = 1.0;
 +          uint32_t low, high;
 +          memcpy(&low, &tmp, sizeof(uint32_t));
 +          memcpy(&high, ((char*)&tmp) + sizeof(uint32_t), sizeof(uint32_t));
@@ -111,12 +104,13 @@ index 61f5e981ad1..13b4b935ae4 100644
 +
 +      cur_hash = (cur_hash << 30) | ((cur_hash >> 1) & 0x3FFFFFFF);
 +      execHash = cur_hash;
-+      printf("Hash: %u\n", cur_hash);
++
++      fprintf(stderr, "Hash: %u\n", cur_hash);
    }
  }
  
 diff --git a/src/fuzzilli/fuzzilli.h b/src/fuzzilli/fuzzilli.h
-index be88a3504f1..2e3376ce959 100644
+index be88a3504f1..78e7a99dfbc 100644
 --- a/src/fuzzilli/fuzzilli.h
 +++ b/src/fuzzilli/fuzzilli.h
 @@ -29,6 +29,8 @@ class FuzzilliExtension : public v8::Extension {
@@ -128,36 +122,3 @@ index be88a3504f1..2e3376ce959 100644
   private:
    static const char* BuildSource(char* buf, size_t size, const char* fun_name) {
      base::SNPrintF(base::Vector<char>(buf, static_cast<int>(size)),
-@@ -39,6 +41,16 @@ class FuzzilliExtension : public v8::Extension {
-   char buffer_[50];
- };
- 
-+/*
-+class FuzzilliHashExtension : public v8::Extension {
-+public:
-+    explicit FuzzilliHashExtension(const char* fun_name)
-+        : v8::Extension("v8/fuzzilli_hash",
-+                        BuildSource(buffer_, sizeof(buffer_), fun_name)) {}
-+    v8::Local<v8::FunctionTemplate> GetNa
-+};
-+*/
-+
- }  // namespace internal
- }  // namespace v8
- 
-diff --git a/src/init/bootstrapper.cc b/src/init/bootstrapper.cc
-index fffda5a44af..267e1a192dc 100644
---- a/src/init/bootstrapper.cc
-+++ b/src/init/bootstrapper.cc
-@@ -158,6 +158,11 @@ void Bootstrapper::InitializeOncePerProcess() {
-   v8::RegisterExtension(std::make_unique<GCExtension>(GCFunctionName()));
- #ifdef V8_FUZZILLI
-   v8::RegisterExtension(std::make_unique<FuzzilliExtension>("fuzzilli"));
-+/*
-+#ifdef V8_JITPICKER
-+  v8::RegisterExtension(std::make_unique<FuzzilliExtension>("fuzzilli_hash"));
-+#endif // V8_JITPICKER
-+*/
- #endif
-   v8::RegisterExtension(std::make_unique<ExternalizeStringExtension>());
-   v8::RegisterExtension(std::make_unique<StatisticsExtension>());

@@ -237,12 +237,36 @@ public class ProgramBuilder {
         return finalize()
     }
 
+    public func insertProbe(after index: Int, from program: Program) -> Program {
+        append(program)
+        var newCode = Code()
+        var variableAnalyzer = VariableAnalyzer()
+
+        var i = 0
+        for instr in code {
+            variableAnalyzer.analyze(instr)
+            newCode.append(instr)
+
+            if i == index {
+                let v = findVariable(with: variableAnalyzer)!
+                newCode.append(Instruction(DifferentialHash(allowInnerScope: false), inouts: [v]))
+            }
+            i += 1
+        }
+
+        newCode.removeNops()
+        code = newCode
+
+        return finalize()
+    }
+
     private func appendDifferentialProbes(with differentialRate: Double) {
         var alreadyProbed = 0
         var probableLocations: [Int] = []
 
         var variableAnalyzer = VariableAnalyzer()
         var contextAnalyzer = ContextAnalyzer()
+
         for instr in code {
             variableAnalyzer.analyze(instr)
             contextAnalyzer.analyze(instr)

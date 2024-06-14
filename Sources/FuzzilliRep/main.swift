@@ -179,10 +179,6 @@ let fuzzer = Fuzzer(configuration: configuration,
 
 fuzzer.initialize()
 
-if probe && differentialTesting {
-    emitError("Option not supported: --probe")
-}
-
 func evaluate(with program: Program) -> Int {
     let script = lifter.lift(program)
     let execution = runner.run(script, withTimeout: 250)
@@ -223,6 +219,16 @@ if minimized {
             break
         }
     }
+}
+
+if probe {
+    emitError("Option not supported: --probe")
+    /*
+    let builder = fuzzer.makeBuilder()
+    targetProgram = builder.insertProbe(after: 3, from: targetProgram)
+    let output = lifter.lift(targetProgram)
+    try output.write(to: URL(fileURLWithPath: "/tmp/probe.js"), atomically: true, encoding: String.Encoding.utf8)
+    */
 }
 
 let script = lifter.lift(targetProgram)
