@@ -365,9 +365,9 @@ void reprl_destroy_context(struct reprl_context* ctx)
     free(ctx);
 }
 
-int reprl_execute(struct reprl_context* ctx, const char* script, uint64_t script_length, uint64_t timeout, uint64_t* execution_time, int fresh_instance, uint32_t* execHash, uint32_t* nInputs)
+int reprl_execute(struct reprl_context* ctx, const char* script, uint64_t script_length, uint64_t timeout, uint64_t* execution_time, int fresh_instance, uint64_t* execHash, uint32_t* nInputs)
 {
-    *execHash = 0;
+    *execHash = 0UL;
     *nInputs = 0;
 
     if (!ctx->initialized) {
@@ -441,16 +441,16 @@ int reprl_execute(struct reprl_context* ctx, const char* script, uint64_t script
     // Poll succeeded, so there must be something to read now (either the status or EOF).
     struct {
         int status;
-        uint32_t execHash;
+        uint64_t execHash;
         uint32_t execHashInputs;
     } s;
-    ssize_t rv = read(ctx->ctrl_in, &s, 12);
+    ssize_t rv = read(ctx->ctrl_in, &s, 16);
 
     int status;
     // ssize_t rv = read(ctx->ctrl_in, &status, 4);
     if (rv < 0) {
         return reprl_error(ctx, "Failed to read from control pipe: %s", strerror(errno));
-    } else if (rv != 12) {
+    } else if (rv != 16) {
         // Most likely, the child process crashed and closed the write end of the control pipe.
         // Unfortunately, there probably is nothing that guarantees that waitpid() will immediately succeed now,
         // and we also don't want to block here. So just retry waitpid() a few times...

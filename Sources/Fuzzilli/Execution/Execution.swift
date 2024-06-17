@@ -59,7 +59,7 @@ public protocol Execution {
     /// A serialized version of (some of) the programs variables after
     /// execution is finished. Might be empty if the result was not requested
     /// or could not be computed.
-    var differentialResult: Int { get }
+    var differentialResult: UInt64 { get }
 
     var differentialResultInputs: Int { get }
 }

@@ -1,5 +1,5 @@
 diff --git a/BUILD.gn b/BUILD.gn
-index 4e429908762..ce1a66eeacc 100644
+index 53deca5f475..59f96e26437 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -25,6 +25,8 @@ target_is_simulator = (target_cpu != v8_target_cpu && !v8_multi_arch_build) ||
@@ -11,7 +11,7 @@ index 4e429908762..ce1a66eeacc 100644
    # Print to stdout on Android.
    v8_android_log_stdout = false
  
-@@ -1048,6 +1050,11 @@ config("features") {
+@@ -1052,6 +1054,11 @@ config("features") {
      ":cppgc_header_features",
    ]
  
@@ -23,25 +23,46 @@ index 4e429908762..ce1a66eeacc 100644
    if (cppgc_enable_verify_heap) {
      defines += [ "CPPGC_VERIFY_HEAP" ]
    }
+@@ -1289,6 +1296,12 @@ config("features") {
+   if (v8_enable_local_off_stack_check) {
+     defines += [ "V8_ENABLE_LOCAL_OFF_STACK_CHECK" ]
+   }
++
++  if (v8_jit_picker) {
++    defines += [ "V8_FUZZILLI" ]
++    defines += [ "V8_JITPICKER" ]
++  }
++
+   if (v8_enable_sticky_mark_bits) {
+     defines += [ "V8_ENABLE_STICKY_MARK_BITS" ]
+   }
 diff --git a/src/d8/d8.cc b/src/d8/d8.cc
-index ce1e6e7c741..ecc0f078e33 100644
+index 155df577651..4b819bfc284 100644
 --- a/src/d8/d8.cc
 +++ b/src/d8/d8.cc
-@@ -6159,7 +6159,20 @@ int Shell::Main(int argc, char* argv[]) {
+@@ -5322,6 +5322,7 @@ int Shell::RunMain(v8::Isolate* isolate, bool last_run) {
+     // reset this counter.
+     Shell::unhandled_promise_rejections_.store(0);
+   }
++
+   // In order to finish successfully, success must be != expected_to_throw.
+   if (Shell::options.no_fail) return 0;
+   // Fuzzers aren't expected to use --throws, but may pick it up from testcases.
+@@ -6195,7 +6196,20 @@ int Shell::Main(int argc, char* argv[]) {
          // to be flushed after every execution
          fflush(stdout);
          fflush(stderr);
 +#ifdef V8_JITPICKER
 +        struct {
 +            int status;
-+            uint32_t execHash;
++            uint64_t execHash;
 +            uint32_t execHashInputs;
 +        } s;
 +        s.status = status;
 +        s.execHash = i::FuzzilliExtension::execHash;
 +        s.execHashInputs = 0;  // execHashInputs not tracked for now
 +        i::FuzzilliExtension::execHash = 0;
-+        CHECK_EQ(write(REPRL_CWFD, &s, 12), 12);
++        CHECK_EQ(write(REPRL_CWFD, &s, 16), 16);
 +#else
          CHECK_EQ(write(REPRL_CWFD, &status, 4), 4);
 +#endif // V8_JITPICKER
@@ -49,7 +70,7 @@ index ce1e6e7c741..ecc0f078e33 100644
          if (options.fuzzilli_enable_builtins_coverage) {
            i::BasicBlockProfiler::Get()->ResetCounts(
 diff --git a/src/fuzzilli/fuzzilli.cc b/src/fuzzilli/fuzzilli.cc
-index 1eef8d15f22..29881388136 100644
+index 6efb511cee5..bb00bd43395 100644
 --- a/src/fuzzilli/fuzzilli.cc
 +++ b/src/fuzzilli/fuzzilli.cc
 @@ -12,6 +12,7 @@
@@ -64,12 +85,12 @@ index 1eef8d15f22..29881388136 100644
  namespace v8 {
  namespace internal {
  
-+uint32_t FuzzilliExtension::execHash = 0;
++uint64_t FuzzilliExtension::execHash = 0;
 +
  v8::Local<v8::FunctionTemplate> FuzzilliExtension::GetNativeFunctionTemplate(
      v8::Isolate* isolate, v8::Local<v8::String> str) {
    return v8::FunctionTemplate::New(isolate, FuzzilliExtension::Fuzzilli);
-@@ -127,6 +130,39 @@ void FuzzilliExtension::Fuzzilli(const FunctionCallbackInfo<Value>& info) {
+@@ -136,6 +139,25 @@ void FuzzilliExtension::Fuzzilli(const FunctionCallbackInfo<Value>& info) {
      }
      fprintf(fzliout, "%s\n", *string);
      fflush(fzliout);
@@ -81,43 +102,144 @@ index 1eef8d15f22..29881388136 100644
 +  } else if (strcmp(*operation, "FUZZILLI_HASH") == 0) {
 +      v8::Isolate* isolate = info.GetIsolate();
 +      auto context = isolate->GetCurrentContext();
-+      uint32_t cur_hash = execHash;
 +
 +      auto arg = info[1];
++      DifferentialObject obj;
++      memset(&obj, 0, sizeof(obj));
++      convertToDifferentialObject(context, arg, obj);
++      if (getenv("FUZZILLI_DEBUG_HASH"))
++          printf("Type: %d\nBool: %d\nInstance type: %d\nElement length: %d\nProperty array length: %d\nNumber of own descriptors: %d\n", obj.type, obj.bool_value, obj.object_value.instance_type, obj.object_value.element_length, obj.object_value.property_array_length, obj.object_value.numberOfOwnDescriptors);
++      update_hash(obj);
 +
-+      if (arg->IsNull()) cur_hash += 1;
-+      else if (arg->IsTrue()) cur_hash += 2;
-+      else if (arg->IsFalse()) cur_hash += 4;
-+      else if (arg->IsUndefined()) cur_hash += 8;
-+      else if (arg->IsString()) cur_hash += 16;
-+      else if (arg->IsNumber()) {
-+          cur_hash += 32;
-+          double tmp = arg->NumberValue(context).FromMaybe(1.0);
-+          if (std::isnan(tmp)) tmp = 1.0;
-+          if (std::isinf(tmp)) tmp = 1.0;
-+          uint32_t low, high;
-+          memcpy(&low, &tmp, sizeof(uint32_t));
-+          memcpy(&high, ((char*)&tmp) + sizeof(uint32_t), sizeof(uint32_t));
-+          cur_hash += low;
-+          cur_hash += high;
-+      } else if (arg->IsObject()) cur_hash += 64;
-+
-+      cur_hash = (cur_hash << 30) | ((cur_hash >> 1) & 0x3FFFFFFF);
-+      execHash = cur_hash;
-+
-+      fprintf(stderr, "Hash: %u\n", cur_hash);
++      if (getenv("FUZZILLI_DEBUG_HASH"))
++          printf("Hash: %lu\n", execHash);
    }
  }
  
 diff --git a/src/fuzzilli/fuzzilli.h b/src/fuzzilli/fuzzilli.h
-index be88a3504f1..78e7a99dfbc 100644
+index be88a3504f1..cefc0d81714 100644
 --- a/src/fuzzilli/fuzzilli.h
 +++ b/src/fuzzilli/fuzzilli.h
-@@ -29,6 +29,8 @@ class FuzzilliExtension : public v8::Extension {
+@@ -8,6 +8,12 @@
+ #include "include/v8-extension.h"
+ #include "include/v8-local-handle.h"
+ #include "src/base/strings.h"
++#include "src/objects/heap-object.h"
++#include "src/objects/instance-type.h"
++#include "src/objects/js-objects.h"
++#include "src/objects/map.h"
++#include "src/objects/objects.h"
++#include "src/objects/js-array-buffer.h"
+ 
+ // REPRL = read-eval-print-reset-loop
+ // These file descriptors are being opened when Fuzzilli uses fork & execve to
+@@ -17,6 +23,28 @@
+ #define REPRL_DRFD 102  // Data read file decriptor
+ #define REPRL_DWFD 103  // Data write file decriptor
+ 
++enum InspectType {
++    kInvalid,
++    kBoolean,
++    kString,
++    kNumber,
++    kObject,
++};
++
++struct DifferentialObject {
++    InspectType type : 3;
++    bool bool_value : 1;
++    union {
++        struct {
++            uint16_t instance_type : 16;
++            uint16_t element_length : 16;
++            uint16_t property_array_length : 16;
++            uint16_t numberOfOwnDescriptors : 16;
++        } object_value;
++        uint64_t double_value : 64;
++    };
++};
++
+ namespace v8 {
+ namespace internal {
+ 
+@@ -29,6 +57,81 @@ class FuzzilliExtension : public v8::Extension {
        v8::Isolate* isolate, v8::Local<v8::String> name) override;
    static void Fuzzilli(const v8::FunctionCallbackInfo<v8::Value>& info);
  
-+  static uint32_t execHash;
++  static uint64_t execHash;
++
++  static void update_hash(DifferentialObject& o) {
++    std::size_t hash_header = (o.type << 3) + o.bool_value;
++    execHash ^= hash_header + 0x9e3779b9 + (execHash << 6) + (execHash >> 2);
++    std::size_t hash_data = std::hash<uint64_t>{}(o.double_value);
++    execHash ^= hash_data + 0x9e3779b9 + (execHash << 6) + (execHash >> 2);
++  }
++
++  static void convertToDifferentialObject(v8::Local<v8::Context>& context, const v8::Local<v8::Value>& value, DifferentialObject& obj) {
++    if (value->IsUndefined() || value->IsNull()) {
++      obj.type = InspectType::kInvalid;
++      obj.bool_value = value->IsNull();
++    } else if (value->IsBoolean()) {
++      obj.type = InspectType::kBoolean;
++      obj.bool_value = value->IsTrue();
++    } else if (value->IsString()) {
++      obj.type = InspectType::kString;
++      obj.bool_value = true;
++    } else if (value->IsNumber()) {
++      obj.type = InspectType::kNumber;
++      double tmp = value->NumberValue(context).FromMaybe(1.0);
++      if (std::isnan(tmp)) tmp = 1.0;
++      if (std::isinf(tmp)) tmp = 1.0;
++      uint32_t low, high;
++      memcpy(&low, &tmp, sizeof(uint32_t));
++      memcpy(&high, ((char*)&tmp) + sizeof(uint32_t), sizeof(uint32_t));
++      obj.double_value = low | ((uint64_t)high << 32UL);
++    } else if (value->IsObject()) {
++      obj.type = InspectType::kObject;
++      auto heap_object = v8::Local<v8::internal::HeapObject>::Cast(value->ToObject(context).ToLocalChecked());
++
++      auto map = heap_object->map();
++      auto instance_type = map->instance_type();
++      auto is_stable = map->is_stable();
++      obj.object_value.instance_type = instance_type;
++      obj.bool_value = is_stable;
++
++      switch (instance_type) {
++        case v8::internal::JS_API_OBJECT_TYPE:
++        case v8::internal::JS_ARRAY_ITERATOR_PROTOTYPE_TYPE:
++        case v8::internal::JS_CONTEXT_EXTENSION_OBJECT_TYPE:
++        case v8::internal::JS_ERROR_TYPE:
++        case v8::internal::JS_ITERATOR_PROTOTYPE_TYPE:
++        case v8::internal::JS_MAP_ITERATOR_PROTOTYPE_TYPE:
++        case v8::internal::JS_OBJECT_PROTOTYPE_TYPE:
++        case v8::internal::JS_PROMISE_PROTOTYPE_TYPE:
++        case v8::internal::JS_REG_EXP_PROTOTYPE_TYPE:
++        case v8::internal::JS_SET_ITERATOR_PROTOTYPE_TYPE:
++        case v8::internal::JS_SET_PROTOTYPE_TYPE:
++        case v8::internal::JS_SPECIAL_API_OBJECT_TYPE:
++        case v8::internal::JS_STRING_ITERATOR_PROTOTYPE_TYPE:
++        case v8::internal::JS_TYPED_ARRAY_PROTOTYPE_TYPE: {
++          auto js_object = v8::Local<v8::internal::JSObject>::Cast(heap_object);
++          obj.object_value.numberOfOwnDescriptors = map->NumberOfOwnDescriptors();
++          auto property_array_length = 0;
++
++          auto properties_or_hash = js_object->raw_properties_or_hash(v8::kRelaxedLoad);
++          if (!v8::internal::IsSmi(properties_or_hash)) {
++            if (is_stable && v8::internal::IsPropertyArray(properties_or_hash)) {
++              auto propertyArray = properties_or_hash.cast<v8::internal::PropertyArray>();
++              property_array_length = propertyArray->length();
++            }
++          }
++          obj.object_value.property_array_length = property_array_length;
++          obj.object_value.element_length = v8::internal::IsJSTypedArray(js_object->GetHeapObject()) ?
++                                              js_object->GetHeapObject()->cast<v8::internal::JSTypedArray>()->GetLength() : js_object->elements()->length();
++          break;
++        }
++        default:
++          break;
++        }
++      }
++    }
 +
   private:
    static const char* BuildSource(char* buf, size_t size, const char* fun_name) {

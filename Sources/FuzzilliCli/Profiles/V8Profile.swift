@@ -579,6 +579,7 @@ let v8Profile = Profile(
     },
 
     processArgumentsReference: [
+        "--omit-quit",
         "--no-sparkplug",
         "--no-turbofan",
         "--no-turboshaft",

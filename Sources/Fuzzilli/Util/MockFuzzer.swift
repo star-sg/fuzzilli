@@ -22,7 +22,7 @@ struct MockExecution: Execution {
     let stderr: String
     let fuzzout: String
     var execTime: TimeInterval
-    let differentialResult: Int
+    let differentialResult: UInt64
     let differentialResultInputs: Int
 }
 
