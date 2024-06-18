@@ -14,6 +14,15 @@
 
 import Fuzzilli
 
+var wasm_path = "/home/me/Projects/JSEngines/v8"
+
+fileprivate let WasmArrayGenerator = ValueGenerator("WasmArrayGenerator") { b, n in
+    let wasm = b.loadBuiltin("wasm")
+    for _ in 0..<n {
+        b.callMethod("create_array", on: wasm, withArgs: [b.loadInt(Int64.random(in: 0..<100))])
+    }
+}
+
 fileprivate let ForceJITCompilationThroughLoopGenerator = CodeGenerator("ForceJITCompilationThroughLoopGenerator", inputs: .required(.function())) { b, f in
     assert(b.type(of: f).Is(.function()))
     let arguments = b.randomArguments(forCalling: f)
@@ -591,7 +600,6 @@ let v8Profile = Profile(
         "--harmony-rab-gsab",
         "--allow-natives-syntax",
         "--interrupt-budget=1024",
-        "--jitless",
         "--predictable",
         "--correctness-fuzzer-suppressions",
         "--fuzzing"],
@@ -604,6 +612,21 @@ let v8Profile = Profile(
     timeout: 250,
 
     codePrefix: """
+                load('\(wasm_path)/test/mjsunit/wasm/wasm-module-builder.js');
+                let builder = new WasmModuleBuilder();
+
+                let array_type = builder.addArray(kWasmI32, true);
+                builder.addFunction('create_array', makeSig([kWasmI32], [wasmRefType(array_type)]))
+                    .addBody([
+                        kExprLocalGet, 0,
+                        kGCPrefix, kExprArrayNewDefault, array_type,
+                    ])
+                .exportFunc();
+
+                let wasm_instance = builder.instantiate({});
+                let wasm = wasm_instance.exports;
+
+                // BEGIN FUZZILLI CODE
                 """,
 
     codeSuffix: """
@@ -644,6 +667,7 @@ let v8Profile = Profile(
         // (WorkerGenerator,                         10),
         (GcGenerator,                             10),
         (ForceOSRThroughLoopGenerator,            10),
+        (WasmArrayGenerator,                      10),
     ],
 
     additionalProgramTemplates: WeightedList<ProgramTemplate>([
@@ -657,6 +681,7 @@ let v8Profile = Profile(
     disabledMutators: ["ExplorationMutator"],
 
     additionalBuiltins: [
+        "wasm"                                          : .object(),
         "gc"                                            : .function([] => (.undefined | .jsPromise)),
         "d8"                                            : .object(),
         // "Worker"                                        : .constructor([.anything, .object()] => .object(withMethods: ["postMessage","getMessage"])),
