@@ -13,14 +13,31 @@
 // limitations under the License.
 
 import Fuzzilli
+import Foundation
 
 var wasm_path = "/home/me/Projects/JSEngines/v8"
 
-fileprivate let WasmArrayGenerator = ValueGenerator("WasmArrayGenerator") { b, n in
-    let wasm = b.loadBuiltin("wasm")
-    for _ in 0..<n {
-        b.callMethod("create_array", on: wasm, withArgs: [b.loadInt(Int64.random(in: 0..<100))])
+fileprivate let WasmObjectFuzzer = ProgramTemplate("WasmObjectFuzzer") { b in
+
+    /*
+    let WasmArrayGenerator = ValueGenerator("WasmArrayGenerator") { b, n in
+        let wasm = b.loadBuiltin("wasm")
+        for _ in 0..<n {
+            b.callMethod("create_array", on: wasm, withArgs: [b.loadInt(Int64.random(in: 0..<100))])
+        }
     }
+
+    let loadModule = b.loadBuiltin("load")
+    b.callFunction(loadModule, withArgs: [b.loadString("\(wasm_path)/test/mjsunit/wasm/wasm-module-builder.js")])
+
+    var newCodeGenerators = fuzzer.codeGenerators
+    newCodeGenerators.append(WasmArrayGenerator, withWeight: 10)
+
+
+
+    let prevCodeGenerators = newCodeGenerators.dropLast()
+    fuzzer.setCodeGenerators(prevCodeGenerators)
+    */
 }
 
 fileprivate let ForceJITCompilationThroughLoopGenerator = CodeGenerator("ForceJITCompilationThroughLoopGenerator", inputs: .required(.function())) { b, f in
@@ -602,7 +619,8 @@ let v8Profile = Profile(
         "--interrupt-budget=1024",
         "--predictable",
         "--correctness-fuzzer-suppressions",
-        "--fuzzing"],
+        "--fuzzing",
+        "--jit-fuzzing"],
 
     // We typically fuzz without any sanitizer instrumentation, but if any sanitizers are active, "abort_on_error=1" must probably be set so that sanitizer errors can be detected.
     processEnv: [:],
@@ -612,21 +630,6 @@ let v8Profile = Profile(
     timeout: 250,
 
     codePrefix: """
-                load('\(wasm_path)/test/mjsunit/wasm/wasm-module-builder.js');
-                let builder = new WasmModuleBuilder();
-
-                let array_type = builder.addArray(kWasmI32, true);
-                builder.addFunction('create_array', makeSig([kWasmI32], [wasmRefType(array_type)]))
-                    .addBody([
-                        kExprLocalGet, 0,
-                        kGCPrefix, kExprArrayNewDefault, array_type,
-                    ])
-                .exportFunc();
-
-                let wasm_instance = builder.instantiate({});
-                let wasm = wasm_instance.exports;
-
-                // BEGIN FUZZILLI CODE
                 """,
 
     codeSuffix: """
@@ -665,15 +668,15 @@ let v8Profile = Profile(
         // (TurbofanVerifyTypeGenerator,             50),
 
         // (WorkerGenerator,                         10),
-        (GcGenerator,                             10),
-        (ForceOSRThroughLoopGenerator,            10),
-        (WasmArrayGenerator,                      10),
+        (GcGenerator,                             50),
+        (ForceOSRThroughLoopGenerator,            50),
     ],
 
     additionalProgramTemplates: WeightedList<ProgramTemplate>([
         (MapTransitionFuzzer,    1),
         (ValueSerializerFuzzer,  1),
         (RegExpFuzzer,           1),
+        // (WasmObjectFuzzer,       1),
     ]),
 
     disabledCodeGenerators: [],
@@ -681,7 +684,7 @@ let v8Profile = Profile(
     disabledMutators: ["ExplorationMutator"],
 
     additionalBuiltins: [
-        "wasm"                                          : .object(),
+        "load"                                          : .function([.string] => .undefined),
         "gc"                                            : .function([] => (.undefined | .jsPromise)),
         "d8"                                            : .object(),
         // "Worker"                                        : .constructor([.anything, .object()] => .object(withMethods: ["postMessage","getMessage"])),

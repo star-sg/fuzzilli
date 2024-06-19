@@ -160,7 +160,7 @@ let environment = JavaScriptEnvironment(additionalBuiltins: profile.additionalBu
 let lifter = JavaScriptLifter(prefix: profile.codePrefix, suffix: profile.codeSuffix, ecmaVersion: profile.ecmaVersion)
 let corpus = BasicCorpus(minSize: 1000, maxSize: 2000, minMutationsPerSample: 5)
 let minimizer = Minimizer()
-let codeGenerators = WeightedList<CodeGenerator>(CodeGenerators.map { return ($0, codeGeneratorWeights[$0.name]!) })
+let codeGenerators = WeightedList<CodeGenerator>(CodeGenerators.map {return ($0, codeGeneratorWeights[$0.name]!) })
 let programTemplates = WeightedList<ProgramTemplate>(ProgramTemplates.map { return ($0, programTemplateWeights[$0.name]!) })
 
 let fuzzer = Fuzzer(configuration: configuration,
@@ -221,14 +221,59 @@ if minimized {
     }
 }
 
+fileprivate let TestCodeGenerator = CodeGenerator("TestCodeGenerator") { b in
+
+    print("================== TestCodeGenerator =====================")
+
+    let propertyNames = b.fuzzer.environment.customProperties
+    assert(Set(propertyNames).isDisjoint(with: b.fuzzer.environment.customMethods))
+
+    func randomProperties(in b: ProgramBuilder) -> ([String], [Variable]) {
+        if !b.hasVisibleVariables {
+            // Use integer values if there are no visible variables, which should be a decent fallback.
+            b.loadInt(b.randomInt())
+        }
+
+        var properties = ["a"]
+        var values = [b.randomVariable()]
+        for _ in 0..<3 {
+            let property = chooseUniform(from: propertyNames)
+
+            guard !properties.contains(property) else { continue }
+            properties.append(property)
+            values.append(b.randomVariable())
+        }
+        assert(Set(properties).count == values.count)
+        return (properties, values)
+    }
+    let c = b.buildConstructor(with: b.randomParameters()) { args in
+        let this = args[0]
+            let (properties, values) = randomProperties(in: b)
+            for (p, v) in zip(properties, values) {
+                b.setProperty(p, of: this, to: v)
+            }
+    }
+    b.construct(c, withArgs: b.randomArguments(forCalling: c))
+}
+
 if probe {
-    emitError("Option not supported: --probe")
+    fuzzer.corpus.add(targetProgram, ProgramAspects(outcome: .succeeded))
+    var prevCodeGenerators = fuzzer.codeGenerators
+    prevCodeGenerators.append(TestCodeGenerator, withWeight: 100000)
+    fuzzer.setCodeGenerators(prevCodeGenerators)
+
+    // emitError("Option not supported: --probe")
+    let b = fuzzer.makeBuilder()
     /*
-    let builder = fuzzer.makeBuilder()
     targetProgram = builder.insertProbe(after: 3, from: targetProgram)
+    */
+    b.buildPrefix()
+    b.build(n: 5)
+    b.dumpCurrentProgram()
+    targetProgram = b.finalize()
     let output = lifter.lift(targetProgram)
     try output.write(to: URL(fileURLWithPath: "/tmp/probe.js"), atomically: true, encoding: String.Encoding.utf8)
-    */
+    exit(0)
 }
 
 let script = lifter.lift(targetProgram)

@@ -146,9 +146,19 @@ public struct Compiler_Protobuf_Parameter {
 
   public var name: String = String()
 
+  public var _default: Compiler_Protobuf_Expression {
+    get {return _storage._default ?? Compiler_Protobuf_Expression()}
+    set {_uniqueStorage()._default = newValue}
+  }
+
+  public var hasDefault: Bool {return _storage._default != nil}
+  public mutating func clearDefault() {_uniqueStorage()._default = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
+
+  fileprivate var _storage = _StorageClass.defaultInstance
 }
 
 public struct Compiler_Protobuf_EmptyStatement {
@@ -225,7 +235,10 @@ public struct Compiler_Protobuf_FunctionDeclaration {
 
   public var parameters: [Compiler_Protobuf_Parameter] = []
 
+
   public var body: [Compiler_Protobuf_Statement] = []
+
+  public var hasRestParameter: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -326,6 +339,8 @@ public struct Compiler_Protobuf_ClassConstructor {
 
   public var body: [Compiler_Protobuf_Statement] = []
 
+  public var hasRestParameter: Bool = false
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -343,6 +358,8 @@ public struct Compiler_Protobuf_ClassMethod {
   public var parameters: [Compiler_Protobuf_Parameter] = []
 
   public var body: [Compiler_Protobuf_Statement] = []
+
+  public var hasRestParameter: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -1467,6 +1484,8 @@ public struct Compiler_Protobuf_ObjectMethod {
 
   public var body: [Compiler_Protobuf_Statement] = []
 
+  public var hasRestParameter: Bool = false
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Key: Equatable {
@@ -1728,6 +1747,8 @@ public struct Compiler_Protobuf_FunctionExpression {
   public var parameters: [Compiler_Protobuf_Parameter] = []
 
   public var body: [Compiler_Protobuf_Statement] = []
+
+  public var hasRestParameter: Bool = false
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -2571,7 +2592,27 @@ extension Compiler_Protobuf_Parameter: SwiftProtobuf.Message, SwiftProtobuf._Mes
   public static let protoMessageName: String = _protobuf_package + ".Parameter"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "name"),
+    2: .same(proto: "_default")
   ]
+
+  fileprivate class _StorageClass {
+      var _default: Compiler_Protobuf_Expression? = nil
+
+      static let defaultInstance = _StorageClass()
+
+      private init() {}
+
+      init(copying source: _StorageClass) {
+          _default = source._default
+      }
+  }
+
+  fileprivate mutating func _uniqueStorage() -> _StorageClass {
+      if !isKnownUniquelyReferenced(&_storage) {
+          _storage = _StorageClass(copying: _storage)
+      }
+      return _storage
+  }
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2580,6 +2621,7 @@ extension Compiler_Protobuf_Parameter: SwiftProtobuf.Message, SwiftProtobuf._Mes
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularStringField(value: &self.name) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &_storage._default) }()
       default: break
       }
     }
@@ -2589,11 +2631,23 @@ extension Compiler_Protobuf_Parameter: SwiftProtobuf.Message, SwiftProtobuf._Mes
     if !self.name.isEmpty {
       try visitor.visitSingularStringField(value: self.name, fieldNumber: 1)
     }
+    try { if let v = _storage._default {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Compiler_Protobuf_Parameter, rhs: Compiler_Protobuf_Parameter) -> Bool {
     if lhs.name != rhs.name {return false}
+    if lhs._storage !== rhs._storage {
+      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
+        let _storage = _args.0
+        let rhs_storage = _args.1
+        if _storage._default != rhs_storage._default {return false}
+        return true
+      }
+      if !storagesAreEqual {return false}
+    }
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2771,6 +2825,7 @@ extension Compiler_Protobuf_FunctionDeclaration: SwiftProtobuf.Message, SwiftPro
     2: .same(proto: "type"),
     3: .same(proto: "parameters"),
     4: .same(proto: "body"),
+    5: .same(proto: "hashRestParameter"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2783,6 +2838,7 @@ extension Compiler_Protobuf_FunctionDeclaration: SwiftProtobuf.Message, SwiftPro
       case 2: try { try decoder.decodeSingularEnumField(value: &self.type) }()
       case 3: try { try decoder.decodeRepeatedMessageField(value: &self.parameters) }()
       case 4: try { try decoder.decodeRepeatedMessageField(value: &self.body) }()
+      case 5: try { try decoder.decodeSingularBoolField(value: &self.hasRestParameter) }()
       default: break
       }
     }
@@ -2801,6 +2857,7 @@ extension Compiler_Protobuf_FunctionDeclaration: SwiftProtobuf.Message, SwiftPro
     if !self.body.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.body, fieldNumber: 4)
     }
+    try visitor.visitSingularBoolField(value: self.hasRestParameter, fieldNumber: 5)
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2810,6 +2867,7 @@ extension Compiler_Protobuf_FunctionDeclaration: SwiftProtobuf.Message, SwiftPro
     if lhs.parameters != rhs.parameters {return false}
     if lhs.body != rhs.body {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
+    if lhs.hasRestParameter != rhs.hasRestParameter {return false}
     return true
   }
 }
@@ -2909,6 +2967,7 @@ extension Compiler_Protobuf_ClassConstructor: SwiftProtobuf.Message, SwiftProtob
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "parameters"),
     2: .same(proto: "body"),
+    3: .same(proto: "hashRestParameter"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2919,6 +2978,7 @@ extension Compiler_Protobuf_ClassConstructor: SwiftProtobuf.Message, SwiftProtob
       switch fieldNumber {
       case 1: try { try decoder.decodeRepeatedMessageField(value: &self.parameters) }()
       case 2: try { try decoder.decodeRepeatedMessageField(value: &self.body) }()
+      case 3: try { try decoder.decodeSingularBoolField(value: &self.hasRestParameter) }()
       default: break
       }
     }
@@ -2931,6 +2991,7 @@ extension Compiler_Protobuf_ClassConstructor: SwiftProtobuf.Message, SwiftProtob
     if !self.body.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.body, fieldNumber: 2)
     }
+    try visitor.visitSingularBoolField(value: self.hasRestParameter, fieldNumber: 3)
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2938,6 +2999,7 @@ extension Compiler_Protobuf_ClassConstructor: SwiftProtobuf.Message, SwiftProtob
     if lhs.parameters != rhs.parameters {return false}
     if lhs.body != rhs.body {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
+    if lhs.hasRestParameter != rhs.hasRestParameter {return false}
     return true
   }
 }
@@ -2949,6 +3011,7 @@ extension Compiler_Protobuf_ClassMethod: SwiftProtobuf.Message, SwiftProtobuf._M
     2: .same(proto: "isStatic"),
     3: .same(proto: "parameters"),
     4: .same(proto: "body"),
+    5: .same(proto: "hashRestParameter"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2961,6 +3024,7 @@ extension Compiler_Protobuf_ClassMethod: SwiftProtobuf.Message, SwiftProtobuf._M
       case 2: try { try decoder.decodeSingularBoolField(value: &self.isStatic) }()
       case 3: try { try decoder.decodeRepeatedMessageField(value: &self.parameters) }()
       case 4: try { try decoder.decodeRepeatedMessageField(value: &self.body) }()
+      case 5: try { try decoder.decodeSingularBoolField(value: &self.hasRestParameter) }()
       default: break
       }
     }
@@ -2979,6 +3043,7 @@ extension Compiler_Protobuf_ClassMethod: SwiftProtobuf.Message, SwiftProtobuf._M
     if !self.body.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.body, fieldNumber: 4)
     }
+    try visitor.visitSingularBoolField(value: self.hasRestParameter, fieldNumber: 5)
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2988,6 +3053,7 @@ extension Compiler_Protobuf_ClassMethod: SwiftProtobuf.Message, SwiftProtobuf._M
     if lhs.parameters != rhs.parameters {return false}
     if lhs.body != rhs.body {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
+    if lhs.hasRestParameter != rhs.hasRestParameter {return false}
     return true
   }
 }
@@ -5064,6 +5130,7 @@ extension Compiler_Protobuf_ObjectMethod: SwiftProtobuf.Message, SwiftProtobuf._
     3: .same(proto: "type"),
     4: .same(proto: "parameters"),
     5: .same(proto: "body"),
+    6: .same(proto: "hasRestParameter"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -5096,6 +5163,7 @@ extension Compiler_Protobuf_ObjectMethod: SwiftProtobuf.Message, SwiftProtobuf._
       case 3: try { try decoder.decodeSingularEnumField(value: &self.type) }()
       case 4: try { try decoder.decodeRepeatedMessageField(value: &self.parameters) }()
       case 5: try { try decoder.decodeRepeatedMessageField(value: &self.body) }()
+      case 6: try { try decoder.decodeSingularBoolField(value: &self.hasRestParameter) }()
       default: break
       }
     }
@@ -5126,6 +5194,7 @@ extension Compiler_Protobuf_ObjectMethod: SwiftProtobuf.Message, SwiftProtobuf._
     if !self.body.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.body, fieldNumber: 5)
     }
+    try visitor.visitSingularBoolField(value: self.hasRestParameter, fieldNumber: 6)
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -5135,6 +5204,7 @@ extension Compiler_Protobuf_ObjectMethod: SwiftProtobuf.Message, SwiftProtobuf._
     if lhs.parameters != rhs.parameters {return false}
     if lhs.body != rhs.body {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
+    if lhs.hasRestParameter != rhs.hasRestParameter {return false}
     return true
   }
 }
@@ -5463,6 +5533,7 @@ extension Compiler_Protobuf_FunctionExpression: SwiftProtobuf.Message, SwiftProt
     1: .same(proto: "type"),
     2: .same(proto: "parameters"),
     3: .same(proto: "body"),
+    4: .same(proto: "hasRestParameter"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -5474,6 +5545,7 @@ extension Compiler_Protobuf_FunctionExpression: SwiftProtobuf.Message, SwiftProt
       case 1: try { try decoder.decodeSingularEnumField(value: &self.type) }()
       case 2: try { try decoder.decodeRepeatedMessageField(value: &self.parameters) }()
       case 3: try { try decoder.decodeRepeatedMessageField(value: &self.body) }()
+      case 4: try { try decoder.decodeSingularBoolField(value: &self.hasRestParameter) }()
       default: break
       }
     }
@@ -5489,6 +5561,7 @@ extension Compiler_Protobuf_FunctionExpression: SwiftProtobuf.Message, SwiftProt
     if !self.body.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.body, fieldNumber: 3)
     }
+    try visitor.visitSingularBoolField(value: self.hasRestParameter, fieldNumber: 4)
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -5497,6 +5570,7 @@ extension Compiler_Protobuf_FunctionExpression: SwiftProtobuf.Message, SwiftProt
     if lhs.parameters != rhs.parameters {return false}
     if lhs.body != rhs.body {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
+    if lhs.hasRestParameter != rhs.hasRestParameter {return false}
     return true
   }
 }

@@ -119,7 +119,7 @@ public class JavaScriptCompiler {
             }
 
         case .functionDeclaration(let functionDeclaration):
-            let parameters = convertParameters(functionDeclaration.parameters)
+            let parameters = convertParameters(functionDeclaration.parameters, hasRestParameter: functionDeclaration.hasRestParameter)
             let functionBegin, functionEnd: Operation
             switch functionDeclaration.type {
             case .plain:
@@ -215,7 +215,7 @@ public class JavaScriptCompiler {
                     emit(op, withInputs: inputs)
 
                 case .ctor(let constructor):
-                    let parameters = convertParameters(constructor.parameters)
+                    let parameters = convertParameters(constructor.parameters, hasRestParameter: constructor.hasRestParameter)
                     let head = emit(BeginClassConstructor(parameters: parameters))
 
                     try enterNewScope {
@@ -230,7 +230,7 @@ public class JavaScriptCompiler {
                     emit(EndClassConstructor())
 
                 case .method(let method):
-                    let parameters = convertParameters(method.parameters)
+                    let parameters = convertParameters(method.parameters, hasRestParameter: method.hasRestParameter)
                     let head: Instruction
                     if method.isStatic {
                         head = emit(BeginClassStaticMethod(methodName: method.name, parameters: parameters))
@@ -724,7 +724,7 @@ public class JavaScriptCompiler {
                         emit(ObjectLiteralAddComputedProperty(), withInputs: [computedPropertyKeys.removeLast()] + inputs)
                     }
                 case .method(let method):
-                    let parameters = convertParameters(method.parameters)
+                    let parameters = convertParameters(method.parameters, hasRestParameter: method.hasRestParameter)
 
                     let instr: Instruction
                     if case .name(let name) = method.key {
@@ -786,6 +786,9 @@ public class JavaScriptCompiler {
                         undefined = emit(LoadUndefined()).output
                     }
                     elements.append(undefined!)
+                } else if case .spreadElement(let spreadElement)  = elem.expression {
+                    let spread = try compileExpression(spreadElement.argument)
+                    elements.append(spread)
                 } else {
                     elements.append(try compileExpression(elem))
                 }
@@ -793,7 +796,7 @@ public class JavaScriptCompiler {
             return emit(CreateArray(numInitialValues: elements.count), withInputs: elements).output
 
         case .functionExpression(let functionExpression):
-            let parameters = convertParameters(functionExpression.parameters)
+            let parameters = convertParameters(functionExpression.parameters, hasRestParameter: functionExpression.hasRestParameter)
             let functionBegin, functionEnd: Operation
             switch functionExpression.type {
             case .plain:
@@ -824,7 +827,8 @@ public class JavaScriptCompiler {
             return instr.output
 
         case .arrowFunctionExpression(let arrowFunction):
-            let parameters = convertParameters(arrowFunction.parameters)
+            // TODO: Support rest parameter for arrow function
+            let parameters = convertParameters(arrowFunction.parameters, hasRestParameter: false)
             let functionBegin, functionEnd: Operation
             switch arrowFunction.type {
             case .plain:
@@ -1037,8 +1041,8 @@ public class JavaScriptCompiler {
         }
     }
 
-    private func convertParameters(_ parameters: [Compiler_Protobuf_Parameter]) -> Parameters {
-        return Parameters(count: parameters.count)
+    private func convertParameters(_ parameters: [Compiler_Protobuf_Parameter], hasRestParameter rest: Bool) -> Parameters {
+        return Parameters(count: parameters.count, hasRestParameter: rest)
     }
 
     /// Convenience accessor for the currently active scope.

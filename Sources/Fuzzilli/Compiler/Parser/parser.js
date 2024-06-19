@@ -73,7 +73,12 @@ function parse(script, proto) {
     }
 
     function visitParameter(param) {
-        assert(param.type == 'Identifier');
+        assert((param.type == 'Identifier') || (param.type == 'RestElement') || (param.type == 'AssignmentPattern'), "Expected parameter to be an identifier, rest element or assignment pattern, found " + param.type);
+        if (param.type === 'AssignmentPattern') {
+            assert(param.left.type === 'Identifier', "Expected left side of assignment pattern to be an identifier, found " + param.left.type);
+            let out = { name: param.left.name, value: visitExpression(param.right) };
+            return make('Parameter', out);
+        }
         return make('Parameter', { name: param.name });
     }
 
@@ -133,10 +138,11 @@ function parse(script, proto) {
                 } else if (node.async) {
                     type = 2; //"ASYNC";
                 }
+                let hasRest = node.params.length > 0 && node.params.at(-1).type == 'RestElement';
                 let parameters = node.params.map(visitParameter);
                 assert(node.body.type === 'BlockStatement', "Expected block statement as function declaration body, found " + node.body.type);
                 let body = node.body.body.map(visitStatement);
-                return makeStatement('FunctionDeclaration', { name, type, parameters, body });
+                return makeStatement('FunctionDeclaration', { name, type, parameters, body, hasRest });
             }
             case 'ClassDeclaration': {
                 let cls = {};
@@ -180,15 +186,17 @@ function parse(script, proto) {
                             assert(name === 'constructor');
                             assert(!isStatic);
 
+                            let hasRest = method.params.length > 0 && method.params.at(-1).type == 'RestElement';
                             let parameters = method.params.map(visitParameter);
                             let body = method.body.body.map(visitStatement);
-                            field.ctor = make('ClassConstructor', { parameters, body });
+                            field.ctor = make('ClassConstructor', { parameters, body, hasRest });
                         } else if (method.kind === 'method') {
                             assert(method.body.type === 'BlockStatement');
 
+                            let hasRest = method.params.length > 0 && method.params.at(-1).type == 'RestElement';
                             let parameters = method.params.map(visitParameter);
                             let body = method.body.body.map(visitStatement);
-                            field.method = make('ClassMethod', { name, isStatic, parameters, body });
+                            field.method = make('ClassMethod', { name, isStatic, parameters, body, hasRest });
                         } else if (method.kind === 'get') {
                             assert(method.params.length === 0);
                             assert(!method.generator && !method.async);
@@ -422,6 +430,7 @@ function parse(script, proto) {
                             } else if (method.async) {
                                 out.type = 2; //"ASYNC";
                             }
+                            out.hasRest = method.params.length > 0 && method.params.at(-1).type == 'RestElement';
                             out.parameters = method.params.map(visitParameter);
                             out.body = method.body.body.map(visitStatement);
                             field.method = make('ObjectMethod', out);
@@ -469,10 +478,11 @@ function parse(script, proto) {
                 } else if (node.async) {
                     type = 2; //"ASYNC";
                 }
+                let hasRest = node.params.length > 0 && node.params.at(-1).type == 'RestElement';
                 let parameters = node.params.map(visitParameter);
                 assert(node.body.type === 'BlockStatement', "Expected block statement as function expression body, found " + node.body.type);
                 let body = node.body.body.map(visitStatement);
-                return makeExpression('FunctionExpression', { type, parameters, body });
+                return makeExpression('FunctionExpression', { type, parameters, body, hasRest });
             }
             case 'ArrowFunctionExpression': {
                 assert(node.id == null);
@@ -483,6 +493,7 @@ function parse(script, proto) {
                 }
                 let parameters = node.params.map(visitParameter);
                 let out = { type, parameters };
+                out.hasRest = node.params.length > 0 && node.params.at(-1).type == 'RestElement';
                 if (node.body.type === 'BlockStatement') {
                     out.block = visitStatement(node.body);
                 } else {
