@@ -270,6 +270,7 @@ if probe {
     b.buildPrefix()
     b.build(n: 5)
     b.dumpCurrentProgram()
+    b.appendDifferentialProbes(with: fuzzer.config.differentialRate)
     targetProgram = b.finalize()
     let output = lifter.lift(targetProgram)
     try output.write(to: URL(fileURLWithPath: "/tmp/probe.js"), atomically: true, encoding: String.Encoding.utf8)

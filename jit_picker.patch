@@ -70,7 +70,7 @@ index 155df577651..4b819bfc284 100644
          if (options.fuzzilli_enable_builtins_coverage) {
            i::BasicBlockProfiler::Get()->ResetCounts(
 diff --git a/src/fuzzilli/fuzzilli.cc b/src/fuzzilli/fuzzilli.cc
-index 6efb511cee5..bb00bd43395 100644
+index 6efb511cee5..1d374a63098 100644
 --- a/src/fuzzilli/fuzzilli.cc
 +++ b/src/fuzzilli/fuzzilli.cc
 @@ -12,6 +12,7 @@
@@ -81,16 +81,27 @@ index 6efb511cee5..bb00bd43395 100644
  #include "src/sandbox/testing.h"
  
  #ifdef V8_OS_LINUX
-@@ -22,6 +23,8 @@
+@@ -22,11 +23,19 @@
  namespace v8 {
  namespace internal {
  
 +uint64_t FuzzilliExtension::execHash = 0;
 +
++#if __has_feature(coverage_sanitizer)
++__attribute__((no_sanitize("coverage")))
++#endif
  v8::Local<v8::FunctionTemplate> FuzzilliExtension::GetNativeFunctionTemplate(
      v8::Isolate* isolate, v8::Local<v8::String> str) {
    return v8::FunctionTemplate::New(isolate, FuzzilliExtension::Fuzzilli);
-@@ -136,6 +139,25 @@ void FuzzilliExtension::Fuzzilli(const FunctionCallbackInfo<Value>& info) {
+ }
+ 
++#if __has_feature(coverage_sanitizer)
++__attribute__((no_sanitize("coverage")))
++#endif
+ // We have to assume that the fuzzer will be able to call this function e.g. by
+ // enumerating the properties of the global object and eval'ing them. As such
+ // this function is implemented in a way that requires passing some magic value
+@@ -136,6 +145,25 @@ void FuzzilliExtension::Fuzzilli(const FunctionCallbackInfo<Value>& info) {
      }
      fprintf(fzliout, "%s\n", *string);
      fflush(fzliout);
@@ -117,7 +128,7 @@ index 6efb511cee5..bb00bd43395 100644
  }
  
 diff --git a/src/fuzzilli/fuzzilli.h b/src/fuzzilli/fuzzilli.h
-index be88a3504f1..cefc0d81714 100644
+index be88a3504f1..a24bb8f074d 100644
 --- a/src/fuzzilli/fuzzilli.h
 +++ b/src/fuzzilli/fuzzilli.h
 @@ -8,6 +8,12 @@
@@ -162,17 +173,25 @@ index be88a3504f1..cefc0d81714 100644
  namespace v8 {
  namespace internal {
  
-@@ -29,6 +57,81 @@ class FuzzilliExtension : public v8::Extension {
+@@ -29,6 +57,89 @@ class FuzzilliExtension : public v8::Extension {
        v8::Isolate* isolate, v8::Local<v8::String> name) override;
    static void Fuzzilli(const v8::FunctionCallbackInfo<v8::Value>& info);
  
 +  static uint64_t execHash;
 +
++  static std::size_t calculate_hash(std::size_t value) {
++    auto x = value;
++    x = ((x >> 16) ^ x) * 0x45d9f3b;
++    x = ((x >> 16) ^ x) * 0x45d9f3b;
++    x = (x >> 16) ^ x;
++    return x;
++  }
++
 +  static void update_hash(DifferentialObject& o) {
 +    std::size_t hash_header = (o.type << 3) + o.bool_value;
-+    execHash ^= hash_header + 0x9e3779b9 + (execHash << 6) + (execHash >> 2);
++    execHash ^= calculate_hash(hash_header) + 0x9e3779b9 + (execHash << 6) + (execHash >> 2);
 +    std::size_t hash_data = std::hash<uint64_t>{}(o.double_value);
-+    execHash ^= hash_data + 0x9e3779b9 + (execHash << 6) + (execHash >> 2);
++    execHash ^= calculate_hash(hash_data) + 0x9e3779b9 + (execHash << 6) + (execHash >> 2);
 +  }
 +
 +  static void convertToDifferentialObject(v8::Local<v8::Context>& context, const v8::Local<v8::Value>& value, DifferentialObject& obj) {

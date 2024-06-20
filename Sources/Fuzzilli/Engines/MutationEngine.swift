@@ -47,6 +47,7 @@ public class MutationEngine: FuzzEngine {
     public override func fuzzOne(_ group: DispatchGroup) {
         var parent = fuzzer.corpus.randomElementForMutating()
         parent = prepareForMutating(parent)
+
         for _ in 0..<numConsecutiveMutations {
             // TODO: factor out code shared with the HybridEngine?
             var mutator = fuzzer.mutators.randomElement()

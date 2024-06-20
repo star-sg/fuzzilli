@@ -197,6 +197,7 @@ public class ProgramBuilder {
 
         newCode.removeNops()
         code = newCode
+        appendDifferentialProbes(with: fuzzer.config.differentialRate)
         return finalize()
     }
 
@@ -217,6 +218,7 @@ public class ProgramBuilder {
 
         newCode.removeNops()
         code = newCode
+        appendDifferentialProbes(with: fuzzer.config.differentialRate)
         return finalize()
     }
 
@@ -256,11 +258,11 @@ public class ProgramBuilder {
 
         newCode.removeNops()
         code = newCode
-
+        appendDifferentialProbes(with: fuzzer.config.differentialRate)
         return finalize()
     }
 
-    private func appendDifferentialProbes(with differentialRate: Double) {
+    public func appendDifferentialProbes(with differentialRate: Double) {
         var alreadyProbed = 0
         var probableLocations: [Int] = []
 
@@ -296,7 +298,9 @@ public class ProgramBuilder {
         for _ in 0..<remainingProbed {
             let v = nextVariable()
             copyVars.append(v)
-            newCode.append(Instruction(LoadInteger(value: 0), inouts: [v]))
+            var tmp = Instruction(LoadInteger(value: 0), inouts: [v])
+            tmp.shouldRemove = true
+            newCode.append(tmp)
         }
 
         var copied = 0
@@ -308,13 +312,17 @@ public class ProgramBuilder {
 
             if toProbe.contains(instr.index) {
                 let v = findVariable(with: variableAnalyzer)!
-                newCode.append(Instruction(Reassign(isAdded: true), inouts: [copyVars[copied], v]))
+                var tmp = Instruction(Reassign(isAdded: true), inouts: [copyVars[copied], v])
+                tmp.shouldRemove = true
+                newCode.append(tmp)
                 copied += 1
             }
         }
 
         for v in copyVars {
-            newCode.append(Instruction(DifferentialHash(allowInnerScope: false), inouts: [v]))
+            var tmp = Instruction(DifferentialHash(allowInnerScope: false), inouts: [v])
+            tmp.shouldRemove = true
+            newCode.append(tmp)
         }
 
         newCode.removeNops()
@@ -323,10 +331,6 @@ public class ProgramBuilder {
 
     /// Finalizes and returns the constructed program, then resets this builder so it can be reused for building another program.
     public func finalize() -> Program {
-        if fuzzer.config.differentialRate > 0.0 {
-            appendDifferentialProbes(with: fuzzer.config.differentialRate)
-        }
-
         let program = Program(code: code, parent: parent, comments: comments, contributors: contributors)
         reset()
         return program
@@ -993,26 +997,26 @@ public class ProgramBuilder {
     }
 
     /// Adopts an instruction from the program that is currently configured for adoption into the program being constructed.
-    public func adopt(_ instr: Instruction) {
-        internalAppend(Instruction(instr.op, inouts: adopt(instr.inouts)))
+    public func adopt(_ instr: Instruction, shouldAppendDiff flag: Bool = false) {
+        internalAppend(Instruction(instr.op, inouts: adopt(instr.inouts)), shouldAppendDiff: flag)
     }
 
     /// Append an instruction at the current position.
-    public func append(_ instr: Instruction) {
+    public func append(_ instr: Instruction, shouldAppendDiff flag: Bool = false) {
         for v in instr.allOutputs {
             numVariables = max(v.number + 1, numVariables)
         }
-        internalAppend(instr)
+        internalAppend(instr, shouldAppendDiff: flag)
     }
 
     /// Append a program at the current position.
     ///
     /// This also renames any variable used in the given program so all variables
     /// from the appended program refer to the same values in the current program.
-    public func append(_ program: Program) {
+    public func append(_ program: Program, shouldAppendDiff flag: Bool = false) {
         adopting(from: program) {
             for instr in program.code {
-                adopt(instr)
+                adopt(instr, shouldAppendDiff: flag)
             }
         }
     }
@@ -2574,7 +2578,7 @@ public class ProgramBuilder {
     }
 
     @discardableResult
-    private func internalAppend(_ instr: Instruction) -> Instruction {
+    private func internalAppend(_ instr: Instruction, shouldAppendDiff flag: Bool = false) -> Instruction {
         // Basic integrity checking
         assert(!instr.inouts.contains(where: { $0.number >= numVariables }))
         assert(instr.op.requiredContext.isSubset(of: contextAnalyzer.context))
@@ -2583,15 +2587,19 @@ public class ProgramBuilder {
         let instr = code.append(instr)
         analyze(instr)
 
-        if let op = instr.op as? DifferentialHash, !op.allowInnerScope {
-            probesWeaved += 1
-        }
-        guard Double(probesWeaved) < fuzzer.config.differentialWeaveRate * Double(code.count) else { return instr }
-        if probability(fuzzer.config.differentialWeaveRate) {
-            //guard scopeAnalyzer.visibleVariables.count > 0 else { return }
-            guard variablesInScope.count > 0 else { return instr }
-            code.append(Instruction(DifferentialHash(allowInnerScope: true), inouts: [findVariable()!]))
-            probesWeaved += 1
+        if flag {
+            if let op = instr.op as? DifferentialHash, !op.allowInnerScope {
+                probesWeaved += 1
+            }
+            guard Double(probesWeaved) < fuzzer.config.differentialWeaveRate * Double(code.count) else { return instr }
+            if probability(fuzzer.config.differentialWeaveRate) {
+                //guard scopeAnalyzer.visibleVariables.count > 0 else { return }
+                guard variablesInScope.count > 0 else { return instr }
+                var tmp = Instruction(DifferentialHash(allowInnerScope: true), inouts: [findVariable()!])
+                tmp.shouldRemove = true
+                code.append(tmp)
+                probesWeaved += 1
+            }
         }
 
         return instr

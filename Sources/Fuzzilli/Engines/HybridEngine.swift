@@ -122,6 +122,7 @@ public class HybridEngine: FuzzEngine {
         // As such, it is much easier to select a "good" method/property to access at runtime than it is during static code generation. Further, it is trivial to determine which
         // operations raise an exception at runtime, but hard to determine that statically at code generation time. So we can be overly conservative and wrap many operations in
         // try-catch (i.e. "guard" them), then remove the unnecessary guards after code generation based on runtime information. This is what fixup achieves.
+
         let refinedProgram: Program
         if let result = fixupMutator.mutate(generatedProgram, for: fuzzer) {
             refinedProgram = result

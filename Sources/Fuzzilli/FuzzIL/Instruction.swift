@@ -296,6 +296,8 @@ public struct Instruction {
         assert(op.numInputs == 0)
         self.init(op, inouts: [])
     }
+
+    public var shouldRemove: Bool = false
 }
 
 // Protobuf support.

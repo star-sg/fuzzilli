@@ -507,7 +507,9 @@ public class Fuzzer {
             assert(referenceRunner!.isInitialized)
             let diff = referenceRunner!.run(script, withTimeout: timeout ?? config.timeout)
             dispatchEvent(events.PostExecute, data: diff)
-            dispatchEvent(events.PostDifferentialExecute, data: diff)
+            if purpose != .differentialTest {
+                dispatchEvent(events.PostDifferentialExecute, data: diff)
+            }
 
             if diff.outcome == .succeeded &&
                !containsPoison(execution: diff, differentialPoison: config.differentialPoison) {

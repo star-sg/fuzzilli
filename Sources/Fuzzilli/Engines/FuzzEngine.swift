@@ -40,7 +40,6 @@ public class FuzzEngine: ComponentBase {
         let differentialResult = program.code.contains { $0.isDifferentialHash }
         let execution = fuzzer.execute(program, withTimeout: timeout, purpose: .fuzzing, differentialResult: differentialResult)
 
-
         switch execution.outcome {
             case .crashed(let termsig):
                 fuzzer.processCrash(program, withSignal: termsig, withStderr: execution.stderr, withStdout: execution.stdout, origin: .local, withExectime: execution.execTime)

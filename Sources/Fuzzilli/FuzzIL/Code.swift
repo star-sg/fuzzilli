@@ -241,22 +241,6 @@ public struct Code: Collection {
             }
 
             guard instr.op.requiredContext.isSubset(of: contextAnalyzer.context) else {
-                /*
-                let range = 5
-                let lowerbound = Swift.max(instructions.startIndex, instr.index - range)
-                let upperbound = Swift.min(instructions.endIndex, instr.index + range + 1)
-
-                let nearbyInstructions = instructions[lowerbound..<upperbound]
-
-                print("================ DEBUG in check() ==================")
-                print("Current context: \(contextAnalyzer.context)")
-                print("Instruction: \(instr.index): \(instr.op.name) \(instr.op.requiredContext)")
-                print("Near by:")
-                for (_, nearbyInstr) in nearbyInstructions.enumerated() {
-                    print("\(nearbyInstr.index): \(nearbyInstr.op.name) \(nearbyInstr.op.requiredContext)")
-                }
-                */
-
                 throw FuzzilliError.codeVerificationError("operation \(instr.op.name) inside an invalid context")
             }
 

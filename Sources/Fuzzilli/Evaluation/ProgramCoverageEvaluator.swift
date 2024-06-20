@@ -216,6 +216,9 @@ public class ProgramCoverageEvaluator: ComponentBase, ProgramEvaluator {
         // Mark all edges in the provided aspects as undiscovered so they can be retriggered during the next execution.
         resetAspects(firstCovEdgeSet)
 
+        // Remove differential instructions
+        program.removeCode()
+
         // Execute the program and collect coverage information.
         let execution = fuzzer.execute(program, purpose: .checkForDeterministicBehavior)
         guard execution.outcome == .succeeded else { return nil }

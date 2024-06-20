@@ -18,3 +18,4 @@ import Foundation
 public protocol FuzzingPostProcessor {
     func process(_ program: Program, for fuzzer: Fuzzer) -> Program
 }
+

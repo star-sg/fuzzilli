@@ -15,29 +15,25 @@
 import Fuzzilli
 import Foundation
 
+struct JitPickerProcessor: FuzzingPostProcessor {
+    init() {}
+
+    func process(_ program: Program, for fuzzer: Fuzzer) -> Program {
+        print("Inject jit-picker with rate \(fuzzer.config.differentialRate)")
+        if fuzzer.config.differentialRate > 0.0 {
+            let b = fuzzer.makeBuilder()
+            b.append(program, shouldAppendDiff: true)
+            b.appendDifferentialProbes(with: fuzzer.config.differentialRate)
+            return b.finalize()
+        }
+        return program
+    }
+}
+
 var wasm_path = "/home/me/Projects/JSEngines/v8"
 
 fileprivate let WasmObjectFuzzer = ProgramTemplate("WasmObjectFuzzer") { b in
 
-    /*
-    let WasmArrayGenerator = ValueGenerator("WasmArrayGenerator") { b, n in
-        let wasm = b.loadBuiltin("wasm")
-        for _ in 0..<n {
-            b.callMethod("create_array", on: wasm, withArgs: [b.loadInt(Int64.random(in: 0..<100))])
-        }
-    }
-
-    let loadModule = b.loadBuiltin("load")
-    b.callFunction(loadModule, withArgs: [b.loadString("\(wasm_path)/test/mjsunit/wasm/wasm-module-builder.js")])
-
-    var newCodeGenerators = fuzzer.codeGenerators
-    newCodeGenerators.append(WasmArrayGenerator, withWeight: 10)
-
-
-
-    let prevCodeGenerators = newCodeGenerators.dropLast()
-    fuzzer.setCodeGenerators(prevCodeGenerators)
-    */
 }
 
 fileprivate let ForceJITCompilationThroughLoopGenerator = CodeGenerator("ForceJITCompilationThroughLoopGenerator", inputs: .required(.function())) { b, f in
@@ -692,5 +688,5 @@ let v8Profile = Profile(
 
     additionalObjectGroups: [],
 
-    optionalPostProcessor: nil
+    optionalPostProcessor: JitPickerProcessor()
 )

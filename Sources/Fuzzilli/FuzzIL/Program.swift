@@ -24,8 +24,8 @@ import Foundation
 /// * The outputs of an instruction are always new variables and never overwrite an existing variable
 ///
 public final class Program {
-    /// The immutable code of this program.
-    public let code: Code
+    /// The mutable code of this program.
+    public var code: Code
 
     /// The parent program that was used to construct this program.
     /// This is mostly only used when inspection mode is enabled to reconstruct
@@ -79,6 +79,27 @@ public final class Program {
     public func copy() -> Program {
         let proto = self.asProtobuf()
         return try! Program(from: proto)
+    }
+
+    private var isCleared = false
+
+    public func removeCode() {
+        if isCleared { return }
+        isCleared = true
+        var newCode = Code()
+
+        for instr in code {
+            if instr.shouldRemove {
+                continue
+            }
+            newCode.append(instr)
+        }
+        newCode.removeNops()
+        code = newCode
+    }
+
+    public func dump() {
+        print(FuzzILLifter().lift(code))
     }
 }
 
