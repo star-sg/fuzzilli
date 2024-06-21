@@ -19,14 +19,12 @@ struct JitPickerProcessor: FuzzingPostProcessor {
     init() {}
 
     func process(_ program: Program, for fuzzer: Fuzzer) -> Program {
-        print("Inject jit-picker with rate \(fuzzer.config.differentialRate)")
+        let b = fuzzer.makeBuilder()
+        b.append(program, shouldAppendDiff: true)
         if fuzzer.config.differentialRate > 0.0 {
-            let b = fuzzer.makeBuilder()
-            b.append(program, shouldAppendDiff: true)
             b.appendDifferentialProbes(with: fuzzer.config.differentialRate)
-            return b.finalize()
         }
-        return program
+        return b.finalize()
     }
 }
 

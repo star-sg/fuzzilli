@@ -54,4 +54,10 @@ public class MultiEngine: FuzzEngine {
             }
         }
     }
+
+    public override func registerPostProcessor(_ postProcessor: any FuzzingPostProcessor) {
+        for engine in engines {
+            engine.registerPostProcessor(postProcessor)
+        }
+    }
 }
