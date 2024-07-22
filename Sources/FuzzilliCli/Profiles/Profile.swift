@@ -14,6 +14,19 @@
 
 import Fuzzilli
 
+struct JitPickerProcessor: FuzzingPostProcessor {
+    init() {}
+
+    func process(_ program: Program, for fuzzer: Fuzzer) -> Program {
+        let b = fuzzer.makeBuilder()
+        b.append(program, shouldAppendDiff: true)
+        if fuzzer.config.differentialRate > 0.0 {
+            b.appendDifferentialProbes(with: fuzzer.config.differentialRate)
+        }
+        return b.finalize()
+    }
+}
+
 struct Profile {
     let processArgs: (_ randomize: Bool, _ differentialTesting: Bool) -> [String]
     let processArgumentsReference: [String]

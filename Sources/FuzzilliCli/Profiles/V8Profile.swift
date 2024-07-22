@@ -15,19 +15,6 @@
 import Fuzzilli
 import Foundation
 
-struct JitPickerProcessor: FuzzingPostProcessor {
-    init() {}
-
-    func process(_ program: Program, for fuzzer: Fuzzer) -> Program {
-        let b = fuzzer.makeBuilder()
-        b.append(program, shouldAppendDiff: true)
-        if fuzzer.config.differentialRate > 0.0 {
-            b.appendDifferentialProbes(with: fuzzer.config.differentialRate)
-        }
-        return b.finalize()
-    }
-}
-
 var wasm_path = "/home/me/Projects/JSEngines/v8"
 
 fileprivate let WasmObjectFuzzer = ProgramTemplate("WasmObjectFuzzer") { b in
