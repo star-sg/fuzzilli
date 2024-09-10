@@ -114,9 +114,18 @@ message ClassField {
         ClassSetter setter = 5;
         ClassStaticInitializer staticInitializer = 6;
     }
+
+    bool isPrivate = 7;
 }
 
 message ClassDeclaration {
+    string name = 1;
+    // The superclass is optional
+    Expression superClass = 2;
+    repeated ClassField fields = 3;
+}
+
+message ClassExpression {
     string name = 1;
     // The superclass is optional
     Expression superClass = 2;
@@ -410,6 +419,10 @@ message TernaryExpression {
   Expression alternate = 3;
 }
 
+message PrivateName {
+    Identifier identifier = 1;
+}
+
 message Expression {
     oneof expression {
         Identifier identifier = 1;
@@ -437,5 +450,7 @@ message Expression {
         SequenceExpression sequenceExpression = 23;
         V8IntrinsicIdentifier v8IntrinsicIdentifier = 24;
         TernaryExpression ternaryExpression = 25;
+        PrivateName privateName = 26;
+        ClassExpression classExpression = 27;
     }
 }

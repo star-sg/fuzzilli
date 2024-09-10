@@ -102,6 +102,89 @@ function parse(script, proto) {
         return { kind, declarations };
     }
 
+    function processClass(node) {
+        let cls = {};
+        cls.name = node.id.name;
+        if (node.superClass !== null) {
+            cls.superClass = visitExpression(node.superClass);
+        }
+        cls.fields = [];
+        for (let field of node.body.body) {
+            if (field.type === 'ClassProperty' || field.type === 'ClassPrivateProperty') {
+                let property = {};
+                property.isStatic = field.static;
+                if (field.value !== null) {
+                    property.value = visitExpression(field.value);
+                }
+                if (field.computed) {
+                    property.expression = visitExpression(field.key);
+                } else {
+                    if (field.key.type === 'Identifier') {
+                        property.name = field.key.name;
+                    } else if (field.key.type === 'NumericLiteral') {
+                        property.index = field.key.value;
+                    } else if (field.key.type === 'PrivateName') {
+                        property.name = field.key.id.name;
+                    } else {
+                        throw "Unknown property key type: " + field.key.type + " in class declaration";
+                    }
+                }
+                cls.fields.push(make('ClassField', { property: make('ClassProperty', property), isPrivate: field.type === 'ClassPrivateProperty' }));
+            } else if (field.type === 'ClassMethod' || field.type === 'ClassPrivateMethod') {
+                assert(!field.shorthand);
+                assert(!field.computed);
+                assert(!field.generator);
+                assert(!field.async);
+                assert(field.key.type === 'Identifier' || field.key.type === 'PrivateName');
+
+                let method = field;
+                field = {};
+                let name = method.type === 'ClassPrivateMethod' ? method.key.id.name : method.key.name;
+                let isStatic = method.static;
+                if (method.kind === 'constructor') {
+                    assert(method.body.type === 'BlockStatement');
+                    assert(name === 'constructor');
+                    assert(!isStatic);
+
+                    let parameters = method.params.map(visitParameter);
+                    let body = method.body.body.map(visitStatement);
+                    field.ctor = make('ClassConstructor', { parameters, body });
+                } else if (method.kind === 'method') {
+                    assert(method.body.type === 'BlockStatement');
+
+                    let parameters = method.params.map(visitParameter);
+                    let body = method.body.body.map(visitStatement);
+                    field.method = make('ClassMethod', { name, isStatic, parameters, body });
+                } else if (method.kind === 'get') {
+                    assert(method.params.length === 0);
+                    assert(!method.generator && !method.async);
+                    assert(method.body.type === 'BlockStatement');
+
+                    let body = method.body.body.map(visitStatement);
+                    field.getter = make('ClassGetter', { name, isStatic, body });
+                } else if (method.kind === 'set') {
+                    assert(method.params.length === 1);
+                    assert(!method.generator && !method.async);
+                    assert(method.body.type === 'BlockStatement');
+
+                    let parameter = visitParameter(method.params[0]);
+                    let body = method.body.body.map(visitStatement);
+                    field.setter = make('ClassSetter', { name, isStatic, parameter, body });
+                } else {
+                    throw "Unknown method kind: " + method.kind;
+                }
+                field.isPrivate = method.type === 'ClassPrivateMethod';
+                cls.fields.push(make('ClassField', field));
+            } else if (field.type === 'StaticBlock') {
+                let body = field.body.map(visitStatement);
+                let staticInitializer = make('ClassStaticInitializer', { body });
+                cls.fields.push(make('ClassField', { staticInitializer }));
+            } else {
+                throw "Unsupported class declaration field: " + field.type;
+            }
+        }
+        return cls;
+    }
 
     function visitStatement(node) {
         switch (node.type) {
@@ -139,84 +222,7 @@ function parse(script, proto) {
                 return makeStatement('FunctionDeclaration', { name, type, parameters, body });
             }
             case 'ClassDeclaration': {
-                let cls = {};
-                cls.name = node.id.name;
-                if (node.superClass !== null) {
-                    cls.superClass = visitExpression(node.superClass);
-                }
-                cls.fields = [];
-                for (let field of node.body.body) {
-                    if (field.type === 'ClassProperty') {
-                        let property = {};
-                        property.isStatic = field.static;
-                        if (field.value !== null) {
-                          property.value = visitExpression(field.value);
-                        }
-                        if (field.computed) {
-                            property.expression = visitExpression(field.key);
-                        } else {
-                            if (field.key.type === 'Identifier') {
-                                property.name = field.key.name;
-                            } else if (field.key.type === 'NumericLiteral') {
-                                property.index = field.key.value;
-                            } else {
-                                throw "Unknown property key type: " + field.key.type + " in class declaration";
-                            }
-                        }
-                        cls.fields.push(make('ClassField', { property: make('ClassProperty', property) }));
-                    } else if (field.type === 'ClassMethod') {
-                        assert(!field.shorthand);
-                        assert(!field.computed);
-                        assert(!field.generator);
-                        assert(!field.async);
-                        assert(field.key.type === 'Identifier');
-
-                        let method = field;
-                        field = {};
-                        let name = method.key.name;
-                        let isStatic = method.static;
-                        if (method.kind === 'constructor') {
-                            assert(method.body.type === 'BlockStatement');
-                            assert(name === 'constructor');
-                            assert(!isStatic);
-
-                            let parameters = method.params.map(visitParameter);
-                            let body = method.body.body.map(visitStatement);
-                            field.ctor = make('ClassConstructor', { parameters, body });
-                        } else if (method.kind === 'method') {
-                            assert(method.body.type === 'BlockStatement');
-
-                            let parameters = method.params.map(visitParameter);
-                            let body = method.body.body.map(visitStatement);
-                            field.method = make('ClassMethod', { name, isStatic, parameters, body });
-                        } else if (method.kind === 'get') {
-                            assert(method.params.length === 0);
-                            assert(!method.generator && !method.async);
-                            assert(method.body.type === 'BlockStatement');
-
-                            let body = method.body.body.map(visitStatement);
-                            field.getter = make('ClassGetter', { name, isStatic, body });
-                        } else if (method.kind === 'set') {
-                            assert(method.params.length === 1);
-                            assert(!method.generator && !method.async);
-                            assert(method.body.type === 'BlockStatement');
-
-                            let parameter = visitParameter(method.params[0]);
-                            let body = method.body.body.map(visitStatement);
-                            field.setter = make('ClassSetter', { name, isStatic, parameter, body });
-                        } else {
-                            throw "Unknown method kind: " + method.kind;
-                        }
-                        cls.fields.push(make('ClassField', field));
-                    } else if (field.type === 'StaticBlock') {
-                        let body = field.body.map(visitStatement);
-                        let staticInitializer = make('ClassStaticInitializer', { body });
-                        cls.fields.push(make('ClassField', { staticInitializer }));
-                    } else {
-                        throw "Unsupported class declaration field: " + field.type;
-                    }
-                }
-                return makeStatement('ClassDeclaration', cls);
+                return makeStatement('ClassDeclaration', processClass(node));
             }
             case 'ReturnStatement': {
                 if (node.argument !== null) {
@@ -277,12 +283,12 @@ function parse(script, proto) {
                 return makeStatement('ForInLoop', forInLoop);
             }
             case 'ForOfStatement': {
-                assert(node.left.type === 'VariableDeclaration', "Expected variable declaration as init part of a for-in loop, found " + node.left.type);
-                assert(node.left.declarations.length === 1, "Expected exactly one variable declaration in the init part of a for-in loop");
+                assert(node.left.type === 'VariableDeclaration', "Expected variable declaration as init part of a for-of loop, found " + node.left.type);
+                assert(node.left.declarations.length === 1, "Expected exactly one variable declaration in the init part of a for-of loop");
                 let decl = node.left.declarations[0];
                 let forOfLoop = {};
                 let initDecl = { name: decl.id.name };
-                assert(decl.init == null, "Expected no initial value for the variable declared as part of a for-in loop")
+                assert(decl.init == null, "Expected no initial value for the variable declared as part of a for-of loop")
                 forOfLoop.left = make('VariableDeclarator', initDecl);
                 forOfLoop.right = visitExpression(node.right);
                 forOfLoop.body = visitStatement(node.body);
@@ -563,6 +569,12 @@ function parse(script, proto) {
             }
             case 'V8IntrinsicIdentifier': {
                 return makeExpression('V8IntrinsicIdentifier', { name: node.name });
+            }
+            case 'PrivateName': {
+                return makeExpression('PrivateName', { id: node.id });
+            }
+            case 'ClassExpression': {
+                return makeExpression('ClassExpression', processClass(node));
             }
             default: {
                 throw "Unhandled node type " + node.type;
