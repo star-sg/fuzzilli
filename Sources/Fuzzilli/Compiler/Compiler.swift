@@ -190,10 +190,18 @@ public class JavaScriptCompiler {
                     var inputs = [Variable]()
                     switch key {
                     case .name(let name):
-                        if property.isStatic {
-                            op = ClassAddStaticProperty(propertyName: name, hasValue: property.hasValue)
+                        if field.isPrivate {
+                            if property.isStatic {
+                                op = ClassAddPrivateStaticProperty(propertyName: name, hasValue: property.hasValue)
+                            } else {
+                                op = ClassAddPrivateInstanceProperty(propertyName: name, hasValue: property.hasValue)
+                            }
                         } else {
-                            op = ClassAddInstanceProperty(propertyName: name, hasValue: property.hasValue)
+                            if property.isStatic {
+                                op = ClassAddStaticProperty(propertyName: name, hasValue: property.hasValue)
+                            } else {
+                                op = ClassAddInstanceProperty(propertyName: name, hasValue: property.hasValue)
+                            }
                         }
                     case .index(let index):
                         if property.isStatic {
@@ -232,10 +240,18 @@ public class JavaScriptCompiler {
                 case .method(let method):
                     let parameters = convertParameters(method.parameters)
                     let head: Instruction
-                    if method.isStatic {
-                        head = emit(BeginClassStaticMethod(methodName: method.name, parameters: parameters))
+                    if field.isPrivate {
+                        if method.isStatic {
+                            head = emit(BeginClassPrivateStaticMethod(methodName: method.name, parameters: parameters))
+                        } else {
+                            head = emit(BeginClassPrivateInstanceMethod(methodName: method.name, parameters: parameters))
+                        }
                     } else {
-                        head = emit(BeginClassInstanceMethod(methodName: method.name, parameters: parameters))
+                        if method.isStatic {
+                            head = emit(BeginClassStaticMethod(methodName: method.name, parameters: parameters))
+                        } else {
+                            head = emit(BeginClassInstanceMethod(methodName: method.name, parameters: parameters))
+                        }
                     }
 
                     try enterNewScope {
@@ -255,10 +271,18 @@ public class JavaScriptCompiler {
 
                 case .getter(let getter):
                     let head: Instruction
-                    if getter.isStatic {
-                        head = emit(BeginClassStaticGetter(propertyName: getter.name))
+                    if field.isPrivate {
+                        if getter.isStatic {
+                            head = emit(BeginClassPrivateStaticGetter(propertyName: getter.name))
+                        } else {
+                            head = emit(BeginClassPrivateInstanceGetter(propertyName: getter.name))
+                        }
                     } else {
-                        head = emit(BeginClassInstanceGetter(propertyName: getter.name))
+                        if getter.isStatic {
+                            head = emit(BeginClassStaticGetter(propertyName: getter.name))
+                        } else {
+                            head = emit(BeginClassInstanceGetter(propertyName: getter.name))
+                        }
                     }
 
                     try enterNewScope {
@@ -276,10 +300,18 @@ public class JavaScriptCompiler {
 
                 case .setter(let setter):
                     let head: Instruction
-                    if setter.isStatic {
-                        head = emit(BeginClassStaticSetter(propertyName: setter.name))
+                    if field.isPrivate {
+                        if setter.isStatic {
+                            head = emit(BeginClassPrivateStaticSetter(propertyName: setter.name))
+                        } else {
+                            head = emit(BeginClassPrivateInstanceSetter(propertyName: setter.name))
+                        }
                     } else {
-                        head = emit(BeginClassInstanceSetter(propertyName: setter.name))
+                        if setter.isStatic {
+                            head = emit(BeginClassStaticSetter(propertyName: setter.name))
+                        } else {
+                            head = emit(BeginClassInstanceSetter(propertyName: setter.name))
+                        }
                     }
 
                     try enterNewScope {
@@ -511,6 +543,9 @@ public class JavaScriptCompiler {
         }
 
         switch expr {
+
+        case .privateName( _):
+            return emit(Nop()).output
 
         case .ternaryExpression(let ternaryExpression):
             let condition = try compileExpression(ternaryExpression.condition)

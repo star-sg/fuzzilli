@@ -145,6 +145,7 @@ function parse(script, proto) {
                     assert(method.body.type === 'BlockStatement');
                     assert(name === 'constructor');
                     assert(!isStatic);
+                    assert(method.type === 'ClassMethod')
 
                     let parameters = method.params.map(visitParameter);
                     let body = method.body.body.map(visitStatement);

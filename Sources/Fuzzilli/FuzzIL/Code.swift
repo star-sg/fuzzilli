@@ -241,7 +241,7 @@ public struct Code: Collection {
             }
 
             guard instr.op.requiredContext.isSubset(of: contextAnalyzer.context) else {
-                throw FuzzilliError.codeVerificationError("operation \(instr.op.name) inside an invalid context")
+                throw FuzzilliError.codeVerificationError("operation \(instr.op.name) inside an invalid context: \(instr.op.requiredContext) vs \(contextAnalyzer.context)")
             }
 
             // Ensure that the instruction exists in the right context

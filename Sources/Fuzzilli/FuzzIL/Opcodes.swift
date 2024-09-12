@@ -205,4 +205,13 @@ enum Opcode {
     case explore(Explore)
     case probe(Probe)
     case fixup(Fixup)
+    case privateName(PrivateName)
+    case classAddStaticPrivateProperty(ClassAddStaticPrivateProperty)
+    case classAddInstancePrivateProperty(ClassAddInstancePrivateProperty)
+    case beginClassStaticPrivateMethod(BeginClassStaticPrivateMethod)
+    case beginClassInstancePrivateMethod(BeginClassInstancePrivateMethod)
+    case beginClassStaticPrivateGetter(BeginClassStaticPrivateGetter)
+    case beginClassInstancePrivateGetter(BeginClassInstancePrivateGetter)
+    case beginClassStaticPrivateSetter(BeginClassStaticPrivateSetter)
+    case beginClassInstancePrivateSetter(BeginClassInstancePrivateSetter)
 }

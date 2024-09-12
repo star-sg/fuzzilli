@@ -666,6 +666,34 @@ public struct Fuzzilli_Protobuf_ClassAddInstanceProperty {
   public init() {}
 }
 
+public struct Fuzzilli_Protobuf_ClassAddStaticPrivateProperty {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var propertyName: String = String()
+
+  public var hasValue_p: Bool = false
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public struct Fuzzilli_Protobuf_ClassAddInstancePrivateProperty {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var propertyName: String = String()
+
+  public var hasValue_p: Bool = false
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 public struct Fuzzilli_Protobuf_ClassAddInstanceElement {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for

@@ -2319,3 +2319,11 @@ final class Fixup: JsInternalOperation {
         super.init(numInputs: numArguments, numOutputs: hasOutput ? 1 : 0)
     }
 }
+
+final class PrivateName: JsOperation {
+    override var opcode: Opcode { .privateName(self) }
+
+    init() {
+        super.init(numInputs: 1, numOutputs: 1, requiredContext: .classDefinition)
+    }
+}
