@@ -363,12 +363,27 @@ public class JavaScriptLifter: Lifter {
                 w.enterNewBlock()
                 bindVariableToThis(instr.innerOutput(0))
 
+            case .beginClassPrivateInstanceGetter(let op):
+                let PROPERTY = op.propertyName
+                w.emit("get #\(PROPERTY)() {")
+                w.enterNewBlock()
+                bindVariableToThis(instr.innerOutput(0))
+
             case .beginClassInstanceSetter(let op):
                 assert(instr.numInnerOutputs == 2)
                 let vars = w.declareAll(instr.innerOutputs.dropFirst(), usePrefix: "a")
                 let PARAMS = liftParameters(op.parameters, as: vars)
                 let PROPERTY = op.propertyName
                 w.emit("set \(PROPERTY)(\(PARAMS)) {")
+                w.enterNewBlock()
+                bindVariableToThis(instr.innerOutput(0))
+
+            case .beginClassPrivateInstanceSetter(let op):
+                assert(instr.numInnerOutputs == 2)
+                let vars = w.declareAll(instr.innerOutputs.dropFirst(), usePrefix: "a")
+                let PARAMS = liftParameters(op.parameters, as: vars)
+                let PROPERTY = op.propertyName
+                w.emit("set #\(PROPERTY)(\(PARAMS)) {")
                 w.enterNewBlock()
                 bindVariableToThis(instr.innerOutput(0))
 
@@ -425,12 +440,28 @@ public class JavaScriptLifter: Lifter {
                 w.enterNewBlock()
                 bindVariableToThis(instr.innerOutput)
 
+            case .beginClassPrivateStaticGetter(let op):
+                assert(instr.numInnerOutputs == 1)
+                let PROPERTY = op.propertyName
+                w.emit("static get #\(PROPERTY)() {")
+                w.enterNewBlock()
+                bindVariableToThis(instr.innerOutput)
+
             case .beginClassStaticSetter(let op):
                 assert(instr.numInnerOutputs == 2)
                 let vars = w.declareAll(instr.innerOutputs.dropFirst(), usePrefix: "a")
                 let PARAMS = liftParameters(op.parameters, as: vars)
                 let PROPERTY = op.propertyName
                 w.emit("static set \(PROPERTY)(\(PARAMS)) {")
+                w.enterNewBlock()
+                bindVariableToThis(instr.innerOutput(0))
+
+            case .beginClassPrivateStaticSetter(let op):
+                assert(instr.numInnerOutputs == 2)
+                let vars = w.declareAll(instr.innerOutputs.dropFirst(), usePrefix: "a")
+                let PARAMS = liftParameters(op.parameters, as: vars)
+                let PROPERTY = op.propertyName
+                w.emit("static set #\(PROPERTY)(\(PARAMS)) {")
                 w.enterNewBlock()
                 bindVariableToThis(instr.innerOutput(0))
 

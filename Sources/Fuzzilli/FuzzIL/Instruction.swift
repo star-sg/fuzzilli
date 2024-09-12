@@ -410,10 +410,14 @@ extension Instruction: ProtobufConvertible {
                 $0.endClassInstanceMethod = Fuzzilli_Protobuf_EndClassInstanceMethod()
             case .beginClassInstanceGetter(let op):
                 $0.beginClassInstanceGetter = Fuzzilli_Protobuf_BeginClassInstanceGetter.with { $0.propertyName = op.propertyName }
+            case .beginClassPrivateInstanceGetter(let op):
+                $0.beginClassPrivateInstanceGetter = Fuzzilli_Protobuf_BeginClassPrivateInstanceGetter.with { $0.propertyName = op.propertyName }
             case .endClassInstanceGetter:
                 $0.endClassInstanceGetter = Fuzzilli_Protobuf_EndClassInstanceGetter()
             case .beginClassInstanceSetter(let op):
                 $0.beginClassInstanceSetter = Fuzzilli_Protobuf_BeginClassInstanceSetter.with { $0.propertyName = op.propertyName }
+            case .beginClassPrivateInstanceSetter(let op):
+                $0.beginClassPrivateInstanceSetter = Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter.with { $0.propertyName = op.propertyName }
             case .endClassInstanceSetter:
                 $0.endClassInstanceSetter = Fuzzilli_Protobuf_EndClassInstanceSetter()
             case .classAddStaticProperty(let op):
@@ -441,10 +445,14 @@ extension Instruction: ProtobufConvertible {
                 $0.endClassStaticMethod = Fuzzilli_Protobuf_EndClassStaticMethod()
             case .beginClassStaticGetter(let op):
                 $0.beginClassStaticGetter = Fuzzilli_Protobuf_BeginClassStaticGetter.with { $0.propertyName = op.propertyName }
+            case .beginClassPrivateStaticGetter(let op):
+                $0.beginClassPrivateStaticGetter = Fuzzilli_Protobuf_BeginClassPrivateStaticGetter.with { $0.propertyName = op.propertyName }
             case .endClassStaticGetter:
                 $0.endClassStaticGetter = Fuzzilli_Protobuf_EndClassStaticGetter()
             case .beginClassStaticSetter(let op):
                 $0.beginClassStaticSetter = Fuzzilli_Protobuf_BeginClassStaticSetter.with { $0.propertyName = op.propertyName }
+            case .beginClassPrivateStaticSetter(let op):
+                $0.beginClassPrivateStaticSetter = Fuzzilli_Protobuf_BeginClassPrivateStaticSetter.with { $0.propertyName = op.propertyName }
             case .endClassStaticSetter:
                 $0.endClassStaticSetter = Fuzzilli_Protobuf_EndClassStaticSetter()
             case .classAddPrivateInstanceProperty(let op):
@@ -1241,6 +1249,14 @@ extension Instruction: ProtobufConvertible {
             op = Nop()
         case .print:
             fatalError("unreachable")
+        case .beginClassPrivateInstanceGetter(let p):
+            op = BeginClassPrivateInstanceGetter(propertyName: p.propertyName)
+        case .beginClassPrivateInstanceSetter(let p):
+            op = BeginClassPrivateInstanceSetter(propertyName: p.propertyName)
+        case .beginClassPrivateStaticGetter(let p):
+            op = BeginClassPrivateStaticGetter(propertyName: p.propertyName)
+        case .beginClassPrivateStaticSetter(let p):
+            op = BeginClassPrivateStaticSetter(propertyName: p.propertyName)
         }
 
         guard op.numInputs + op.numOutputs + op.numInnerOutputs == inouts.count else {

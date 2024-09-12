@@ -147,10 +147,18 @@ message BeginClassInstanceGetter {
     string propertyName = 1;
 }
 
+message BeginClassPrivateInstanceGetter {
+    string propertyName = 1;
+}
+
 message EndClassInstanceGetter {
 }
 
 message BeginClassInstanceSetter {
+    string propertyName = 1;
+}
+
+message BeginClassPrivateInstanceSetter {
     string propertyName = 1;
 }
 
@@ -189,10 +197,18 @@ message BeginClassStaticGetter {
     string propertyName = 1;
 }
 
+message BeginClassPrivateStaticGetter {
+    string propertyName = 1;
+}
+
 message EndClassStaticGetter {
 }
 
 message BeginClassStaticSetter {
+    string propertyName = 1;
+}
+
+message BeginClassPrivateStaticSetter {
     string propertyName = 1;
 }
 

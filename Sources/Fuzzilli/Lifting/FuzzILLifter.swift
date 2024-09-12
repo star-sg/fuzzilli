@@ -178,6 +178,11 @@ public class FuzzILLifter: Lifter {
             w.emit("BeginClassInstanceGetter `\(op.propertyName)` -> \(params)")
             w.increaseIndentionLevel()
 
+        case .beginClassPrivateInstanceGetter(let op):
+            let params = instr.innerOutputs.map(lift).joined(separator: ", ")
+            w.emit("BeginClassPrivateInstanceGetter `\(op.propertyName)` -> \(params)")
+            w.increaseIndentionLevel()
+
         case .endClassInstanceGetter:
             w.decreaseIndentionLevel()
             w.emit("EndClassInstanceGetter")
@@ -185,6 +190,11 @@ public class FuzzILLifter: Lifter {
         case .beginClassInstanceSetter(let op):
             let params = instr.innerOutputs.map(lift).joined(separator: ", ")
             w.emit("BeginClassInstanceSetter `\(op.propertyName)` -> \(params)")
+            w.increaseIndentionLevel()
+
+        case .beginClassPrivateInstanceSetter(let op):
+            let params = instr.innerOutputs.map(lift).joined(separator: ", ")
+            w.emit("BeginClassPrivateInstanceSetter `\(op.propertyName)` -> \(params)")
             w.increaseIndentionLevel()
 
         case .endClassInstanceSetter:
@@ -234,6 +244,11 @@ public class FuzzILLifter: Lifter {
             w.emit("BeginClassStaticGetter `\(op.propertyName)` -> \(params)")
             w.increaseIndentionLevel()
 
+        case .beginClassPrivateStaticGetter(let op):
+            let params = instr.innerOutputs.map(lift).joined(separator: ", ")
+            w.emit("BeginClassPrivateStaticGetter `\(op.propertyName)` -> \(params)")
+            w.increaseIndentionLevel()
+
         case .endClassStaticGetter:
             w.decreaseIndentionLevel()
             w.emit("EndClassStaticGetter")
@@ -241,6 +256,11 @@ public class FuzzILLifter: Lifter {
         case .beginClassStaticSetter(let op):
             let params = instr.innerOutputs.map(lift).joined(separator: ", ")
             w.emit("BeginClassStaticSetter `\(op.propertyName)` -> \(params)")
+            w.increaseIndentionLevel()
+
+        case .beginClassPrivateStaticSetter(let op):
+            let params = instr.innerOutputs.map(lift).joined(separator: ", ")
+            w.emit("BeginClassPrivateStaticSetter `\(op.propertyName)` -> \(params)")
             w.increaseIndentionLevel()
 
         case .endClassStaticSetter:

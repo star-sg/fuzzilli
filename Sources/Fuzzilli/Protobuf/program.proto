@@ -203,6 +203,10 @@ message Instruction {
         Explore explore = 177;
         Probe probe = 178;
         Fixup fixup = 179;
+        BeginClassPrivateInstanceGetter = 180;
+        BeginClassPrivateInstanceSetter = 181;
+        BeginClassPrivateStaticGetter = 182;
+        BeginClassPrivateStaticSetter = 183;
     }
 }
 

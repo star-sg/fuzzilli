@@ -552,6 +552,17 @@ final class BeginClassInstanceGetter: BeginAnySubroutine {
     }
 }
 
+final class BeginClassPrivateInstanceGetter: BeginAnySubroutine {
+    override var opcode: Opcode { .beginClassPrivateInstanceGetter(self) }
+
+    let propertyName: String
+
+    init(propertyName: String) {
+        self.propertyName = propertyName
+        super.init(parameters: Parameters(count: 0), numInnerOutputs: 1, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
+    }
+}
+
 final class EndClassInstanceGetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassInstanceGetter(self) }
 }
@@ -564,6 +575,17 @@ final class BeginClassInstanceSetter: BeginAnySubroutine {
     init(propertyName: String) {
         self.propertyName = propertyName
         // First inner output is the explicit |this| parameter
+        super.init(parameters: Parameters(count: 1), numInnerOutputs: 2, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
+    }
+}
+
+final class BeginClassPrivateInstanceSetter: BeginAnySubroutine {
+    override var opcode: Opcode { .beginClassPrivateInstanceSetter(self) }
+
+    let propertyName: String
+
+    init(propertyName: String) {
+        self.propertyName = propertyName
         super.init(parameters: Parameters(count: 1), numInnerOutputs: 2, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
     }
 }
@@ -658,6 +680,17 @@ final class BeginClassStaticGetter: BeginAnySubroutine {
     }
 }
 
+final class BeginClassPrivateStaticGetter: BeginAnySubroutine {
+    override var opcode: Opcode { .beginClassPrivateStaticGetter(self) }
+
+    let propertyName: String
+
+    init(propertyName: String) {
+        self.propertyName = propertyName
+        super.init(parameters: Parameters(count: 0), numInnerOutputs: 1, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
+    }
+}
+
 final class EndClassStaticGetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassStaticGetter(self) }
 }
@@ -670,6 +703,17 @@ final class BeginClassStaticSetter: BeginAnySubroutine {
     init(propertyName: String) {
         self.propertyName = propertyName
         // First inner output is the explicit |this| parameter
+        super.init(parameters: Parameters(count: 1), numInnerOutputs: 2, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
+    }
+}
+
+final class BeginClassPrivateStaticSetter: BeginAnySubroutine {
+    override var opcode: Opcode { .beginClassPrivateStaticSetter(self) }
+
+    let propertyName: String
+
+    init(propertyName: String) {
+        self.propertyName = propertyName
         super.init(parameters: Parameters(count: 1), numInnerOutputs: 2, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
     }
 }
@@ -2317,57 +2361,5 @@ final class Fixup: JsInternalOperation {
         self.action = action
         self.originalOperation = originalOperation
         super.init(numInputs: numArguments, numOutputs: hasOutput ? 1 : 0)
-    }
-}
-
-final class PrivateName: JsOperation {
-    override var opcode: Opcode { .privateName(self) }
-
-    init() {
-        super.init(numInputs: 1, numOutputs: 1, requiredContext: .classDefinition)
-    }
-}
-
-final class BeginClassPrivateStaticGetter: BeginAnySubroutine {
-    override var opcode: Opcode { .beginClassPrivateStaticGetter(self) }
-
-    let propertyName: String
-
-    init(propertyName: String) {
-        self.propertyName = propertyName
-        super.init(parameters: Parameters(count: 0), numInnerOutputs: 1, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
-    }
-}
-
-final class BeginClassPrivateInstanceGetter: BeginAnySubroutine {
-    override var opcode: Opcode { .beginClassPrivateInstanceGetter(self) }
-
-    let propertyName: String
-
-    init(propertyName: String) {
-        self.propertyName = propertyName
-        super.init(parameters: Parameters(count: 0), numInnerOutputs: 1, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
-    }
-}
-
-final class BeginClassStaticPrivateSetter: BeginAnySubroutine {
-    override var opcode: Opcode { .beginClassStaticPrivateSetter(self) }
-
-    let propertyName: String
-
-    init(propertyName: String) {
-        self.propertyName = propertyName
-        super.init(parameters: Parameters(count: 1), numInnerOutputs: 2, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
-    }
-}
-
-final class BeginClassInstancePrivateSetter: BeginAnySubroutine {
-    override var opcode: Opcode { .beginClassInstancePrivateSetter(self) }
-
-    let propertyName: String
-
-    init(propertyName: String) {
-        self.propertyName = propertyName
-        super.init(parameters: Parameters(count: 1), numInnerOutputs: 2, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
     }
 }
