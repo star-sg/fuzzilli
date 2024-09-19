@@ -567,6 +567,10 @@ final class EndClassInstanceGetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassInstanceGetter(self) }
 }
 
+final class EndClassPrivateInstanceGetter: EndAnySubroutine {
+    override var opcode: Opcode { .endClassPrivateInstanceGetter(self) }
+}
+
 final class BeginClassInstanceSetter: BeginAnySubroutine {
     override var opcode: Opcode { .beginClassInstanceSetter(self) }
 
@@ -592,6 +596,10 @@ final class BeginClassPrivateInstanceSetter: BeginAnySubroutine {
 
 final class EndClassInstanceSetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassInstanceSetter(self) }
+}
+
+final class EndClassPrivateInstanceSetter: EndAnySubroutine {
+    override var opcode: Opcode { .endClassPrivateInstanceSetter(self) }
 }
 
 final class ClassAddStaticProperty: JsOperation {
@@ -695,6 +703,10 @@ final class EndClassStaticGetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassStaticGetter(self) }
 }
 
+final class EndClassPrivateStaticGetter: EndAnySubroutine {
+    override var opcode: Opcode { .endClassPrivateStaticGetter(self) }
+}
+
 final class BeginClassStaticSetter: BeginAnySubroutine {
     override var opcode: Opcode { .beginClassStaticSetter(self) }
 
@@ -720,6 +732,10 @@ final class BeginClassPrivateStaticSetter: BeginAnySubroutine {
 
 final class EndClassStaticSetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassStaticSetter(self) }
+}
+
+final class EndClassPrivateStaticSetter: EndAnySubroutine {
+    override var opcode: Opcode { .endClassPrivateStaticSetter(self) }
 }
 
 final class ClassAddPrivateInstanceProperty: JsOperation {
@@ -2361,5 +2377,15 @@ final class Fixup: JsInternalOperation {
         self.action = action
         self.originalOperation = originalOperation
         super.init(numInputs: numArguments, numOutputs: hasOutput ? 1 : 0)
+    }
+}
+
+final class PrivateName: JsOperation {
+    override var opcode: Opcode { .privateName(self) }
+
+    let _name: String
+    init(_ name: String) {
+        self._name = name
+        super.init(numOutputs: 1, requiredContext: .classMethod)
     }
 }

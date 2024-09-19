@@ -414,12 +414,16 @@ extension Instruction: ProtobufConvertible {
                 $0.beginClassPrivateInstanceGetter = Fuzzilli_Protobuf_BeginClassPrivateInstanceGetter.with { $0.propertyName = op.propertyName }
             case .endClassInstanceGetter:
                 $0.endClassInstanceGetter = Fuzzilli_Protobuf_EndClassInstanceGetter()
+            case .endClassPrivateInstanceGetter:
+                $0.endClassPrivateInstanceGetter = Fuzzilli_Protobuf_EndClassPrivateInstanceGetter()
             case .beginClassInstanceSetter(let op):
                 $0.beginClassInstanceSetter = Fuzzilli_Protobuf_BeginClassInstanceSetter.with { $0.propertyName = op.propertyName }
             case .beginClassPrivateInstanceSetter(let op):
                 $0.beginClassPrivateInstanceSetter = Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter.with { $0.propertyName = op.propertyName }
             case .endClassInstanceSetter:
                 $0.endClassInstanceSetter = Fuzzilli_Protobuf_EndClassInstanceSetter()
+            case .endClassPrivateInstanceSetter:
+                $0.endClassPrivateInstanceSetter = Fuzzilli_Protobuf_EndClassPrivateInstanceSetter()
             case .classAddStaticProperty(let op):
                 $0.classAddStaticProperty = Fuzzilli_Protobuf_ClassAddStaticProperty.with {
                     $0.propertyName = op.propertyName
@@ -449,12 +453,16 @@ extension Instruction: ProtobufConvertible {
                 $0.beginClassPrivateStaticGetter = Fuzzilli_Protobuf_BeginClassPrivateStaticGetter.with { $0.propertyName = op.propertyName }
             case .endClassStaticGetter:
                 $0.endClassStaticGetter = Fuzzilli_Protobuf_EndClassStaticGetter()
+            case .endClassPrivateStaticGetter:
+                $0.endClassPrivateStaticGetter = Fuzzilli_Protobuf_EndClassPrivateStaticGetter()
             case .beginClassStaticSetter(let op):
                 $0.beginClassStaticSetter = Fuzzilli_Protobuf_BeginClassStaticSetter.with { $0.propertyName = op.propertyName }
             case .beginClassPrivateStaticSetter(let op):
                 $0.beginClassPrivateStaticSetter = Fuzzilli_Protobuf_BeginClassPrivateStaticSetter.with { $0.propertyName = op.propertyName }
             case .endClassStaticSetter:
                 $0.endClassStaticSetter = Fuzzilli_Protobuf_EndClassStaticSetter()
+            case .endClassPrivateStaticSetter:
+                $0.endClassPrivateStaticSetter = Fuzzilli_Protobuf_EndClassPrivateStaticSetter()
             case .classAddPrivateInstanceProperty(let op):
                 $0.classAddPrivateInstanceProperty = Fuzzilli_Protobuf_ClassAddPrivateInstanceProperty.with {
                     $0.propertyName = op.propertyName
@@ -831,6 +839,8 @@ extension Instruction: ProtobufConvertible {
                 $0.loadNewTarget = Fuzzilli_Protobuf_LoadNewTarget()
             case .print(_):
                 fatalError("Print operations should not be serialized")
+            case .privateName(let op):
+                $0.privateName = Fuzzilli_Protobuf_PrivateName.with { $0._name = op._name }
             }
         }
 
@@ -939,12 +949,20 @@ extension Instruction: ProtobufConvertible {
             op = EndClassInstanceMethod()
         case .beginClassInstanceGetter(let p):
             op = BeginClassInstanceGetter(propertyName: p.propertyName)
+        case .beginClassPrivateInstanceGetter(let p):
+            op = BeginClassPrivateInstanceGetter(propertyName: p.propertyName)
         case .endClassInstanceGetter:
             op = EndClassInstanceGetter()
+        case .endClassPrivateInstanceGetter:
+            op = EndClassPrivateInstanceGetter()
         case .beginClassInstanceSetter(let p):
             op = BeginClassInstanceSetter(propertyName: p.propertyName)
+        case .beginClassPrivateInstanceSetter(let p):
+            op = BeginClassPrivateInstanceSetter(propertyName: p.propertyName)
         case .endClassInstanceSetter:
             op = EndClassInstanceSetter()
+        case .endClassPrivateInstanceSetter:
+            op = EndClassPrivateInstanceSetter()
         case .classAddStaticProperty(let p):
             op = ClassAddStaticProperty(propertyName: p.propertyName, hasValue: p.hasValue_p)
         case .classAddStaticElement(let p):
@@ -961,12 +979,20 @@ extension Instruction: ProtobufConvertible {
             op = EndClassStaticMethod()
         case .beginClassStaticGetter(let p):
             op = BeginClassStaticGetter(propertyName: p.propertyName)
+        case .beginClassPrivateStaticGetter(let p):
+            op = BeginClassPrivateStaticGetter(propertyName: p.propertyName)
         case .endClassStaticGetter:
             op = EndClassStaticGetter()
+        case .endClassPrivateStaticGetter:
+            op = EndClassPrivateStaticGetter()
         case .beginClassStaticSetter(let p):
             op = BeginClassStaticSetter(propertyName: p.propertyName)
+        case .beginClassPrivateStaticSetter(let p):
+            op = BeginClassPrivateStaticSetter(propertyName: p.propertyName)
         case .endClassStaticSetter:
             op = EndClassStaticSetter()
+        case .endClassPrivateStaticSetter:
+            op = EndClassPrivateStaticSetter()
         case .classAddPrivateInstanceProperty(let p):
             op = ClassAddPrivateInstanceProperty(propertyName: p.propertyName, hasValue: p.hasValue_p)
         case .beginClassPrivateInstanceMethod(let p):
@@ -1249,14 +1275,8 @@ extension Instruction: ProtobufConvertible {
             op = Nop()
         case .print:
             fatalError("unreachable")
-        case .beginClassPrivateInstanceGetter(let p):
-            op = BeginClassPrivateInstanceGetter(propertyName: p.propertyName)
-        case .beginClassPrivateInstanceSetter(let p):
-            op = BeginClassPrivateInstanceSetter(propertyName: p.propertyName)
-        case .beginClassPrivateStaticGetter(let p):
-            op = BeginClassPrivateStaticGetter(propertyName: p.propertyName)
-        case .beginClassPrivateStaticSetter(let p):
-            op = BeginClassPrivateStaticSetter(propertyName: p.propertyName)
+        case .privateName(let p):
+            op = PrivateName(p._name)
         }
 
         guard op.numInputs + op.numOutputs + op.numInnerOutputs == inouts.count else {

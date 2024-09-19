@@ -352,6 +352,14 @@ public struct Fuzzilli_Protobuf_Instruction {
     set {operation = .endClassInstanceGetter(newValue)}
   }
 
+  public var endClassPrivateInstanceGetter: Fuzzilli_Protobuf_EndClassPrivateInstanceGetter {
+    get {
+      if case .endClassPrivateInstanceGetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_EndClassPrivateInstanceGetter()
+    }
+    set {operation = .endClassPrivateInstanceGetter(newValue)}
+  }
+
   public var beginClassInstanceSetter: Fuzzilli_Protobuf_BeginClassInstanceSetter {
     get {
       if case .beginClassInstanceSetter(let v)? = operation {return v}
@@ -374,6 +382,14 @@ public struct Fuzzilli_Protobuf_Instruction {
       return Fuzzilli_Protobuf_EndClassInstanceSetter()
     }
     set {operation = .endClassInstanceSetter(newValue)}
+  }
+
+  public var endClassPrivateInstanceSetter: Fuzzilli_Protobuf_EndClassPrivateInstanceSetter {
+    get {
+      if case .endClassPrivateInstanceSetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_EndClassPrivateInstanceSetter()
+    }
+    set {operation = .endClassPrivateInstanceSetter(newValue)}
   }
 
   public var classAddStaticProperty: Fuzzilli_Protobuf_ClassAddStaticProperty {
@@ -456,6 +472,14 @@ public struct Fuzzilli_Protobuf_Instruction {
     set {operation = .endClassStaticGetter(newValue)}
   }
 
+  public var endClassPrivateStaticGetter: Fuzzilli_Protobuf_EndClassPrivateStaticGetter {
+    get {
+      if case .endClassPrivateStaticGetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_EndClassPrivateStaticGetter()
+    }
+    set {operation = .endClassPrivateStaticGetter(newValue)}
+  }
+
   public var beginClassStaticSetter: Fuzzilli_Protobuf_BeginClassStaticSetter {
     get {
       if case .beginClassStaticSetter(let v)? = operation {return v}
@@ -478,6 +502,14 @@ public struct Fuzzilli_Protobuf_Instruction {
       return Fuzzilli_Protobuf_EndClassStaticSetter()
     }
     set {operation = .endClassStaticSetter(newValue)}
+  }
+
+  public var endClassPrivateStaticSetter: Fuzzilli_Protobuf_EndClassPrivateStaticSetter {
+    get {
+      if case .endClassPrivateStaticSetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_EndClassPrivateStaticSetter()
+    }
+    set {operation = .endClassPrivateStaticSetter(newValue)}
   }
 
   public var classAddPrivateInstanceProperty: Fuzzilli_Protobuf_ClassAddPrivateInstanceProperty {
@@ -1504,6 +1536,14 @@ public struct Fuzzilli_Protobuf_Instruction {
     set {operation = .fixup(newValue)}
   }
 
+  public var privateName: Fuzzilli_Protobuf_PrivateName {
+    get {
+      if case .privateName(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_PrivateName()
+    }
+    set {operation = .privateName(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Operation: Equatable {
@@ -1545,9 +1585,11 @@ public struct Fuzzilli_Protobuf_Instruction {
     case beginClassInstanceGetter(Fuzzilli_Protobuf_BeginClassInstanceGetter)
     case beginClassPrivateInstanceGetter(Fuzzilli_Protobuf_BeginClassPrivateInstanceGetter)
     case endClassInstanceGetter(Fuzzilli_Protobuf_EndClassInstanceGetter)
+    case endClassPrivateInstanceGetter(Fuzzilli_Protobuf_EndClassPrivateInstanceGetter)
     case beginClassInstanceSetter(Fuzzilli_Protobuf_BeginClassInstanceSetter)
     case beginClassPrivateInstanceSetter(Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter)
     case endClassInstanceSetter(Fuzzilli_Protobuf_EndClassInstanceSetter)
+    case endClassPrivateInstanceSetter(Fuzzilli_Protobuf_EndClassPrivateInstanceSetter)
     case classAddStaticProperty(Fuzzilli_Protobuf_ClassAddStaticProperty)
     case classAddStaticElement(Fuzzilli_Protobuf_ClassAddStaticElement)
     case classAddStaticComputedProperty(Fuzzilli_Protobuf_ClassAddStaticComputedProperty)
@@ -1558,9 +1600,11 @@ public struct Fuzzilli_Protobuf_Instruction {
     case beginClassStaticGetter(Fuzzilli_Protobuf_BeginClassStaticGetter)
     case beginClassPrivateStaticGetter(Fuzzilli_Protobuf_BeginClassPrivateStaticGetter)
     case endClassStaticGetter(Fuzzilli_Protobuf_EndClassStaticGetter)
+    case endClassPrivateStaticGetter(Fuzzilli_Protobuf_EndClassPrivateStaticGetter)
     case beginClassStaticSetter(Fuzzilli_Protobuf_BeginClassStaticSetter)
     case beginClassPrivateStaticSetter(Fuzzilli_Protobuf_BeginClassPrivateStaticSetter)
     case endClassStaticSetter(Fuzzilli_Protobuf_EndClassStaticSetter)
+    case endClassPrivateStaticSetter(Fuzzilli_Protobuf_EndClassPrivateStaticSetter)
     case classAddPrivateInstanceProperty(Fuzzilli_Protobuf_ClassAddPrivateInstanceProperty)
     case beginClassPrivateInstanceMethod(Fuzzilli_Protobuf_BeginClassPrivateInstanceMethod)
     case endClassPrivateInstanceMethod(Fuzzilli_Protobuf_EndClassPrivateInstanceMethod)
@@ -1689,6 +1733,7 @@ public struct Fuzzilli_Protobuf_Instruction {
     case explore(Fuzzilli_Protobuf_Explore)
     case probe(Fuzzilli_Protobuf_Probe)
     case fixup(Fuzzilli_Protobuf_Fixup)
+    case privateName(Fuzzilli_Protobuf_PrivateName)
 
   #if !swift(>=4.1)
     public static func ==(lhs: Fuzzilli_Protobuf_Instruction.OneOf_Operation, rhs: Fuzzilli_Protobuf_Instruction.OneOf_Operation) -> Bool {
@@ -1848,6 +1893,10 @@ public struct Fuzzilli_Protobuf_Instruction {
         guard case .endClassInstanceGetter(let l) = lhs, case .endClassInstanceGetter(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
+      case (.endClassPrivateInstanceGetter, .endClassPrivateInstanceGetter): return {
+        guard case .endClassPrivateInstanceGetter(let l) = lhs, case .endClassPrivateInstanceGetter(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
       case (.beginClassInstanceSetter, .beginClassInstanceSetter): return {
         guard case .beginClassInstanceSetter(let l) = lhs, case .beginClassInstanceSetter(let r) = rhs else { preconditionFailure() }
         return l == r
@@ -1858,6 +1907,10 @@ public struct Fuzzilli_Protobuf_Instruction {
       }()
       case (.endClassInstanceSetter, .endClassInstanceSetter): return {
         guard case .endClassInstanceSetter(let l) = lhs, case .endClassInstanceSetter(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.endClassPrivateInstanceSetter, .endClassPrivateInstanceSetter): return {
+        guard case .endClassPrivateInstanceSetter(let l) = lhs, case .endClassPrivateInstanceSetter(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       case (.classAddStaticProperty, .classAddStaticProperty): return {
@@ -1900,6 +1953,10 @@ public struct Fuzzilli_Protobuf_Instruction {
         guard case .endClassStaticGetter(let l) = lhs, case .endClassStaticGetter(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
+      case (.endClassPrivateStaticGetter, .endClassPrivateStaticGetter): return {
+        guard case .endClassPrivateStaticGetter(let l) = lhs, case .endClassPrivateStaticGetter(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
       case (.beginClassStaticSetter, .beginClassStaticSetter): return {
         guard case .beginClassStaticSetter(let l) = lhs, case .beginClassStaticSetter(let r) = rhs else { preconditionFailure() }
         return l == r
@@ -1910,6 +1967,10 @@ public struct Fuzzilli_Protobuf_Instruction {
       }()
       case (.endClassStaticSetter, .endClassStaticSetter): return {
         guard case .endClassStaticSetter(let l) = lhs, case .endClassStaticSetter(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
+      case (.endClassPrivateStaticSetter, .endClassPrivateStaticSetter): return {
+        guard case .endClassPrivateStaticSetter(let l) = lhs, case .endClassPrivateStaticSetter(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
       case (.classAddPrivateInstanceProperty, .classAddPrivateInstanceProperty): return {
@@ -2424,6 +2485,10 @@ public struct Fuzzilli_Protobuf_Instruction {
         guard case .fixup(let l) = lhs, case .fixup(let r) = rhs else { preconditionFailure() }
         return l == r
       }()
+      case (.privateName, .privateName): return {
+        guard case .privateName(let l) = lhs, case .privateName(let r) = rhs else { preconditionFailure() }
+        return l == r
+      }()
       default: return false
       }
     }
@@ -2661,10 +2726,15 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
     177: .same(proto: "explore"),
     178: .same(proto: "probe"),
     179: .same(proto: "fixup"),
-    180: .same(proto: "beginClassPrivateInstanceetter"),
+    180: .same(proto: "beginClassPrivateInstanceGetter"),
     181: .same(proto: "beginClassPrivateInstanceSetter"),
     182: .same(proto: "beginClassPrivateStaticGetter"),
     183: .same(proto: "beginClassPrivateStaticSetter"),
+    184: .same(proto: "endClassPrivateInstanceGetter"),
+    185: .same(proto: "endClassPrivateInstanceSetter"),
+    186: .same(proto: "endClassPrivateStaticGetter"),
+    187: .same(proto: "endClassPrivateStaticSetter"),
+    188: .same(proto: "privateName"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -5035,6 +5105,71 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .beginClassPrivateStaticSetter(v)
         }
       }()
+      case 184: try {
+        var v: Fuzzilli_Protobuf_EndClassPrivateInstanceGetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .endClassPrivateInstanceGetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .endClassPrivateInstanceGetter(v)
+        }
+      }()
+      case 185: try {
+        var v: Fuzzilli_Protobuf_EndClassPrivateInstanceSetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .endClassPrivateInstanceSetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .endClassPrivateInstanceSetter(v)
+        }
+      }()
+      case 186: try {
+        var v: Fuzzilli_Protobuf_EndClassPrivateStaticGetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .endClassPrivateStaticGetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .endClassPrivateStaticGetter(v)
+        }
+      }()
+      case 187: try {
+        var v: Fuzzilli_Protobuf_EndClassPrivateStaticSetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .endClassPrivateStaticSetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .endClassPrivateStaticSetter(v)
+        }
+      }()
+      case 188: try {
+        var v: Fuzzilli_Protobuf_PrivateName?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .privateName(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .privateName(v)
+        }
+      }()
       default: break
       }
     }
@@ -5776,6 +5911,26 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
     case .beginClassPrivateStaticSetter?: try {
       guard case .beginClassPrivateStaticSetter(let v)? = self.operation else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 183)
+    }()
+    case .endClassPrivateInstanceGetter?: try {
+      guard case .endClassPrivateInstanceGetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 184)
+    }()
+    case .endClassPrivateInstanceSetter?: try {
+      guard case .endClassPrivateInstanceSetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 185)
+    }()
+    case .endClassPrivateStaticGetter?: try {
+      guard case .endClassPrivateStaticGetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 186)
+    }()
+    case .endClassPrivateStaticSetter?: try {
+      guard case .endClassPrivateStaticSetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 187)
+    }()
+    case .privateName?: try {
+      guard case .privateName(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 188)
     }()
     case nil: break
     }

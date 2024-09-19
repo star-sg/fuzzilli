@@ -207,6 +207,11 @@ message Instruction {
         BeginClassPrivateInstanceSetter = 181;
         BeginClassPrivateStaticGetter = 182;
         BeginClassPrivateStaticSetter = 183;
+        EndClassPrivateInstanceGetter = 184;
+        EndClassPrivateInstanceSetter = 185;
+        EndClassPrivateStaticGetter = 186;
+        EndClassPrivateStaticSetter = 187;
+        PrivaetName = 188;
     }
 }
 

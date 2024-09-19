@@ -787,6 +787,16 @@ public struct Fuzzilli_Protobuf_EndClassInstanceGetter {
   public init() {}
 }
 
+public struct Fuzzilli_Protobuf_EndClassPrivateInstanceGetter {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 public struct Fuzzilli_Protobuf_BeginClassInstanceSetter {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -812,6 +822,16 @@ public struct Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter {
 }
 
 public struct Fuzzilli_Protobuf_EndClassInstanceSetter {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public struct Fuzzilli_Protobuf_EndClassPrivateInstanceSetter {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -948,6 +968,16 @@ public struct Fuzzilli_Protobuf_EndClassStaticGetter {
   public init() {}
 }
 
+public struct Fuzzilli_Protobuf_EndClassPrivateStaticGetter {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 public struct Fuzzilli_Protobuf_BeginClassStaticSetter {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -973,6 +1003,16 @@ public struct Fuzzilli_Protobuf_BeginClassPrivateStaticSetter {
 }
 
 public struct Fuzzilli_Protobuf_EndClassStaticSetter {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public struct Fuzzilli_Protobuf_EndClassPrivateStaticSetter {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -2587,6 +2627,18 @@ public struct Fuzzilli_Protobuf_Print {
   public init() {}
 }
 
+public struct Fuzzilli_Protobuf_PrivateName {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var _name: String = String()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 #if swift(>=5.5) && canImport(_Concurrency)
 extension Fuzzilli_Protobuf_PropertyType: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_UnaryOperator: @unchecked Sendable {}
@@ -2627,9 +2679,13 @@ extension Fuzzilli_Protobuf_ClassAddInstanceComputedProperty: @unchecked Sendabl
 extension Fuzzilli_Protobuf_BeginClassInstanceMethod: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_EndClassInstanceMethod: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_BeginClassInstanceGetter: @unchecked Sendable {}
+extension Fuzzilli_Protobuf_BeginClassPrivateInstanceGetter: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_EndClassInstanceGetter: @unchecked Sendable {}
+extension Fuzzilli_Protobuf_EndClassPrivateInstanceGetter: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_BeginClassInstanceSetter: @unchecked Sendable {}
+extension Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_EndClassInstanceSetter: @unchecked Sendable {}
+extension Fuzzilli_Protobuf_EndClassPrivateInstanceSetter: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_ClassAddStaticProperty: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_ClassAddStaticElement: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_ClassAddStaticComputedProperty: @unchecked Sendable {}
@@ -2638,9 +2694,13 @@ extension Fuzzilli_Protobuf_EndClassStaticInitializer: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_BeginClassStaticMethod: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_EndClassStaticMethod: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_BeginClassStaticGetter: @unchecked Sendable {}
+extension Fuzzilli_Protobuf_BeginClassPrivateStaticGetter: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_EndClassStaticGetter: @unchecked Sendable {}
+extension Fuzzilli_Protobuf_EndClassPrivateStaticGetter: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_BeginClassStaticSetter: @unchecked Sendable {}
+extension Fuzzilli_Protobuf_BeginClassPrivateStaticSetter: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_EndClassStaticSetter: @unchecked Sendable {}
+extension Fuzzilli_Protobuf_EndClassPrivateStaticSetter: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_ClassAddPrivateInstanceProperty: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_BeginClassPrivateInstanceMethod: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_EndClassPrivateInstanceMethod: @unchecked Sendable {}
@@ -2771,6 +2831,7 @@ extension Fuzzilli_Protobuf_BeginBlockStatement: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_EndBlockStatement: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_Nop: @unchecked Sendable {}
 extension Fuzzilli_Protobuf_Print: @unchecked Sendable {}
+extension Fuzzilli_Protobuf_PrivateName: @unchecked Sendable {}
 #endif  // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -3859,6 +3920,25 @@ extension Fuzzilli_Protobuf_EndClassInstanceGetter: SwiftProtobuf.Message, Swift
   }
 }
 
+extension Fuzzilli_Protobuf_EndClassPrivateInstanceGetter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EndClassPrivateInstanceGetter"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Fuzzilli_Protobuf_EndClassPrivateInstanceGetter, rhs: Fuzzilli_Protobuf_EndClassPrivateInstanceGetter) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Fuzzilli_Protobuf_BeginClassInstanceSetter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".BeginClassInstanceSetter"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -3942,6 +4022,24 @@ extension Fuzzilli_Protobuf_EndClassInstanceSetter: SwiftProtobuf.Message, Swift
   }
 }
 
+extension Fuzzilli_Protobuf_EndClassPrivateInstanceSetter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EndClassPrivateInstanceSetter"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Fuzzilli_Protobuf_EndClassPrivateInstanceSetter, rhs: Fuzzilli_Protobuf_EndClassPrivateInstanceSetter) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
 extension Fuzzilli_Protobuf_ClassAddStaticProperty: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ClassAddStaticProperty"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -4233,6 +4331,25 @@ extension Fuzzilli_Protobuf_EndClassStaticGetter: SwiftProtobuf.Message, SwiftPr
   }
 }
 
+extension Fuzzilli_Protobuf_EndClassPrivateStaticGetter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EndClassPrivateStaticGetter"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Fuzzilli_Protobuf_EndClassPrivateStaticGetter, rhs: Fuzzilli_Protobuf_EndClassPrivateStaticGetter) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Fuzzilli_Protobuf_BeginClassStaticSetter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".BeginClassStaticSetter"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -4311,6 +4428,25 @@ extension Fuzzilli_Protobuf_EndClassStaticSetter: SwiftProtobuf.Message, SwiftPr
   }
 
   public static func ==(lhs: Fuzzilli_Protobuf_EndClassStaticSetter, rhs: Fuzzilli_Protobuf_EndClassStaticSetter) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Fuzzilli_Protobuf_EndClassPrivateStaticSetter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".EndClassPrivateStaticSetter"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Fuzzilli_Protobuf_EndClassPrivateStaticSetter, rhs: Fuzzilli_Protobuf_EndClassPrivateStaticSetter) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -7951,6 +8087,38 @@ extension Fuzzilli_Protobuf_Print: SwiftProtobuf.Message, SwiftProtobuf._Message
   }
 
   public static func ==(lhs: Fuzzilli_Protobuf_Print, rhs: Fuzzilli_Protobuf_Print) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Fuzzilli_Protobuf_PrivateName: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".PrivateName"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "_name"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self._name) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self._name.isEmpty {
+      try visitor.visitSingularStringField(value: self._name, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Fuzzilli_Protobuf_PrivateName, rhs: Fuzzilli_Protobuf_PrivateName) -> Bool {
+    if lhs._name != rhs._name {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

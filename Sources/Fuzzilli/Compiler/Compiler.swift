@@ -263,10 +263,18 @@ public class JavaScriptCompiler {
                         }
                     }
 
-                    if method.isStatic {
-                        emit(EndClassStaticMethod())
+                    if field.isPrivate {
+                        if method.isStatic {
+                            emit(EndClassPrivateStaticMethod())
+                        } else {
+                            emit(EndClassPrivateInstanceMethod())
+                        }
                     } else {
-                        emit(EndClassInstanceMethod())
+                        if method.isStatic {
+                            emit(EndClassStaticMethod())
+                        } else {
+                            emit(EndClassInstanceMethod())
+                        }
                     }
 
                 case .getter(let getter):
@@ -292,10 +300,18 @@ public class JavaScriptCompiler {
                         }
                     }
 
-                    if getter.isStatic {
-                        emit(EndClassStaticGetter())
+                    if field.isPrivate {
+                        if getter.isStatic {
+                            emit(EndClassPrivateStaticGetter())
+                        } else {
+                            emit(EndClassPrivateInstanceGetter())
+                        }
                     } else {
-                        emit(EndClassInstanceGetter())
+                        if getter.isStatic {
+                            emit(EndClassPrivateStaticGetter())
+                        } else {
+                            emit(EndClassPrivateInstanceGetter())
+                        }
                     }
 
                 case .setter(let setter):
@@ -323,10 +339,18 @@ public class JavaScriptCompiler {
                         }
                     }
 
-                    if setter.isStatic {
-                        emit(EndClassStaticSetter())
+                    if field.isPrivate {
+                        if setter.isStatic {
+                            emit(EndClassPrivateStaticSetter())
+                        } else {
+                            emit(EndClassPrivateInstanceSetter())
+                        }
                     } else {
-                        emit(EndClassInstanceSetter())
+                        if setter.isStatic {
+                            emit(EndClassStaticSetter())
+                        } else {
+                            emit(EndClassInstanceSetter())
+                        }
                     }
 
                 case .staticInitializer(let staticInitializer):
@@ -544,8 +568,228 @@ public class JavaScriptCompiler {
 
         switch expr {
 
-        case .privateName( _):
-            return emit(Nop()).output
+        case .classExpression(let cls):
+            var propertyValues = [Variable]()
+            var computedPropertyKeys = [Variable]()
+            for field in cls.fields {
+                guard let field = field.field else {
+                    throw CompilerError.invalidNodeError("missing concrete field in class expression")
+                }
+                if case .property(let property) = field {
+                    if property.hasValue {
+                        propertyValues.append(try compileExpression(property.value))
+                    }
+                    if case .expression(let key) = property.key {
+                        computedPropertyKeys.append(try compileExpression(key))
+                    }
+                }
+            }
+
+            propertyValues.reverse()
+            computedPropertyKeys.reverse()
+
+            let classDecl: Instruction
+            if cls.hasSuperClass {
+                let superClass = try compileExpression(cls.superClass)
+                classDecl = emit(BeginClassDefinition(hasSuperclass: true), withInputs: [superClass])
+            } else {
+                classDecl = emit(BeginClassDefinition(hasSuperclass: false))
+            }
+
+            for field in cls.fields {
+                switch field.field! {
+                case .property(let property):
+                    guard let key = property.key else {
+                        throw CompilerError.invalidNodeError("Missing key in class expression property")
+                    }
+
+                    let op: Operation
+                    var inputs = [Variable]()
+                    switch key {
+                    case .name(let name):
+                        if field.isPrivate {
+                            if property.isStatic {
+                                op = ClassAddPrivateStaticProperty(propertyName: name, hasValue: property.hasValue)
+                            } else {
+                                op = ClassAddPrivateInstanceProperty(propertyName: name, hasValue: property.hasValue)
+                            }
+                        } else {
+                            if property.isStatic {
+                                op = ClassAddStaticProperty(propertyName: name, hasValue: property.hasValue)
+                            } else {
+                                op = ClassAddInstanceProperty(propertyName: name, hasValue: property.hasValue)
+                            }
+                        }
+                    case .index(let index):
+                        if property.isStatic {
+                            op = ClassAddStaticElement(index: index, hasValue: property.hasValue)
+                        } else {
+                            op = ClassAddInstanceElement(index: index, hasValue: property.hasValue)
+                        }
+                    case .expression:
+                        inputs.append(computedPropertyKeys.removeLast())
+                        if property.isStatic {
+                            op = ClassAddStaticComputedProperty(hasValue: property.hasValue)
+                        } else {
+                            op = ClassAddInstanceComputedProperty(hasValue: property.hasValue)
+                        }
+                    }
+                    if property.hasValue {
+                        inputs.append(propertyValues.removeLast())
+                    }
+                    emit(op, withInputs: inputs)
+
+                case .ctor(let constructor):
+                    let parameters = convertParameters(constructor.parameters)
+                    let head = emit(BeginClassConstructor(parameters: parameters))
+
+                    try enterNewScope {
+                        var parameters = head.innerOutputs
+                        map("this", to: parameters.removeFirst())
+                        mapParameters(constructor.parameters, to: parameters)
+                        for statement in constructor.body {
+                            try compileStatement(statement)
+                        }
+                    }
+
+                    emit(EndClassConstructor())
+
+                case .method(let method):
+                    let parameters = convertParameters(method.parameters)
+                    let head: Instruction
+                    if field.isPrivate {
+                        if method.isStatic {
+                            head = emit(BeginClassPrivateStaticMethod(methodName: method.name, parameters: parameters))
+                        } else {
+                            head = emit(BeginClassPrivateInstanceMethod(methodName: method.name, parameters: parameters))
+                        }
+                    } else {
+                        if method.isStatic {
+                            head = emit(BeginClassStaticMethod(methodName: method.name, parameters: parameters))
+                        } else {
+                            head = emit(BeginClassInstanceMethod(methodName: method.name, parameters: parameters))
+                        }
+                    }
+
+                    try enterNewScope {
+                        var parameters = head.innerOutputs
+                        map("this", to: parameters.removeFirst())
+                        mapParameters(method.parameters, to: parameters)
+                        for statement in method.body {
+                            try compileStatement(statement)
+                        }
+                    }
+
+                    if field.isPrivate {
+                        if method.isStatic {
+                            emit(EndClassPrivateStaticMethod())
+                        } else {
+                            emit(EndClassPrivateInstanceMethod())
+                        }
+                    } else {
+                        if method.isStatic {
+                            emit(EndClassStaticMethod())
+                        } else {
+                            emit(EndClassInstanceMethod())
+                        }
+                    }
+
+                case .getter(let getter):
+                    let head: Instruction
+                    if field.isPrivate {
+                        if getter.isStatic {
+                            head = emit(BeginClassPrivateStaticGetter(propertyName: getter.name))
+                        } else {
+                            head = emit(BeginClassPrivateInstanceGetter(propertyName: getter.name))
+                        }
+                    } else {
+                        if getter.isStatic {
+                            head = emit(BeginClassStaticGetter(propertyName: getter.name))
+                        } else {
+                            head = emit(BeginClassInstanceGetter(propertyName: getter.name))
+                        }
+                    }
+
+                    try enterNewScope {
+                        map("this", to: head.innerOutput)
+                        for statement in getter.body {
+                            try compileStatement(statement)
+                        }
+                    }
+
+                    if field.isPrivate {
+                        if getter.isStatic {
+                            emit(EndClassPrivateStaticGetter())
+                        } else {
+                            emit(EndClassPrivateInstanceGetter())
+                        }
+                    } else {
+                        if getter.isStatic {
+                            emit(EndClassPrivateStaticGetter())
+                        } else {
+                            emit(EndClassPrivateInstanceGetter())
+                        }
+                    }
+
+                case .setter(let setter):
+                    let head: Instruction
+                    if field.isPrivate {
+                        if setter.isStatic {
+                            head = emit(BeginClassPrivateStaticSetter(propertyName: setter.name))
+                        } else {
+                            head = emit(BeginClassPrivateInstanceSetter(propertyName: setter.name))
+                        }
+                    } else {
+                        if setter.isStatic {
+                            head = emit(BeginClassStaticSetter(propertyName: setter.name))
+                        } else {
+                            head = emit(BeginClassInstanceSetter(propertyName: setter.name))
+                        }
+                    }
+
+                    try enterNewScope {
+                        var parameters = head.innerOutputs
+                        map("this", to: parameters.removeFirst())
+                        mapParameters([setter.parameter], to: parameters)
+                        for statement in setter.body {
+                            try compileStatement(statement)
+                        }
+                    }
+
+                    if field.isPrivate {
+                        if setter.isStatic {
+                            emit(EndClassPrivateStaticSetter())
+                        } else {
+                            emit(EndClassPrivateInstanceSetter())
+                        }
+                    } else {
+                        if setter.isStatic {
+                            emit(EndClassStaticSetter())
+                        } else {
+                            emit(EndClassInstanceSetter())
+                        }
+                    }
+
+                case .staticInitializer(let staticInitializer):
+                    let head = emit(BeginClassStaticInitializer())
+
+                    try enterNewScope {
+                        map("this", to: head.innerOutput)
+                        for statement in staticInitializer.body {
+                            try compileStatement(statement)
+                        }
+                    }
+
+                    emit(EndClassStaticInitializer())
+                }
+            }
+
+            emit(EndClassDefinition())
+
+            return classDecl.output
+
+        case .privateName(let p):
+            return emit(PrivateName(p.id.name)).output
 
         case .ternaryExpression(let ternaryExpression):
             let condition = try compileExpression(ternaryExpression.condition)

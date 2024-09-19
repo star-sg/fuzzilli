@@ -1771,6 +1771,11 @@ public class ProgramBuilder {
         // property and method names for private property accesses and private method calls.
         public fileprivate(set) var privateProperties: [String] = []
         public fileprivate(set) var privateMethods: [String] = []
+        public fileprivate(set) var privateInstanceGetters: [String] = []
+        public fileprivate(set) var privateInstanceSetters: [String] = []
+        public fileprivate(set) var privateStaticGetters: [String] = []
+        public fileprivate(set) var privateStaticSetters: [String] = []
+
         public var privateFields: [String] {
             return privateProperties + privateMethods
         }
@@ -1816,10 +1821,22 @@ public class ProgramBuilder {
             b.emit(EndClassInstanceGetter())
         }
 
+        public func addPrivateInstanceGetter(for name: String, _ body: (_ this: Variable) -> ()) {
+            let instr = b.emit(BeginClassPrivateInstanceGetter(propertyName: name))
+            body(instr.innerOutput)
+            b.emit(EndClassPrivateInstanceGetter())
+        }
+
         public func addInstanceSetter(for name: String, _ body: (_ this: Variable, _ val: Variable) -> ()) {
             let instr = b.emit(BeginClassInstanceSetter(propertyName: name))
             body(instr.innerOutput(0), instr.innerOutput(1))
             b.emit(EndClassInstanceSetter())
+        }
+
+        public func addPrivateInstanceSetter(for name: String, _ body: (_ this: Variable, _ val: Variable) -> ()) {
+            let instr = b.emit(BeginClassPrivateInstanceSetter(propertyName: name))
+            body(instr.innerOutput(0), instr.innerOutput(1))
+            b.emit(EndClassPrivateInstanceSetter())
         }
 
         public func addStaticProperty(_ name: String, value: Variable? = nil) {
@@ -1856,10 +1873,22 @@ public class ProgramBuilder {
             b.emit(EndClassStaticGetter())
         }
 
+        public func addPrivateStaticGetter(for name: String, _ body: (_ this: Variable) -> ()) {
+            let instr = b.emit(BeginClassPrivateStaticGetter(propertyName: name))
+            body(instr.innerOutput)
+            b.emit(EndClassPrivateStaticGetter())
+        }
+
         public func addStaticSetter(for name: String, _ body: (_ this: Variable, _ val: Variable) -> ()) {
             let instr = b.emit(BeginClassStaticSetter(propertyName: name))
             body(instr.innerOutput(0), instr.innerOutput(1))
             b.emit(EndClassStaticSetter())
+        }
+
+        public func addPrivateStaticSetter(for name: String, _ body: (_ this: Variable, _ val: Variable) -> ()) {
+            let instr = b.emit(BeginClassPrivateStaticSetter(propertyName: name))
+            body(instr.innerOutput(0), instr.innerOutput(1))
+            b.emit(EndClassPrivateStaticSetter())
         }
 
         public func addPrivateInstanceProperty(_ name: String, value: Variable? = nil) {
@@ -2557,6 +2586,10 @@ public class ProgramBuilder {
         emit(Print(), withInputs: [value])
     }
 
+    @discardableResult
+    public func privateName(_ name: String) -> Variable {
+        return emit(PrivateName(name)).output
+    }
 
     /// Returns the next free variable.
     func nextVariable() -> Variable {
@@ -2663,8 +2696,12 @@ public class ProgramBuilder {
             activeClassDefinitions.top.instanceMethods.append(op.methodName)
         case .beginClassInstanceGetter(let op):
             activeClassDefinitions.top.instanceGetters.append(op.propertyName)
+        case .beginClassPrivateInstanceGetter(let op):
+            activeClassDefinitions.top.privateInstanceGetters.append(op.propertyName)
         case .beginClassInstanceSetter(let op):
             activeClassDefinitions.top.instanceSetters.append(op.propertyName)
+        case .beginClassPrivateInstanceSetter(let op):
+            activeClassDefinitions.top.privateInstanceSetters.append(op.propertyName)
         case .classAddStaticProperty(let op):
             activeClassDefinitions.top.staticProperties.append(op.propertyName)
         case .classAddStaticElement(let op):
@@ -2675,8 +2712,12 @@ public class ProgramBuilder {
             activeClassDefinitions.top.staticMethods.append(op.methodName)
         case .beginClassStaticGetter(let op):
             activeClassDefinitions.top.staticGetters.append(op.propertyName)
+        case .beginClassPrivateStaticGetter(let op):
+            activeClassDefinitions.top.privateStaticGetters.append(op.propertyName)
         case .beginClassStaticSetter(let op):
             activeClassDefinitions.top.staticSetters.append(op.propertyName)
+        case .beginClassPrivateStaticSetter(let op):
+            activeClassDefinitions.top.privateStaticSetters.append(op.propertyName)
         case .classAddPrivateInstanceProperty(let op):
             activeClassDefinitions.top.privateProperties.append(op.propertyName)
         case .beginClassPrivateInstanceMethod(let op):

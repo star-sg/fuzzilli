@@ -126,10 +126,9 @@ message ClassDeclaration {
 }
 
 message ClassExpression {
-    string name = 1;
     // The superclass is optional
-    Expression superClass = 2;
-    repeated ClassField fields = 3;
+    Expression superClass = 1;
+    repeated ClassField fields = 2;
 }
 
 message ReturnStatement {

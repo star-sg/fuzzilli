@@ -187,6 +187,10 @@ public class FuzzILLifter: Lifter {
             w.decreaseIndentionLevel()
             w.emit("EndClassInstanceGetter")
 
+        case .endClassPrivateInstanceGetter:
+            w.decreaseIndentionLevel()
+            w.emit("EndClassPrivateInstanceGetter")
+
         case .beginClassInstanceSetter(let op):
             let params = instr.innerOutputs.map(lift).joined(separator: ", ")
             w.emit("BeginClassInstanceSetter `\(op.propertyName)` -> \(params)")
@@ -200,6 +204,10 @@ public class FuzzILLifter: Lifter {
         case .endClassInstanceSetter:
             w.decreaseIndentionLevel()
             w.emit("EndClassInstanceSetter")
+
+        case .endClassPrivateInstanceSetter:
+            w.decreaseIndentionLevel()
+            w.emit("EndClassPrivateInstanceSetter")
 
         case .classAddStaticProperty(let op):
             if op.hasValue {
@@ -253,6 +261,10 @@ public class FuzzILLifter: Lifter {
             w.decreaseIndentionLevel()
             w.emit("EndClassStaticGetter")
 
+        case .endClassPrivateStaticGetter:
+            w.decreaseIndentionLevel()
+            w.emit("EndClassPrivateStaticGetter")
+
         case .beginClassStaticSetter(let op):
             let params = instr.innerOutputs.map(lift).joined(separator: ", ")
             w.emit("BeginClassStaticSetter `\(op.propertyName)` -> \(params)")
@@ -266,6 +278,10 @@ public class FuzzILLifter: Lifter {
         case .endClassStaticSetter:
             w.decreaseIndentionLevel()
             w.emit("EndClassStaticSetter")
+
+        case .endClassPrivateStaticSetter:
+            w.decreaseIndentionLevel()
+            w.emit("EndClassPrivateStaticSetter")
 
         case .classAddPrivateInstanceProperty(let op):
             if op.hasValue {
@@ -768,6 +784,9 @@ public class FuzzILLifter: Lifter {
 
         case .print:
             w.emit("Print \(input(0))")
+
+        case .privateName(let op):
+           w.emit("\(output()) <- PrivateName '\(op._name)'")
         }
     }
 

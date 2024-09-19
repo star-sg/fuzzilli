@@ -104,7 +104,7 @@ function parse(script, proto) {
 
     function processClass(node) {
         let cls = {};
-        cls.name = node.id.name;
+        if (node.id != null) cls.name = node.id.name;
         if (node.superClass !== null) {
             cls.superClass = visitExpression(node.superClass);
         }
@@ -572,7 +572,7 @@ function parse(script, proto) {
                 return makeExpression('V8IntrinsicIdentifier', { name: node.name });
             }
             case 'PrivateName': {
-                return makeExpression('PrivateName', { id: node.id });
+                return makeExpression('PrivateName', { identifier: node.id });
             }
             case 'ClassExpression': {
                 return makeExpression('ClassExpression', processClass(node));
@@ -595,7 +595,7 @@ protobuf.load(astProtobufDefinitionPath, function(err, root) {
     let ast = parse(script, root);
 
     // Uncomment this to print the AST to stdout (will be very verbose).
-    //console.log(JSON.stringify(ast, null, 2));
+    // console.log(JSON.stringify(ast, null, 2));
     
     const AST = root.lookupType('compiler.protobuf.AST');
     let buffer = AST.encode(ast).finish();

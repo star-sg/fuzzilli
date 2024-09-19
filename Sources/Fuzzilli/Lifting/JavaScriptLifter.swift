@@ -389,7 +389,9 @@ public class JavaScriptLifter: Lifter {
 
             case .endClassInstanceMethod,
                  .endClassInstanceGetter,
-                 .endClassInstanceSetter:
+                 .endClassInstanceSetter,
+                 .endClassPrivateInstanceGetter,
+                 .endClassPrivateInstanceSetter:
                 w.leaveCurrentBlock()
                 w.emit("}")
 
@@ -468,7 +470,9 @@ public class JavaScriptLifter: Lifter {
             case .endClassStaticInitializer,
                  .endClassStaticMethod,
                  .endClassStaticGetter,
-                 .endClassStaticSetter:
+                 .endClassStaticSetter,
+                 .endClassPrivateStaticGetter,
+                 .endClassPrivateStaticSetter:
                 w.leaveCurrentBlock()
                 w.emit("}")
 
@@ -1307,6 +1311,10 @@ public class JavaScriptLifter: Lifter {
             case .print:
                 let VALUE = input(0)
                 w.emit("fuzzilli('FUZZILLI_PRINT', \(VALUE));")
+
+            case .privateName(let op):
+                let expr = MemberExpression.new() + "#" + op._name
+                w.assign(expr, to: instr.output)
             }
 
             // Handling of guarded operations, part 2: emit the guarded operation and surround it with a try-catch.

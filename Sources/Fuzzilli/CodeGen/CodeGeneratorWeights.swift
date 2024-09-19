@@ -75,6 +75,10 @@ public let codeGeneratorWeights = [
     "ClassPrivateInstanceMethodGenerator":      5,
     "ClassPrivateStaticPropertyGenerator":      5,
     "ClassPrivateStaticMethodGenerator":        5,
+    "ClassPrivateInstanceGetterGenerator":      3,
+    "ClassPrivateInstanceSetterGenerator":      3,
+    "ClassPrivateStaticGetterGenerator":        2,
+    "ClassPrivateStaticSetterGenerator":        2,
 
 
     "ObjectWithSpreadGenerator":                2,
@@ -139,6 +143,7 @@ public let codeGeneratorWeights = [
     "PrivatePropertyAssignmentGenerator":       30,
     "PrivatePropertyUpdateGenerator":           15,
     "PrivateMethodCallGenerator":               20,
+    "PrivateNameInOperatorGenerator":           15,
 
     // These will only be used inside class- or object literal methods.
     "SuperPropertyRetrievalGenerator":          20,

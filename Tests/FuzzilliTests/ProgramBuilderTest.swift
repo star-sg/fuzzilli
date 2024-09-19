@@ -627,9 +627,17 @@ class ProgramBuilderTests: XCTestCase {
             cls.addInstanceGetter(for: "foobar") { this in }
             XCTAssert(cls.instanceGetters.contains("foobar"))
 
+            XCTAssertFalse(cls.privateInstanceGetters.contains("baz"))
+            cls.addPrivateInstanceGetter(for: "baz") { this in }
+            XCTAssert(cls.privateInstanceGetters.contains("baz"))
+
             XCTAssertFalse(cls.instanceSetters.contains("foobar"))
             cls.addInstanceSetter(for: "foobar") { this, v in }
             XCTAssert(cls.instanceSetters.contains("foobar"))
+
+            XCTAssertFalse(cls.privateInstanceSetters.contains("baz"))
+            cls.addPrivateInstanceSetter(for: "baz") { this, v in }
+            XCTAssert(cls.privateInstanceSetters.contains("baz"))
 
             XCTAssertFalse(cls.staticProperties.contains("foo"))
             cls.addStaticProperty("foo", value: i)
@@ -651,9 +659,17 @@ class ProgramBuilderTests: XCTestCase {
             cls.addStaticGetter(for: "foobar") { this in }
             XCTAssert(cls.staticGetters.contains("foobar"))
 
+            XCTAssertFalse(cls.privateStaticGetters.contains("foobaz"))
+            cls.addPrivateStaticGetter(for: "foobaz") { this in }
+            XCTAssert(cls.privateStaticGetters.contains("foobaz"))
+
             XCTAssertFalse(cls.staticSetters.contains("foobar"))
             cls.addStaticSetter(for: "foobar") { this, v in }
             XCTAssert(cls.staticSetters.contains("foobar"))
+
+            XCTAssertFalse(cls.privateStaticSetters.contains("foobaz"))
+            cls.addPrivateStaticSetter(for: "foobaz") { this, v in }
+            XCTAssert(cls.privateStaticSetters.contains("foobaz"))
 
             // All private fields, regardless of whether they are per-instance or static and whether they are properties or methods use the same
             // namespace and each entry must be unique in that namespace. For example, there cannot be both a `#foo` and `static #foo` field.
@@ -697,7 +713,7 @@ class ProgramBuilderTests: XCTestCase {
         }
 
         let program = b.finalize()
-        XCTAssertEqual(program.size, 32)
+        XCTAssertEqual(program.size, 40)
     }
 
     func testSwitchBlockBuilding() {
@@ -2444,5 +2460,42 @@ class ProgramBuilderTests: XCTestCase {
         // Ensure first object has the right type, and that we only generated one more variable
         XCTAssert(b.type(of: args[0]).Is(typeA))
         XCTAssertEqual(b.numberOfVisibleVariables, previous + 1)
+    }
+
+    func testPrivateName() {
+        let env = JavaScriptEnvironment()
+        let fuzzer = makeMockFuzzer(environment: env)
+        let b = fuzzer.makeBuilder()
+
+        let i = b.loadInt(64)
+
+        let classA = b.buildClassDefinition { cls in
+            XCTAssertFalse(cls.privateFields.contains("foo"))
+            cls.addPrivateInstanceProperty("foo", value: i)
+            XCTAssert(cls.privateFields.contains("foo"))
+        }
+
+        let classB = b.buildClassDefinition { cls in
+            XCTAssertFalse(cls.privateFields.contains("bar"))
+            cls.addPrivateInstanceProperty("bar", value: i)
+            XCTAssert(cls.privateFields.contains("bar"))
+        }
+
+        let classC = b.buildClassDefinition { cls in
+            XCTAssertFalse(cls.privateFields.contains("foobar"))
+            cls.addPrivateInstanceProperty("foobar", value: i)
+            XCTAssert(cls.privateFields.contains("foobar"))
+            cls.addInstanceMethod("check", with: .parameters(n: 2)) { args in 
+                b.testIn(b.privateName("foobar"), args[0])
+                b.testIn(b.privateName("foobar"), args[1])
+            }
+        }
+
+        let o1 = b.construct(classA)
+        let o2 = b.construct(classB)
+        let o3 = b.construct(classC)
+
+        b.callMethod("check", on: o3, withArgs: [o1, o2])
+        // b.dumpCurrentProgram()
     }
 }
