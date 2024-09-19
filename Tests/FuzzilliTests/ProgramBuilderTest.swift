@@ -2485,7 +2485,7 @@ class ProgramBuilderTests: XCTestCase {
             XCTAssertFalse(cls.privateFields.contains("foobar"))
             cls.addPrivateInstanceProperty("foobar", value: i)
             XCTAssert(cls.privateFields.contains("foobar"))
-            cls.addInstanceMethod("check", with: .parameters(n: 2)) { args in 
+            cls.addInstanceMethod("check", with: .parameters(n: 2)) { args in
                 b.testIn(b.privateName("foobar"), args[0])
                 b.testIn(b.privateName("foobar"), args[1])
             }
