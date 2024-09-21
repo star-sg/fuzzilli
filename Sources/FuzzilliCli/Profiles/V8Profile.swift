@@ -14,6 +14,10 @@
 
 import Fuzzilli
 
+fileprivate let ForceReturnNodetype = CodeGenerator("ForceReturnNodeType", inContext: .classMethod) { b in
+    b.doReturn(b.getSuperProperty("nodeType"))
+}
+
 fileprivate let ForceJITCompilationThroughLoopGenerator = CodeGenerator("ForceJITCompilationThroughLoopGenerator", inputs: .required(.function())) { b, f in
     assert(b.type(of: f).Is(.function()))
     let arguments = b.randomArguments(forCalling: f)
@@ -637,6 +641,7 @@ let v8Profile = Profile(
         "gc"                                            : .function([] => (.undefined | .jsPromise)),
         "d8"                                            : .object(),
         "Worker"                                        : .constructor([.anything, .object()] => .object(withMethods: ["postMessage","getMessage"])),
+        "d8.dom.Div"                                    : .object(withProperties: ["nodeType"]),
     ],
 
     additionalObjectGroups: [],

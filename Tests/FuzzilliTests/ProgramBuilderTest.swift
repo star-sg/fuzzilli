@@ -2498,4 +2498,38 @@ class ProgramBuilderTests: XCTestCase {
         b.callMethod("check", on: o3, withArgs: [o1, o2])
         // b.dumpCurrentProgram()
     }
+
+    func testNodeType() {
+        let additionalBuiltins = [ "d8.dom.Div" : ILType.object(withProperties: ["nodeType"]) ]
+        let env = JavaScriptEnvironment(additionalBuiltins: additionalBuiltins)
+        let fuzzer = makeMockFuzzer(environment: env)
+        let b = fuzzer.makeBuilder()
+
+        let c = b.buildClassDefinition { cls in
+            cls.addInstanceMethod("foo", with: .parameters(n: 0)) { args in
+                b.doReturn(b.getSuperProperty("nodeType"))
+            }
+        }
+
+        let c0 = b.construct(c)
+        let proto = b.getProperty("prototype", of: c)
+        let f = b.getProperty("foo", of: proto)
+
+        b.eval("%PrepareFunctionForOptimization(%@)", with: [f])
+        b.callMethod("foo", on: c0)
+
+        let domdiv = b.loadBuiltin("d8.dom.Div")
+        let c1 = b.construct(domdiv)
+        b.setProperty("__proto__", of: proto, to: c1)
+
+        let c2 = b.construct(c)
+        b.buildTryCatchFinally(tryBody: {
+            b.callMethod("foo", on: c2)
+        }, catchBody: {e in })
+        b.eval("%OptimizeMaglevOnNextCall(%@)", with: [f])
+        b.callMethod("foo", on: c2)
+        b.dumpCurrentProgram()
+        print("====================")
+        print(JavaScriptLifter(prefix: "", suffix: "", ecmaVersion: .es6).lift(b.finalize()))
+    }
 }
