@@ -1,23 +1,19 @@
 diff --git a/src/d8/d8.cc b/src/d8/d8.cc
-index 76b54329579..d5f3ce70165 100644
+index d8d939d6f93..2312b70df9c 100644
 --- a/src/d8/d8.cc
 +++ b/src/d8/d8.cc
-@@ -17,6 +17,7 @@
- #include <unordered_map>
- #include <utility>
- #include <vector>
-+#include "src/objects/casting.h"
- 
- #ifdef ENABLE_VTUNE_JIT_INTERFACE
- #include "src/third_party/vtune/v8-vtune.h"
-@@ -3629,6 +3630,27 @@ void Shell::NodeTypeCallback(const v8::FunctionCallbackInfo<v8::Value>& info) {
+@@ -3514,6 +3514,26 @@ void Shell::NodeTypeCallback(const v8::FunctionCallbackInfo<v8::Value>& info) {
    DCHECK(i::ValidateCallbackInfo(info));
    v8::Isolate* isolate = info.GetIsolate();
  
 +  internal::PrintFunctionCallbackInfo((void*)&info);
 +
-+  auto receiver  = v8::Local<v8::internal::JSReceiver>::Cast(v8::Local<v8::internal::HeapObject>::Cast(info.This()));
-+  auto templ  = v8::Local<v8::internal::FunctionTemplateInfo>::Cast(v8::Local<v8::internal::HeapObject>::Cast(info.Data()));
++  auto receiver  = v8::Local<v8::internal::JSReceiver>::Cast(info.This());
++
++  auto implicit_args = static_cast<v8::internal::Address *>(*(unsigned long **)&info);
++  auto target_ptr = static_cast<v8::internal::Address *>((unsigned long *)(implicit_args + 4));
++  auto target = internal::Handle<internal::Object>(target_ptr);
++  auto templ = internal::Cast<internal::FunctionTemplateInfo>(target);
 +
 +  internal::Tagged<internal::Object> recv_type = templ->signature();
 +  if (!internal::IsFunctionTemplateInfo(recv_type)) DCHECK(!receiver.IsEmpty());
@@ -27,13 +23,8 @@ index 76b54329579..d5f3ce70165 100644
 +  internal::Tagged<internal::FunctionTemplateInfo> signature =
 +      internal::Cast<internal::FunctionTemplateInfo>(recv_type);
 +
-+  if (signature->IsTemplateFor(js_obj_receiver)) DCHECK(!receiver.IsEmpty());
-+
-+  DCHECK(V8_UNLIKELY(IsJSGlobalProxy(js_obj_receiver)));
-+  internal::Tagged<internal::HeapObject> prototype = js_obj_receiver->map()->prototype();
-+  DCHECK(!prototype.is_null());
-+  internal::Tagged<internal::JSObject> js_obj_prototype = internal::Cast<internal::JSObject>(prototype);
-+  if (signature->IsTemplateFor(js_obj_prototype)) DCHECK(!js_obj_prototype.is_null());
++  DCHECK(signature->IsTemplateFor(js_obj_receiver));
++  DCHECK(!receiver.IsEmpty());
 +
    info.GetReturnValue().Set(v8::Number::New(isolate, 1));
  }
