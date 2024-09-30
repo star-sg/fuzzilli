@@ -211,7 +211,7 @@ message Instruction {
         EndClassPrivateInstanceSetter = 185;
         EndClassPrivateStaticGetter = 186;
         EndClassPrivateStaticSetter = 187;
-        PrivaetName = 188;
+        PrivateName = 188;
     }
 }
 
