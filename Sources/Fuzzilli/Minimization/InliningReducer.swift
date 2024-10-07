@@ -70,7 +70,11 @@ struct InliningReducer: Reducer {
                  .beginClassStaticGetter,
                  .beginClassStaticSetter,
                  .beginClassPrivateInstanceMethod,
-                 .beginClassPrivateStaticMethod:
+                 .beginClassPrivateStaticMethod,
+                 .beginClassPrivateInstanceGetter,
+                 .beginClassPrivateInstanceSetter,
+                 .beginClassPrivateStaticGetter,
+                 .beginClassPrivateStaticSetter:
                 activeSubroutineDefinitions.append(instr.hasOneOutput ? instr.output : nil)
             case .endPlainFunction,
                  .endArrowFunction,
@@ -92,7 +96,11 @@ struct InliningReducer: Reducer {
                  .endClassStaticGetter,
                  .endClassStaticSetter,
                  .endClassPrivateInstanceMethod,
-                 .endClassPrivateStaticMethod:
+                 .endClassPrivateStaticMethod,
+                 .endClassPrivateInstanceGetter,
+                 .endClassPrivateInstanceSetter,
+                 .endClassPrivateStaticGetter,
+                 .endClassPrivateStaticSetter:
                 activeSubroutineDefinitions.removeLast()
             default:
                 assert(!instr.op.contextOpened.contains(.subroutine))

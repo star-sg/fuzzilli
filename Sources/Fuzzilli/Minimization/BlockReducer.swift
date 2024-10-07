@@ -45,7 +45,11 @@ struct BlockReducer: Reducer {
                  .beginClassStaticGetter,
                  .beginClassStaticSetter,
                  .beginClassPrivateInstanceMethod,
-                 .beginClassPrivateStaticMethod:
+                 .beginClassPrivateStaticMethod,
+                 .beginClassPrivateInstanceGetter,
+                 .beginClassPrivateInstanceSetter,
+                 .beginClassPrivateStaticGetter,
+                 .beginClassPrivateStaticSetter:
                 reduceFunctionInClassDefinition(group.block(0), in: &code, with: helper)
 
             case .beginWhileLoopHeader,
