@@ -87,8 +87,12 @@ public class OperationMutator: BaseInstructionMutator {
             newOp = BeginClassInstanceMethod(methodName: b.randomMethodName(), parameters: op.parameters)
         case .beginClassInstanceGetter:
             newOp = BeginClassInstanceGetter(propertyName: b.randomPropertyName())
+        case .beginClassPrivateInstanceGetter:
+            newOp = BeginClassPrivateInstanceGetter(propertyName: b.randomPropertyName())
         case .beginClassInstanceSetter:
             newOp = BeginClassInstanceSetter(propertyName: b.randomPropertyName())
+        case .beginClassPrivateInstanceSetter:
+            newOp = BeginClassPrivateInstanceSetter(propertyName: b.randomPropertyName())
         case .classAddStaticProperty(let op):
             newOp = ClassAddStaticProperty(propertyName: b.randomPropertyName(), hasValue: op.hasValue)
         case .classAddStaticElement(let op):
@@ -97,8 +101,12 @@ public class OperationMutator: BaseInstructionMutator {
             newOp = BeginClassStaticMethod(methodName: b.randomMethodName(), parameters: op.parameters)
         case .beginClassStaticGetter:
             newOp = BeginClassStaticGetter(propertyName: b.randomPropertyName())
+        case .beginClassPrivateStaticGetter:
+            newOp = BeginClassPrivateStaticGetter(propertyName: b.randomPropertyName())
         case .beginClassStaticSetter:
             newOp = BeginClassStaticSetter(propertyName: b.randomPropertyName())
+        case .beginClassPrivateStaticSetter:
+            newOp = BeginClassPrivateStaticSetter(propertyName: b.randomPropertyName())
         case .createIntArray:
             var values = [Int64]()
             for _ in 0..<Int.random(in: 1...10) {
@@ -227,6 +235,8 @@ public class OperationMutator: BaseInstructionMutator {
             newOp = UpdateSuperProperty(propertyName: b.randomPropertyName(), operator: chooseUniform(from: BinaryOperator.allCases))
         case .beginIf(let op):
             newOp = BeginIf(inverted: !op.inverted)
+        case .privateName:
+            newOp = PrivateName(b.randomPropertyName())
         default:
             fatalError("Unhandled Operation: \(type(of: instr.op))")
         }

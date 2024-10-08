@@ -2386,6 +2386,6 @@ final class PrivateName: JsOperation {
     let _name: String
     init(_ name: String) {
         self._name = name
-        super.init(numOutputs: 1, requiredContext: .classMethod)
+        super.init(numOutputs: 1, attributes: .isMutable, requiredContext: .classMethod)
     }
 }
