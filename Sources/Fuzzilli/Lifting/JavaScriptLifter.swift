@@ -363,6 +363,12 @@ public class JavaScriptLifter: Lifter {
                 w.enterNewBlock()
                 bindVariableToThis(instr.innerOutput(0))
 
+            case .beginClassPrivateInstanceGetter(let op):
+                let PROPERTY = op.propertyName
+                w.emit("get #\(PROPERTY)() {")
+                w.enterNewBlock()
+                bindVariableToThis(instr.innerOutput(0))
+
             case .beginClassInstanceSetter(let op):
                 assert(instr.numInnerOutputs == 2)
                 let vars = w.declareAll(instr.innerOutputs.dropFirst(), usePrefix: "a")
@@ -372,9 +378,20 @@ public class JavaScriptLifter: Lifter {
                 w.enterNewBlock()
                 bindVariableToThis(instr.innerOutput(0))
 
+            case .beginClassPrivateInstanceSetter(let op):
+                assert(instr.numInnerOutputs == 2)
+                let vars = w.declareAll(instr.innerOutputs.dropFirst(), usePrefix: "a")
+                let PARAMS = liftParameters(op.parameters, as: vars)
+                let PROPERTY = op.propertyName
+                w.emit("set #\(PROPERTY)(\(PARAMS)) {")
+                w.enterNewBlock()
+                bindVariableToThis(instr.innerOutput(0))
+
             case .endClassInstanceMethod,
                  .endClassInstanceGetter,
-                 .endClassInstanceSetter:
+                 .endClassInstanceSetter,
+                 .endClassPrivateInstanceGetter,
+                 .endClassPrivateInstanceSetter:
                 w.leaveCurrentBlock()
                 w.emit("}")
 
@@ -425,6 +442,13 @@ public class JavaScriptLifter: Lifter {
                 w.enterNewBlock()
                 bindVariableToThis(instr.innerOutput)
 
+            case .beginClassPrivateStaticGetter(let op):
+                assert(instr.numInnerOutputs == 1)
+                let PROPERTY = op.propertyName
+                w.emit("static get #\(PROPERTY)() {")
+                w.enterNewBlock()
+                bindVariableToThis(instr.innerOutput)
+
             case .beginClassStaticSetter(let op):
                 assert(instr.numInnerOutputs == 2)
                 let vars = w.declareAll(instr.innerOutputs.dropFirst(), usePrefix: "a")
@@ -434,10 +458,21 @@ public class JavaScriptLifter: Lifter {
                 w.enterNewBlock()
                 bindVariableToThis(instr.innerOutput(0))
 
+            case .beginClassPrivateStaticSetter(let op):
+                assert(instr.numInnerOutputs == 2)
+                let vars = w.declareAll(instr.innerOutputs.dropFirst(), usePrefix: "a")
+                let PARAMS = liftParameters(op.parameters, as: vars)
+                let PROPERTY = op.propertyName
+                w.emit("static set #\(PROPERTY)(\(PARAMS)) {")
+                w.enterNewBlock()
+                bindVariableToThis(instr.innerOutput(0))
+
             case .endClassStaticInitializer,
                  .endClassStaticMethod,
                  .endClassStaticGetter,
-                 .endClassStaticSetter:
+                 .endClassStaticSetter,
+                 .endClassPrivateStaticGetter,
+                 .endClassPrivateStaticSetter:
                 w.leaveCurrentBlock()
                 w.emit("}")
 
@@ -1276,6 +1311,10 @@ public class JavaScriptLifter: Lifter {
             case .print:
                 let VALUE = input(0)
                 w.emit("fuzzilli('FUZZILLI_PRINT', \(VALUE));")
+
+            case .privateName(let op):
+                let expr = MemberExpression.new() + "#" + op._name
+                w.assign(expr, to: instr.output)
             }
 
             // Handling of guarded operations, part 2: emit the guarded operation and surround it with a try-catch.

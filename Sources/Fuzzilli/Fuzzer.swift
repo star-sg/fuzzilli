@@ -262,6 +262,20 @@ public class Fuzzer {
             }
         }
 
+        // Install a timer to monitor for faulty code generators and program templates.
+        timers.scheduleTask(every: 5 * Minutes) {
+            for generator in self.codeGenerators {
+                if generator.totalSamples >= 100 && generator.correctnessRate < 0.05 {
+                    self.logger.warning("Code generator \(generator.name) might be broken. Correctness rate is only \(generator.correctnessRate * 100)% after \(generator.totalSamples) generated samples")
+                }
+            }
+            for template in self.programTemplates {
+                if template.totalSamples >= 100 && template.correctnessRate < 0.05 {
+                    self.logger.warning("Program template \(template.name) might be broken. Correctness rate is only \(template.correctnessRate * 100)% after \(template.totalSamples) generated samples")
+                }
+            }
+        }
+
         // Determine our initial state if necessary.
         assert(state == .uninitialized || state == .corpusImport)
         if state == .uninitialized {
@@ -584,11 +598,11 @@ public class Fuzzer {
     }
 
     /// Constructs a new ProgramBuilder using this fuzzing context.
-    public func makeBuilder(forMutating parent: Program? = nil, mode: ProgramBuilder.Mode = .aggressive) -> ProgramBuilder {
+    public func makeBuilder(forMutating parent: Program? = nil) -> ProgramBuilder {
         dispatchPrecondition(condition: .onQueue(queue))
         // Program ancestor chains are only constructed if inspection mode is enabled
         let parent = config.enableInspection ? parent : nil
-        return ProgramBuilder(for: self, parent: parent, mode: mode)
+        return ProgramBuilder(for: self, parent: parent)
     }
 
     /// Performs one round of fuzzing.

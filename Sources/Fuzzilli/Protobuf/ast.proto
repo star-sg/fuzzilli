@@ -114,6 +114,8 @@ message ClassField {
         ClassSetter setter = 5;
         ClassStaticInitializer staticInitializer = 6;
     }
+
+    bool isPrivate = 7;
 }
 
 message ClassDeclaration {
@@ -121,6 +123,12 @@ message ClassDeclaration {
     // The superclass is optional
     Expression superClass = 2;
     repeated ClassField fields = 3;
+}
+
+message ClassExpression {
+    // The superclass is optional
+    Expression superClass = 1;
+    repeated ClassField fields = 2;
 }
 
 message ReturnStatement {
@@ -202,6 +210,21 @@ message ThrowStatement {
     Expression argument = 1;
 }
 
+message WithStatement {
+    Expression object = 1;
+    Statement body = 2;
+}
+
+message SwitchStatement {
+    Expression discriminant = 1;
+    repeated SwitchCase cases = 2;
+}
+
+message SwitchCase {
+    Expression test = 1;
+    repeated Statement consequent = 2;
+}
+
 message Statement {
     oneof statement {
         EmptyStatement emptyStatement = 1;
@@ -221,6 +244,8 @@ message Statement {
         ContinueStatement continueStatement = 15;
         TryStatement tryStatement = 16;
         ThrowStatement throwStatement = 17;
+        WithStatement withStatement = 18;
+        SwitchStatement switchStatement = 19;
     }
 }
 
@@ -395,6 +420,19 @@ message V8IntrinsicIdentifier {
     string name = 1;
 }
 
+message TernaryExpression {
+  // The test condition of the ternary expression.
+  Expression condition = 1;
+  // The expression executed if the test is true.
+  Expression consequent = 2;
+  // The expression executed if the test is false.
+  Expression alternate = 3;
+}
+
+message PrivateName {
+    Identifier identifier = 1;
+}
+
 message Expression {
     oneof expression {
         Identifier identifier = 1;
@@ -421,5 +459,8 @@ message Expression {
         SpreadElement spreadElement = 22;
         SequenceExpression sequenceExpression = 23;
         V8IntrinsicIdentifier v8IntrinsicIdentifier = 24;
+        TernaryExpression ternaryExpression = 25;
+        PrivateName privateName = 26;
+        ClassExpression classExpression = 27;
     }
 }

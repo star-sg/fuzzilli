@@ -51,5 +51,6 @@ let profiles = [
     "xs": xsProfile,
     "v8holefuzzing": v8HoleFuzzingProfile,
     "serenity": serenityProfile,
-    "maglev": maglevProfile
+    "njs": njsProfile,
+    "maglev": maglevProfile,
 ]

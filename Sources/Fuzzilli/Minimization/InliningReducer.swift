@@ -14,17 +14,16 @@
 
 /// Attempts to inline functions at their callsite. This reducer is necessary to prevent deep nesting of functions.
 struct InliningReducer: Reducer {
-    func reduce(_ code: inout Code, with helper: MinimizationHelper) {
-        var candidates = identifyInlineableFunctions(in: code)
+    func reduce(with helper: MinimizationHelper) {
+        var candidates = identifyInlineableFunctions(in: helper.code)
         while !candidates.isEmpty {
             let funcIndex = candidates.removeLast()
-            let newCode = inline(functionAt: funcIndex, in: code)
-            if helper.test(newCode) {
-                code = newCode
+            let newCode = inline(functionAt: funcIndex, in: helper.code)
+            if helper.testAndCommit(newCode) {
                 // Inlining changes the program so we need to redo our analysis.
                 // In particular, instruction are reordered and variables are renamed. Further, there may now also be new inlining candidates, for example
                 // if another function could previously not be inlined because it was used as argument or return value of a now inlined function).
-                candidates = identifyInlineableFunctions(in: code)
+                candidates = identifyInlineableFunctions(in: helper.code)
             }
         }
     }
@@ -70,7 +69,11 @@ struct InliningReducer: Reducer {
                  .beginClassStaticGetter,
                  .beginClassStaticSetter,
                  .beginClassPrivateInstanceMethod,
-                 .beginClassPrivateStaticMethod:
+                 .beginClassPrivateStaticMethod,
+                 .beginClassPrivateInstanceGetter,
+                 .beginClassPrivateInstanceSetter,
+                 .beginClassPrivateStaticGetter,
+                 .beginClassPrivateStaticSetter:
                 activeSubroutineDefinitions.append(instr.hasOneOutput ? instr.output : nil)
             case .endPlainFunction,
                  .endArrowFunction,
@@ -92,7 +95,11 @@ struct InliningReducer: Reducer {
                  .endClassStaticGetter,
                  .endClassStaticSetter,
                  .endClassPrivateInstanceMethod,
-                 .endClassPrivateStaticMethod:
+                 .endClassPrivateStaticMethod,
+                 .endClassPrivateInstanceGetter,
+                 .endClassPrivateInstanceSetter,
+                 .endClassPrivateStaticGetter,
+                 .endClassPrivateStaticSetter:
                 activeSubroutineDefinitions.removeLast()
             default:
                 assert(!instr.op.contextOpened.contains(.subroutine))
@@ -148,7 +155,6 @@ struct InliningReducer: Reducer {
         }
 
         let funcDefinition = code[i]
-        assert(funcDefinition.op is BeginAnyFunction)
         let function = funcDefinition.output
         let parameters = Array(funcDefinition.innerOutputs)
 
@@ -217,7 +223,7 @@ struct InliningReducer: Reducer {
         var functionDefinitionDepth = 0
         for instr in functionBody {
             let newInouts = instr.inouts.map { arguments[$0] ?? $0 }
-            let newInstr = Instruction(instr.op, inouts: newInouts)
+            let newInstr = Instruction(instr.op, inouts: newInouts, flags: instr.flags)
 
             // Returns (from the function being inlined) are converted to assignments to the return value.
             if instr.op is Return && functionDefinitionDepth == 0 {
