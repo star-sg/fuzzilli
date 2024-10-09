@@ -34,14 +34,14 @@ function tryReadFile(path) {
 
 // Parse the given JavaScript script and return an AST compatible with Fuzzilli's protobuf-based AST format.
 function parse(script, proto) {
-    let ast = Parser.parse(script, { plugins: ["v8intrinsic"] }); 
+    let ast = Parser.parse(script, { sourceType: "unambiguous", plugins: ["v8intrinsic"]}); 
     
     function assertNoError(err) {
         if (err) throw err;
     }
 
     function dump(node) {
-        console.log(JSON.stringify(node, null, 2));
+        console.log(JSON.stringify(node, null, 4));
     }
 
     function visitProgram(node) {
@@ -334,6 +334,7 @@ function parse(script, proto) {
                 return makeStatement('WithStatement', withStatement);
             }
             default: {
+                dump(node);
                 throw "Unhandled node type " + node.type;
             }
         }
@@ -401,11 +402,15 @@ function parse(script, proto) {
                             if (field.key.type === 'Identifier') {
                                 property.name = field.key.name;
                             } else if (field.key.type === 'NumericLiteral') {
-                                property.index = field.key.value;
+                                if (Number.isInteger(field.key.value))
+                                    property.index = field.key.value;
+                                else
+                                    property.name = field.key.toString(10);
                             } else {
                                 throw "Unknown property key type: " + field.key.type;
                             }
                         }
+                        console.log(field);
                         fields.push(make('ObjectField', { property: make('ObjectProperty', property) }));
                     } else {
                         assert(field.type === 'ObjectMethod');
@@ -577,7 +582,20 @@ function parse(script, proto) {
             case 'ClassExpression': {
                 return makeExpression('ClassExpression', processClass(node));
             }
+            case 'ArrayPattern': {
+                let elements = [];
+                for (let elem of node.elements) {
+                    if (elem == null) {
+                        elements.push(Expression.create({}));
+                    } else {
+                        elements.push(visitExpression(elem));
+                    }
+                }
+
+                return makeExpression('ArrayPattern', { elements: elements});
+            }
             default: {
+                dump(node);
                 throw "Unhandled node type " + node.type;
             }
         }
@@ -595,7 +613,7 @@ protobuf.load(astProtobufDefinitionPath, function(err, root) {
     let ast = parse(script, root);
 
     // Uncomment this to print the AST to stdout (will be very verbose).
-    // console.log(JSON.stringify(ast, null, 2));
+    console.log(JSON.stringify(ast, null, 4));
     
     const AST = root.lookupType('compiler.protobuf.AST');
     let buffer = AST.encode(ast).finish();
