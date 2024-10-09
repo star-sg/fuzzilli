@@ -2435,15 +2435,18 @@ class ProgramBuilderTests: XCTestCase {
 
     func testArgumentGenerationForKnownSignatureWithLimit() {
         let env = JavaScriptEnvironment()
-        let fuzzer = makeMockFuzzer(environment: env)
+        let config = Configuration(logLevel: .error)
+        let fuzzer = makeMockFuzzer(config: config, environment: env)
         let b = fuzzer.makeBuilder()
 
         b.loadInt(42)
 
         let typeA: ILType = .object(withProperties: ["a", "b"])
         let typeB: ILType = .object(withProperties: ["c", "d"])
+        let typeC: ILType = .object(withProperties: ["e", "f"])
 
         let signature: Signature = [.plain(typeA), .plain(typeB)] => .undefined
+        let signature2: Signature = [.plain(typeC), .plain(typeC)] => .undefined
 
         var args = b.findOrGenerateArguments(forSignature: signature)
         XCTAssertEqual(args.count, 2)
@@ -2454,11 +2457,11 @@ class ProgramBuilderTests: XCTestCase {
 
         let previous = b.numberOfVisibleVariables
 
-        args = b.findOrGenerateArguments(forSignature: signature, maxNumberOfVariablesToGenerate: 1)
+        args = b.findOrGenerateArguments(forSignature: signature2, maxNumberOfVariablesToGenerate: 1)
         XCTAssertEqual(args.count, 2)
 
         // Ensure first object has the right type, and that we only generated one more variable
-        XCTAssert(b.type(of: args[0]).Is(typeA))
+        XCTAssert(b.type(of: args[0]).Is(typeC))
         XCTAssertEqual(b.numberOfVisibleVariables, previous + 1)
     }
 

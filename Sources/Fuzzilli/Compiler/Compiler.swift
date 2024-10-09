@@ -57,6 +57,9 @@ public class JavaScriptCompiler {
     /// The next free FuzzIL variable.
     private var nextVariable = 0
 
+    /// Context analyzer to track the context of the code being compiled. Used for example to distinguish switch and loop breaks.
+    private var contextAnalyzer = ContextAnalyzer()
+
     public func compile(_ ast: AST) throws -> Program {
         reset()
 
@@ -497,8 +500,15 @@ public class JavaScriptCompiler {
             emit(EndForOfLoop())
 
         case .breakStatement:
-            // TODO currently we assume this is a LoopBreak, but once we support switch-statements, it could also be a SwitchBreak
-            emit(LoopBreak())
+            // If we're in both .loop and .switch context, then the loop must be the most recent context 
+            // (switch blocks don't propagate an outer .loop context) so we just need to check for .loop here
+            if contextAnalyzer.context.contains(.loop){
+                emit(LoopBreak())
+            } else if contextAnalyzer.context.contains(.switchBlock){
+                emit(SwitchBreak())
+            } else {
+                throw CompilerError.invalidNodeError("break statement outside of loop or switch")
+            }
 
         case .continueStatement:
             emit(LoopContinue())
@@ -542,6 +552,35 @@ public class JavaScriptCompiler {
                 try compileBody(withStatement.body)
             }
             emit(EndWith())
+        case .switchStatement(let switchStatement):
+            // TODO Replace the precomputation of tests with compilation of the test expressions in the cases.
+            // To do this, we would need to redesign Switch statements in FuzzIL to (for example) have a BeginSwitchCaseHead, BeginSwitchCaseBody, and EndSwitchCase. 
+            // Then the expression would go inside the header.
+            var precomputedTests = [Variable]()
+            for caseStatement in switchStatement.cases {
+                if caseStatement.hasTest {
+                    let test = try compileExpression(caseStatement.test)
+                    precomputedTests.append(test)
+                } 
+            }
+            let discriminant = try compileExpression(switchStatement.discriminant)
+            emit(BeginSwitch(), withInputs: [discriminant])
+            for caseStatement in switchStatement.cases {
+                if caseStatement.hasTest {
+                    emit(BeginSwitchCase(), withInputs: [precomputedTests.removeFirst()])
+                } else {
+                    emit(BeginSwitchDefaultCase())
+                }
+                try enterNewScope {
+                    for statement in caseStatement.consequent {
+                        try compileStatement(statement)
+                    }
+                }
+                // We could also do an optimization here where we check if the last statement in the case is a break, and if so, we drop the last instruction
+                // and set the fallsThrough flag to false.
+                emit(EndSwitchCase(fallsThrough: true)) 
+            }
+            emit(EndSwitch())
         }
     }
 
@@ -1073,17 +1112,29 @@ public class JavaScriptCompiler {
         case .arrayExpression(let arrayExpression):
             var elements = [Variable]()
             var undefined: Variable? = nil
+            var spreads = [Bool]()
             for elem in arrayExpression.elements {
                 if elem.expression == nil {
                     if undefined == nil {
                         undefined = emit(LoadUndefined()).output
                     }
                     elements.append(undefined!)
+                    spreads.append(false)
                 } else {
-                    elements.append(try compileExpression(elem))
+                    if case .spreadElement(let spreadElement) = elem.expression {
+                        elements.append(try compileExpression(spreadElement.argument))
+                        spreads.append(true)
+                    } else {
+                        elements.append(try compileExpression(elem))
+                        spreads.append(false)
+                    }
                 }
             }
-            return emit(CreateArray(numInitialValues: elements.count), withInputs: elements).output
+            if spreads.contains(true) {
+                return emit(CreateArrayWithSpread(spreads: spreads), withInputs: elements).output
+            } else {
+                return emit(CreateArray(numInitialValues: elements.count), withInputs: elements).output
+            }
 
         case .functionExpression(let functionExpression):
             let parameters = convertParameters(functionExpression.parameters)
@@ -1277,7 +1328,8 @@ public class JavaScriptCompiler {
         let outputs = (0..<op.numOutputs).map { _ in nextFreeVariable() }
         let innerOutputs = (0..<op.numInnerOutputs).map { _ in nextFreeVariable() }
         let inouts = inputs + outputs + innerOutputs
-        let instr = Instruction(op, inouts: inouts)
+        let instr = Instruction(op, inouts: inouts, flags: .empty)
+        contextAnalyzer.analyze(instr)
         return code.append(instr)
     }
 

@@ -639,7 +639,7 @@ let v8Profile = Profile(
 
     additionalBuiltins: [
         "gc"                                            : .function([] => (.undefined | .jsPromise)),
-        "d8"                                            : .object(),
+        "d8"                                            : .object(withProperties: ["test"]),
         "Worker"                                        : .constructor([.anything, .object()] => .object(withMethods: ["postMessage","getMessage"])),
         "d8.dom.Div"                                    : .object(withProperties: ["nodeType"]),
     ],

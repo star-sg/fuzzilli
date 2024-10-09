@@ -495,12 +495,17 @@ public class ProgramBuilder {
         func createObjectWithProperties(_ type: ILType) -> Variable  {
             assert(type.MayBe(.object()))
 
+            // Before we do any generation below, let's take into account that we already create a variable with this invocation, i.e. the createObject at the end.
+            // Therefore we need to decrease the budget here temporarily.
+            self.argumentGenerationVariableBudget! -= 1
+            // We defer the increase again, because at that point the variable is actually visible, i.e. `numVariables` was increased through the `createObject` call.
+            defer { self.argumentGenerationVariableBudget! += 1 }
+
             var properties: [String: Variable] = [:]
 
             for propertyName in type.properties {
                 // If we have an object that has a group, we should get a type here, otherwise if we don't have a group, we will get .anything.
                 let propType = fuzzer.environment.type(ofProperty: propertyName, on: type)
-                // Here we can enter generateType again, and end up here again if we need config objects for config objects, therefore we pass the recursion counter back into generateType, which will bail out eventually if there is a cycle.
                 properties[propertyName] = generateType(propType)
             }
 
@@ -526,8 +531,8 @@ public class ProgramBuilder {
                 }
             }
 
-            if numVariables > argumentGenerationVariableBudget! {
-                logger.warning("Reached variable generation limit in generateType for Signature: \(argumentGenerationSignature!).")
+            if numVariables >= argumentGenerationVariableBudget! {
+                logger.warning("Reached variable generation limit in generateType for Signature: \(argumentGenerationSignature!), returning a random variable for use as type \(type).")
                 return randomVariable(forUseAs: type)
             }
 
@@ -950,7 +955,7 @@ public class ProgramBuilder {
 
     /// Adopts an instruction from the program that is currently configured for adoption into the program being constructed.
     public func adopt(_ instr: Instruction) {
-        internalAppend(Instruction(instr.op, inouts: adopt(instr.inouts)))
+        internalAppend(Instruction(instr.op, inouts: adopt(instr.inouts), flags: instr.flags))
     }
 
     /// Append an instruction at the current position.
@@ -1248,7 +1253,7 @@ public class ProgramBuilder {
                 variableMap[output] = nextVariable()
             }
             let inouts = instr.inouts.map({ variableMap[$0]! })
-            append(Instruction(instr.op, inouts: inouts))
+            append(Instruction(instr.op, inouts: inouts, flags: instr.flags))
         }
 
         trace("Splicing done")
@@ -1599,7 +1604,7 @@ public class ProgramBuilder {
             inouts.append(nextVariable())
         }
 
-        return internalAppend(Instruction(op, inouts: inouts))
+        return internalAppend(Instruction(op, inouts: inouts, flags: .empty))
     }
 
     @discardableResult
