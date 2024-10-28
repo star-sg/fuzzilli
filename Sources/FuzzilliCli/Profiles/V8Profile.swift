@@ -14,6 +14,10 @@
 
 import Fuzzilli
 
+fileprivate let ForceReturnNodetype = CodeGenerator("ForceReturnNodeType", inContext: .classMethod) { b in
+    b.doReturn(b.getSuperProperty("nodeType"))
+}
+
 fileprivate let ForceJITCompilationThroughLoopGenerator = CodeGenerator("ForceJITCompilationThroughLoopGenerator", inputs: .required(.function())) { b, f in
     assert(b.type(of: f).Is(.function()))
     let arguments = b.randomArguments(forCalling: f)
@@ -103,6 +107,14 @@ fileprivate let GcGenerator = CodeGenerator("GcGenerator") { b in
     // what the type of the return value is.
     let execution = b.loadString(probability(0.5) ? "sync" : "async")
     b.callFunction(gc, withArgs: [b.createObject(with: ["type": type, "execution": execution])])
+}
+
+fileprivate let WasmStructGenerator = CodeGenerator("WasmStructGenerator") { b in
+    b.eval("%WasmStruct()", hasOutput: true);
+}
+
+fileprivate let WasmArrayGenerator = CodeGenerator("WasmArrayGenerator") { b in
+    b.eval("%WasmArray()", hasOutput: true);
 }
 
 fileprivate let MapTransitionFuzzer = ProgramTemplate("MapTransitionFuzzer") { b in
@@ -421,7 +433,8 @@ let v8Profile = Profile(
             "--jit-fuzzing",
             "--future",
             "--harmony",
-            "--js-staging"
+            "--js-staging",
+            "--wasm-staging"
         ]
 
         guard randomize else { return args }
@@ -478,6 +491,10 @@ let v8Profile = Profile(
             args.append("--turboshaft-typed-optimizations")
         }
 
+        if probability(0.1) && !args.contains("--no-turboshaft") {
+            args.append("--turboshaft-from-maglev")
+        }
+
         if probability(0.1) {
             args.append("--harmony-struct")
         }
@@ -514,6 +531,9 @@ let v8Profile = Profile(
         if probability(0.1) {
             args.append("--stress-ic")
         }
+        if probability(0.1) {
+            args.append("--optimize-on-next-call-optimizes-to-maglev")
+        }
 
         //
         // More exotic configuration changes.
@@ -523,6 +543,9 @@ let v8Profile = Profile(
             if probability(0.5) { args.append("--lazy-new-space-shrinking") }
             if probability(0.5) { args.append("--const-tracking-let") }
             if probability(0.5) { args.append("--stress-wasm-memory-moving") }
+            if probability(0.5) { args.append("--stress-background-compile") }
+            if probability(0.5) { args.append("--parallel-compile-tasks-for-lazy") }
+            if probability(0.5) { args.append("--parallel-compile-tasks-for-eager-toplevel") }
 
             args.append(probability(0.5) ? "--always-sparkplug" : "--no-always-sparkplug")
             args.append(probability(0.5) ? "--always-osr" : "--no-always-osr")
@@ -531,6 +554,7 @@ let v8Profile = Profile(
 
             // Maglev related flags
             args.append(probability(0.5) ? "--maglev-inline-api-calls" : "--no-maglev-inline-api-calls")
+            if probability(0.5) { args.append("--maglev-extend-properties-backing-store") }
 
             // Compiler related flags
             args.append(probability(0.5) ? "--always-turbofan" : "--no-always-turbofan")
@@ -584,6 +608,8 @@ let v8Profile = Profile(
         ("fuzzilli('FUZZILLI_CRASH', 2)", .shouldCrash),
         // Wild-write
         ("fuzzilli('FUZZILLI_CRASH', 3)", .shouldCrash),
+        // Check that DEBUG is defined.
+        ("fuzzilli('FUZZILLI_CRASH', 8)", .shouldCrash),
 
         // TODO we could try to check that OOM crashes are ignored here ( with.shouldNotCrash).
     ],
@@ -596,6 +622,9 @@ let v8Profile = Profile(
 
         (WorkerGenerator,                         10),
         (GcGenerator,                             10),
+
+        (WasmStructGenerator,                     15),
+        (WasmArrayGenerator,                      15),
     ],
 
     additionalProgramTemplates: WeightedList<ProgramTemplate>([
@@ -610,8 +639,9 @@ let v8Profile = Profile(
 
     additionalBuiltins: [
         "gc"                                            : .function([] => (.undefined | .jsPromise)),
-        "d8"                                            : .object(),
+        "d8"                                            : .object(withProperties: ["test"]),
         "Worker"                                        : .constructor([.anything, .object()] => .object(withMethods: ["postMessage","getMessage"])),
+        "d8.dom.Div"                                    : .object(withProperties: ["nodeType"]),
     ],
 
     additionalObjectGroups: [],

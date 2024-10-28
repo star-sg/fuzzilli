@@ -147,14 +147,28 @@ message BeginClassInstanceGetter {
     string propertyName = 1;
 }
 
+message BeginClassPrivateInstanceGetter {
+    string propertyName = 1;
+}
+
 message EndClassInstanceGetter {
+}
+
+message EndClassPrivateInstanceGetter {
 }
 
 message BeginClassInstanceSetter {
     string propertyName = 1;
 }
 
+message BeginClassPrivateInstanceSetter {
+    string propertyName = 1;
+}
+
 message EndClassInstanceSetter {
+}
+
+message EndClassPrivateInstanceSetter {
 }
 
 message ClassAddStaticProperty {
@@ -189,14 +203,28 @@ message BeginClassStaticGetter {
     string propertyName = 1;
 }
 
+message BeginClassPrivateStaticGetter {
+    string propertyName = 1;
+}
+
 message EndClassStaticGetter {
+}
+
+message EndClassPrivateStaticGetter {
 }
 
 message BeginClassStaticSetter {
     string propertyName = 1;
 }
 
+message BeginClassPrivateStaticSetter {
+    string propertyName = 1;
+}
+
 message EndClassStaticSetter {
+}
+
+message EndClassPrivateStaticSetter {
 }
 
 message ClassAddPrivateInstanceProperty {
@@ -745,4 +773,8 @@ message Nop {
 }
 
 message Print {
+}
+
+message PrivateName {
+    string _name = 1
 }

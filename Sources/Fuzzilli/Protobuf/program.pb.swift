@@ -7,7 +7,7 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-public struct Fuzzilli_Protobuf_Instruction {
+public struct Fuzzilli_Protobuf_Instruction: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -336,12 +336,28 @@ public struct Fuzzilli_Protobuf_Instruction {
     set {operation = .beginClassInstanceGetter(newValue)}
   }
 
+  public var beginClassPrivateInstanceGetter: Fuzzilli_Protobuf_BeginClassPrivateInstanceGetter {
+    get {
+      if case .beginClassPrivateInstanceGetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_BeginClassPrivateInstanceGetter()
+    }
+    set {operation = .beginClassPrivateInstanceGetter(newValue)}
+  }
+
   public var endClassInstanceGetter: Fuzzilli_Protobuf_EndClassInstanceGetter {
     get {
       if case .endClassInstanceGetter(let v)? = operation {return v}
       return Fuzzilli_Protobuf_EndClassInstanceGetter()
     }
     set {operation = .endClassInstanceGetter(newValue)}
+  }
+
+  public var endClassPrivateInstanceGetter: Fuzzilli_Protobuf_EndClassPrivateInstanceGetter {
+    get {
+      if case .endClassPrivateInstanceGetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_EndClassPrivateInstanceGetter()
+    }
+    set {operation = .endClassPrivateInstanceGetter(newValue)}
   }
 
   public var beginClassInstanceSetter: Fuzzilli_Protobuf_BeginClassInstanceSetter {
@@ -352,12 +368,28 @@ public struct Fuzzilli_Protobuf_Instruction {
     set {operation = .beginClassInstanceSetter(newValue)}
   }
 
+  public var beginClassPrivateInstanceSetter: Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter {
+    get {
+      if case .beginClassPrivateInstanceSetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter()
+    }
+    set {operation = .beginClassPrivateInstanceSetter(newValue)}
+  }
+
   public var endClassInstanceSetter: Fuzzilli_Protobuf_EndClassInstanceSetter {
     get {
       if case .endClassInstanceSetter(let v)? = operation {return v}
       return Fuzzilli_Protobuf_EndClassInstanceSetter()
     }
     set {operation = .endClassInstanceSetter(newValue)}
+  }
+
+  public var endClassPrivateInstanceSetter: Fuzzilli_Protobuf_EndClassPrivateInstanceSetter {
+    get {
+      if case .endClassPrivateInstanceSetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_EndClassPrivateInstanceSetter()
+    }
+    set {operation = .endClassPrivateInstanceSetter(newValue)}
   }
 
   public var classAddStaticProperty: Fuzzilli_Protobuf_ClassAddStaticProperty {
@@ -424,12 +456,28 @@ public struct Fuzzilli_Protobuf_Instruction {
     set {operation = .beginClassStaticGetter(newValue)}
   }
 
+  public var beginClassPrivateStaticGetter: Fuzzilli_Protobuf_BeginClassPrivateStaticGetter {
+    get {
+      if case .beginClassPrivateStaticGetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_BeginClassPrivateStaticGetter()
+    }
+    set {operation = .beginClassPrivateStaticGetter(newValue)}
+  }
+
   public var endClassStaticGetter: Fuzzilli_Protobuf_EndClassStaticGetter {
     get {
       if case .endClassStaticGetter(let v)? = operation {return v}
       return Fuzzilli_Protobuf_EndClassStaticGetter()
     }
     set {operation = .endClassStaticGetter(newValue)}
+  }
+
+  public var endClassPrivateStaticGetter: Fuzzilli_Protobuf_EndClassPrivateStaticGetter {
+    get {
+      if case .endClassPrivateStaticGetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_EndClassPrivateStaticGetter()
+    }
+    set {operation = .endClassPrivateStaticGetter(newValue)}
   }
 
   public var beginClassStaticSetter: Fuzzilli_Protobuf_BeginClassStaticSetter {
@@ -440,12 +488,28 @@ public struct Fuzzilli_Protobuf_Instruction {
     set {operation = .beginClassStaticSetter(newValue)}
   }
 
+  public var beginClassPrivateStaticSetter: Fuzzilli_Protobuf_BeginClassPrivateStaticSetter {
+    get {
+      if case .beginClassPrivateStaticSetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_BeginClassPrivateStaticSetter()
+    }
+    set {operation = .beginClassPrivateStaticSetter(newValue)}
+  }
+
   public var endClassStaticSetter: Fuzzilli_Protobuf_EndClassStaticSetter {
     get {
       if case .endClassStaticSetter(let v)? = operation {return v}
       return Fuzzilli_Protobuf_EndClassStaticSetter()
     }
     set {operation = .endClassStaticSetter(newValue)}
+  }
+
+  public var endClassPrivateStaticSetter: Fuzzilli_Protobuf_EndClassPrivateStaticSetter {
+    get {
+      if case .endClassPrivateStaticSetter(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_EndClassPrivateStaticSetter()
+    }
+    set {operation = .endClassPrivateStaticSetter(newValue)}
   }
 
   public var classAddPrivateInstanceProperty: Fuzzilli_Protobuf_ClassAddPrivateInstanceProperty {
@@ -1472,9 +1536,17 @@ public struct Fuzzilli_Protobuf_Instruction {
     set {operation = .fixup(newValue)}
   }
 
+  public var privateName: Fuzzilli_Protobuf_PrivateName {
+    get {
+      if case .privateName(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_PrivateName()
+    }
+    set {operation = .privateName(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Operation: Equatable {
+  public enum OneOf_Operation: Equatable, Sendable {
     case opIdx(UInt32)
     case nop(Fuzzilli_Protobuf_Nop)
     case loadInteger(Fuzzilli_Protobuf_LoadInteger)
@@ -1511,9 +1583,13 @@ public struct Fuzzilli_Protobuf_Instruction {
     case beginClassInstanceMethod(Fuzzilli_Protobuf_BeginClassInstanceMethod)
     case endClassInstanceMethod(Fuzzilli_Protobuf_EndClassInstanceMethod)
     case beginClassInstanceGetter(Fuzzilli_Protobuf_BeginClassInstanceGetter)
+    case beginClassPrivateInstanceGetter(Fuzzilli_Protobuf_BeginClassPrivateInstanceGetter)
     case endClassInstanceGetter(Fuzzilli_Protobuf_EndClassInstanceGetter)
+    case endClassPrivateInstanceGetter(Fuzzilli_Protobuf_EndClassPrivateInstanceGetter)
     case beginClassInstanceSetter(Fuzzilli_Protobuf_BeginClassInstanceSetter)
+    case beginClassPrivateInstanceSetter(Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter)
     case endClassInstanceSetter(Fuzzilli_Protobuf_EndClassInstanceSetter)
+    case endClassPrivateInstanceSetter(Fuzzilli_Protobuf_EndClassPrivateInstanceSetter)
     case classAddStaticProperty(Fuzzilli_Protobuf_ClassAddStaticProperty)
     case classAddStaticElement(Fuzzilli_Protobuf_ClassAddStaticElement)
     case classAddStaticComputedProperty(Fuzzilli_Protobuf_ClassAddStaticComputedProperty)
@@ -1522,9 +1598,13 @@ public struct Fuzzilli_Protobuf_Instruction {
     case beginClassStaticMethod(Fuzzilli_Protobuf_BeginClassStaticMethod)
     case endClassStaticMethod(Fuzzilli_Protobuf_EndClassStaticMethod)
     case beginClassStaticGetter(Fuzzilli_Protobuf_BeginClassStaticGetter)
+    case beginClassPrivateStaticGetter(Fuzzilli_Protobuf_BeginClassPrivateStaticGetter)
     case endClassStaticGetter(Fuzzilli_Protobuf_EndClassStaticGetter)
+    case endClassPrivateStaticGetter(Fuzzilli_Protobuf_EndClassPrivateStaticGetter)
     case beginClassStaticSetter(Fuzzilli_Protobuf_BeginClassStaticSetter)
+    case beginClassPrivateStaticSetter(Fuzzilli_Protobuf_BeginClassPrivateStaticSetter)
     case endClassStaticSetter(Fuzzilli_Protobuf_EndClassStaticSetter)
+    case endClassPrivateStaticSetter(Fuzzilli_Protobuf_EndClassPrivateStaticSetter)
     case classAddPrivateInstanceProperty(Fuzzilli_Protobuf_ClassAddPrivateInstanceProperty)
     case beginClassPrivateInstanceMethod(Fuzzilli_Protobuf_BeginClassPrivateInstanceMethod)
     case endClassPrivateInstanceMethod(Fuzzilli_Protobuf_EndClassPrivateInstanceMethod)
@@ -1653,735 +1733,14 @@ public struct Fuzzilli_Protobuf_Instruction {
     case explore(Fuzzilli_Protobuf_Explore)
     case probe(Fuzzilli_Protobuf_Probe)
     case fixup(Fuzzilli_Protobuf_Fixup)
+    case privateName(Fuzzilli_Protobuf_PrivateName)
 
-  #if !swift(>=4.1)
-    public static func ==(lhs: Fuzzilli_Protobuf_Instruction.OneOf_Operation, rhs: Fuzzilli_Protobuf_Instruction.OneOf_Operation) -> Bool {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch (lhs, rhs) {
-      case (.opIdx, .opIdx): return {
-        guard case .opIdx(let l) = lhs, case .opIdx(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.nop, .nop): return {
-        guard case .nop(let l) = lhs, case .nop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadInteger, .loadInteger): return {
-        guard case .loadInteger(let l) = lhs, case .loadInteger(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadBigInt, .loadBigInt): return {
-        guard case .loadBigInt(let l) = lhs, case .loadBigInt(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadFloat, .loadFloat): return {
-        guard case .loadFloat(let l) = lhs, case .loadFloat(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadString, .loadString): return {
-        guard case .loadString(let l) = lhs, case .loadString(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadBoolean, .loadBoolean): return {
-        guard case .loadBoolean(let l) = lhs, case .loadBoolean(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadUndefined, .loadUndefined): return {
-        guard case .loadUndefined(let l) = lhs, case .loadUndefined(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadNull, .loadNull): return {
-        guard case .loadNull(let l) = lhs, case .loadNull(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadThis, .loadThis): return {
-        guard case .loadThis(let l) = lhs, case .loadThis(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadArguments, .loadArguments): return {
-        guard case .loadArguments(let l) = lhs, case .loadArguments(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadRegExp, .loadRegExp): return {
-        guard case .loadRegExp(let l) = lhs, case .loadRegExp(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginObjectLiteral, .beginObjectLiteral): return {
-        guard case .beginObjectLiteral(let l) = lhs, case .beginObjectLiteral(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.objectLiteralAddProperty, .objectLiteralAddProperty): return {
-        guard case .objectLiteralAddProperty(let l) = lhs, case .objectLiteralAddProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.objectLiteralAddElement, .objectLiteralAddElement): return {
-        guard case .objectLiteralAddElement(let l) = lhs, case .objectLiteralAddElement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.objectLiteralAddComputedProperty, .objectLiteralAddComputedProperty): return {
-        guard case .objectLiteralAddComputedProperty(let l) = lhs, case .objectLiteralAddComputedProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.objectLiteralCopyProperties, .objectLiteralCopyProperties): return {
-        guard case .objectLiteralCopyProperties(let l) = lhs, case .objectLiteralCopyProperties(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.objectLiteralSetPrototype, .objectLiteralSetPrototype): return {
-        guard case .objectLiteralSetPrototype(let l) = lhs, case .objectLiteralSetPrototype(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginObjectLiteralMethod, .beginObjectLiteralMethod): return {
-        guard case .beginObjectLiteralMethod(let l) = lhs, case .beginObjectLiteralMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endObjectLiteralMethod, .endObjectLiteralMethod): return {
-        guard case .endObjectLiteralMethod(let l) = lhs, case .endObjectLiteralMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginObjectLiteralComputedMethod, .beginObjectLiteralComputedMethod): return {
-        guard case .beginObjectLiteralComputedMethod(let l) = lhs, case .beginObjectLiteralComputedMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endObjectLiteralComputedMethod, .endObjectLiteralComputedMethod): return {
-        guard case .endObjectLiteralComputedMethod(let l) = lhs, case .endObjectLiteralComputedMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginObjectLiteralGetter, .beginObjectLiteralGetter): return {
-        guard case .beginObjectLiteralGetter(let l) = lhs, case .beginObjectLiteralGetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endObjectLiteralGetter, .endObjectLiteralGetter): return {
-        guard case .endObjectLiteralGetter(let l) = lhs, case .endObjectLiteralGetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginObjectLiteralSetter, .beginObjectLiteralSetter): return {
-        guard case .beginObjectLiteralSetter(let l) = lhs, case .beginObjectLiteralSetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endObjectLiteralSetter, .endObjectLiteralSetter): return {
-        guard case .endObjectLiteralSetter(let l) = lhs, case .endObjectLiteralSetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endObjectLiteral, .endObjectLiteral): return {
-        guard case .endObjectLiteral(let l) = lhs, case .endObjectLiteral(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassDefinition, .beginClassDefinition): return {
-        guard case .beginClassDefinition(let l) = lhs, case .beginClassDefinition(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassConstructor, .beginClassConstructor): return {
-        guard case .beginClassConstructor(let l) = lhs, case .beginClassConstructor(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassConstructor, .endClassConstructor): return {
-        guard case .endClassConstructor(let l) = lhs, case .endClassConstructor(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.classAddInstanceProperty, .classAddInstanceProperty): return {
-        guard case .classAddInstanceProperty(let l) = lhs, case .classAddInstanceProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.classAddInstanceElement, .classAddInstanceElement): return {
-        guard case .classAddInstanceElement(let l) = lhs, case .classAddInstanceElement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.classAddInstanceComputedProperty, .classAddInstanceComputedProperty): return {
-        guard case .classAddInstanceComputedProperty(let l) = lhs, case .classAddInstanceComputedProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassInstanceMethod, .beginClassInstanceMethod): return {
-        guard case .beginClassInstanceMethod(let l) = lhs, case .beginClassInstanceMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassInstanceMethod, .endClassInstanceMethod): return {
-        guard case .endClassInstanceMethod(let l) = lhs, case .endClassInstanceMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassInstanceGetter, .beginClassInstanceGetter): return {
-        guard case .beginClassInstanceGetter(let l) = lhs, case .beginClassInstanceGetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassInstanceGetter, .endClassInstanceGetter): return {
-        guard case .endClassInstanceGetter(let l) = lhs, case .endClassInstanceGetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassInstanceSetter, .beginClassInstanceSetter): return {
-        guard case .beginClassInstanceSetter(let l) = lhs, case .beginClassInstanceSetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassInstanceSetter, .endClassInstanceSetter): return {
-        guard case .endClassInstanceSetter(let l) = lhs, case .endClassInstanceSetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.classAddStaticProperty, .classAddStaticProperty): return {
-        guard case .classAddStaticProperty(let l) = lhs, case .classAddStaticProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.classAddStaticElement, .classAddStaticElement): return {
-        guard case .classAddStaticElement(let l) = lhs, case .classAddStaticElement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.classAddStaticComputedProperty, .classAddStaticComputedProperty): return {
-        guard case .classAddStaticComputedProperty(let l) = lhs, case .classAddStaticComputedProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassStaticInitializer, .beginClassStaticInitializer): return {
-        guard case .beginClassStaticInitializer(let l) = lhs, case .beginClassStaticInitializer(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassStaticInitializer, .endClassStaticInitializer): return {
-        guard case .endClassStaticInitializer(let l) = lhs, case .endClassStaticInitializer(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassStaticMethod, .beginClassStaticMethod): return {
-        guard case .beginClassStaticMethod(let l) = lhs, case .beginClassStaticMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassStaticMethod, .endClassStaticMethod): return {
-        guard case .endClassStaticMethod(let l) = lhs, case .endClassStaticMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassStaticGetter, .beginClassStaticGetter): return {
-        guard case .beginClassStaticGetter(let l) = lhs, case .beginClassStaticGetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassStaticGetter, .endClassStaticGetter): return {
-        guard case .endClassStaticGetter(let l) = lhs, case .endClassStaticGetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassStaticSetter, .beginClassStaticSetter): return {
-        guard case .beginClassStaticSetter(let l) = lhs, case .beginClassStaticSetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassStaticSetter, .endClassStaticSetter): return {
-        guard case .endClassStaticSetter(let l) = lhs, case .endClassStaticSetter(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.classAddPrivateInstanceProperty, .classAddPrivateInstanceProperty): return {
-        guard case .classAddPrivateInstanceProperty(let l) = lhs, case .classAddPrivateInstanceProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassPrivateInstanceMethod, .beginClassPrivateInstanceMethod): return {
-        guard case .beginClassPrivateInstanceMethod(let l) = lhs, case .beginClassPrivateInstanceMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassPrivateInstanceMethod, .endClassPrivateInstanceMethod): return {
-        guard case .endClassPrivateInstanceMethod(let l) = lhs, case .endClassPrivateInstanceMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.classAddPrivateStaticProperty, .classAddPrivateStaticProperty): return {
-        guard case .classAddPrivateStaticProperty(let l) = lhs, case .classAddPrivateStaticProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginClassPrivateStaticMethod, .beginClassPrivateStaticMethod): return {
-        guard case .beginClassPrivateStaticMethod(let l) = lhs, case .beginClassPrivateStaticMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassPrivateStaticMethod, .endClassPrivateStaticMethod): return {
-        guard case .endClassPrivateStaticMethod(let l) = lhs, case .endClassPrivateStaticMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endClassDefinition, .endClassDefinition): return {
-        guard case .endClassDefinition(let l) = lhs, case .endClassDefinition(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.createArray, .createArray): return {
-        guard case .createArray(let l) = lhs, case .createArray(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.createIntArray, .createIntArray): return {
-        guard case .createIntArray(let l) = lhs, case .createIntArray(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.createFloatArray, .createFloatArray): return {
-        guard case .createFloatArray(let l) = lhs, case .createFloatArray(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.createArrayWithSpread, .createArrayWithSpread): return {
-        guard case .createArrayWithSpread(let l) = lhs, case .createArrayWithSpread(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.createTemplateString, .createTemplateString): return {
-        guard case .createTemplateString(let l) = lhs, case .createTemplateString(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadBuiltin, .loadBuiltin): return {
-        guard case .loadBuiltin(let l) = lhs, case .loadBuiltin(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.getProperty, .getProperty): return {
-        guard case .getProperty(let l) = lhs, case .getProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.setProperty, .setProperty): return {
-        guard case .setProperty(let l) = lhs, case .setProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.updateProperty, .updateProperty): return {
-        guard case .updateProperty(let l) = lhs, case .updateProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.deleteProperty, .deleteProperty): return {
-        guard case .deleteProperty(let l) = lhs, case .deleteProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.configureProperty, .configureProperty): return {
-        guard case .configureProperty(let l) = lhs, case .configureProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.getElement, .getElement): return {
-        guard case .getElement(let l) = lhs, case .getElement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.setElement, .setElement): return {
-        guard case .setElement(let l) = lhs, case .setElement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.updateElement, .updateElement): return {
-        guard case .updateElement(let l) = lhs, case .updateElement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.deleteElement, .deleteElement): return {
-        guard case .deleteElement(let l) = lhs, case .deleteElement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.configureElement, .configureElement): return {
-        guard case .configureElement(let l) = lhs, case .configureElement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.getComputedProperty, .getComputedProperty): return {
-        guard case .getComputedProperty(let l) = lhs, case .getComputedProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.setComputedProperty, .setComputedProperty): return {
-        guard case .setComputedProperty(let l) = lhs, case .setComputedProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.updateComputedProperty, .updateComputedProperty): return {
-        guard case .updateComputedProperty(let l) = lhs, case .updateComputedProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.deleteComputedProperty, .deleteComputedProperty): return {
-        guard case .deleteComputedProperty(let l) = lhs, case .deleteComputedProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.configureComputedProperty, .configureComputedProperty): return {
-        guard case .configureComputedProperty(let l) = lhs, case .configureComputedProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.typeOf, .typeOf): return {
-        guard case .typeOf(let l) = lhs, case .typeOf(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.testInstanceOf, .testInstanceOf): return {
-        guard case .testInstanceOf(let l) = lhs, case .testInstanceOf(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.testIn, .testIn): return {
-        guard case .testIn(let l) = lhs, case .testIn(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginPlainFunction, .beginPlainFunction): return {
-        guard case .beginPlainFunction(let l) = lhs, case .beginPlainFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endPlainFunction, .endPlainFunction): return {
-        guard case .endPlainFunction(let l) = lhs, case .endPlainFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginArrowFunction, .beginArrowFunction): return {
-        guard case .beginArrowFunction(let l) = lhs, case .beginArrowFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endArrowFunction, .endArrowFunction): return {
-        guard case .endArrowFunction(let l) = lhs, case .endArrowFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginGeneratorFunction, .beginGeneratorFunction): return {
-        guard case .beginGeneratorFunction(let l) = lhs, case .beginGeneratorFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endGeneratorFunction, .endGeneratorFunction): return {
-        guard case .endGeneratorFunction(let l) = lhs, case .endGeneratorFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginAsyncFunction, .beginAsyncFunction): return {
-        guard case .beginAsyncFunction(let l) = lhs, case .beginAsyncFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endAsyncFunction, .endAsyncFunction): return {
-        guard case .endAsyncFunction(let l) = lhs, case .endAsyncFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginAsyncArrowFunction, .beginAsyncArrowFunction): return {
-        guard case .beginAsyncArrowFunction(let l) = lhs, case .beginAsyncArrowFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endAsyncArrowFunction, .endAsyncArrowFunction): return {
-        guard case .endAsyncArrowFunction(let l) = lhs, case .endAsyncArrowFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginAsyncGeneratorFunction, .beginAsyncGeneratorFunction): return {
-        guard case .beginAsyncGeneratorFunction(let l) = lhs, case .beginAsyncGeneratorFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endAsyncGeneratorFunction, .endAsyncGeneratorFunction): return {
-        guard case .endAsyncGeneratorFunction(let l) = lhs, case .endAsyncGeneratorFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginConstructor, .beginConstructor): return {
-        guard case .beginConstructor(let l) = lhs, case .beginConstructor(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endConstructor, .endConstructor): return {
-        guard case .endConstructor(let l) = lhs, case .endConstructor(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.return, .return): return {
-        guard case .return(let l) = lhs, case .return(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.yield, .yield): return {
-        guard case .yield(let l) = lhs, case .yield(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.yieldEach, .yieldEach): return {
-        guard case .yieldEach(let l) = lhs, case .yieldEach(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.await, .await): return {
-        guard case .await(let l) = lhs, case .await(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.callFunction, .callFunction): return {
-        guard case .callFunction(let l) = lhs, case .callFunction(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.callFunctionWithSpread, .callFunctionWithSpread): return {
-        guard case .callFunctionWithSpread(let l) = lhs, case .callFunctionWithSpread(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.construct, .construct): return {
-        guard case .construct(let l) = lhs, case .construct(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.constructWithSpread, .constructWithSpread): return {
-        guard case .constructWithSpread(let l) = lhs, case .constructWithSpread(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.callMethod, .callMethod): return {
-        guard case .callMethod(let l) = lhs, case .callMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.callMethodWithSpread, .callMethodWithSpread): return {
-        guard case .callMethodWithSpread(let l) = lhs, case .callMethodWithSpread(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.callComputedMethod, .callComputedMethod): return {
-        guard case .callComputedMethod(let l) = lhs, case .callComputedMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.callComputedMethodWithSpread, .callComputedMethodWithSpread): return {
-        guard case .callComputedMethodWithSpread(let l) = lhs, case .callComputedMethodWithSpread(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.unaryOperation, .unaryOperation): return {
-        guard case .unaryOperation(let l) = lhs, case .unaryOperation(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.binaryOperation, .binaryOperation): return {
-        guard case .binaryOperation(let l) = lhs, case .binaryOperation(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.ternaryOperation, .ternaryOperation): return {
-        guard case .ternaryOperation(let l) = lhs, case .ternaryOperation(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.update, .update): return {
-        guard case .update(let l) = lhs, case .update(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.dup, .dup): return {
-        guard case .dup(let l) = lhs, case .dup(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.reassign, .reassign): return {
-        guard case .reassign(let l) = lhs, case .reassign(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.destructArray, .destructArray): return {
-        guard case .destructArray(let l) = lhs, case .destructArray(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.destructArrayAndReassign, .destructArrayAndReassign): return {
-        guard case .destructArrayAndReassign(let l) = lhs, case .destructArrayAndReassign(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.destructObject, .destructObject): return {
-        guard case .destructObject(let l) = lhs, case .destructObject(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.destructObjectAndReassign, .destructObjectAndReassign): return {
-        guard case .destructObjectAndReassign(let l) = lhs, case .destructObjectAndReassign(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.compare, .compare): return {
-        guard case .compare(let l) = lhs, case .compare(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadNamedVariable, .loadNamedVariable): return {
-        guard case .loadNamedVariable(let l) = lhs, case .loadNamedVariable(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.storeNamedVariable, .storeNamedVariable): return {
-        guard case .storeNamedVariable(let l) = lhs, case .storeNamedVariable(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.defineNamedVariable, .defineNamedVariable): return {
-        guard case .defineNamedVariable(let l) = lhs, case .defineNamedVariable(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.eval, .eval): return {
-        guard case .eval(let l) = lhs, case .eval(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginWith, .beginWith): return {
-        guard case .beginWith(let l) = lhs, case .beginWith(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endWith, .endWith): return {
-        guard case .endWith(let l) = lhs, case .endWith(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.callSuperConstructor, .callSuperConstructor): return {
-        guard case .callSuperConstructor(let l) = lhs, case .callSuperConstructor(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.callSuperMethod, .callSuperMethod): return {
-        guard case .callSuperMethod(let l) = lhs, case .callSuperMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.getPrivateProperty, .getPrivateProperty): return {
-        guard case .getPrivateProperty(let l) = lhs, case .getPrivateProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.setPrivateProperty, .setPrivateProperty): return {
-        guard case .setPrivateProperty(let l) = lhs, case .setPrivateProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.updatePrivateProperty, .updatePrivateProperty): return {
-        guard case .updatePrivateProperty(let l) = lhs, case .updatePrivateProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.callPrivateMethod, .callPrivateMethod): return {
-        guard case .callPrivateMethod(let l) = lhs, case .callPrivateMethod(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.getSuperProperty, .getSuperProperty): return {
-        guard case .getSuperProperty(let l) = lhs, case .getSuperProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.setSuperProperty, .setSuperProperty): return {
-        guard case .setSuperProperty(let l) = lhs, case .setSuperProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.getComputedSuperProperty, .getComputedSuperProperty): return {
-        guard case .getComputedSuperProperty(let l) = lhs, case .getComputedSuperProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.setComputedSuperProperty, .setComputedSuperProperty): return {
-        guard case .setComputedSuperProperty(let l) = lhs, case .setComputedSuperProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.updateSuperProperty, .updateSuperProperty): return {
-        guard case .updateSuperProperty(let l) = lhs, case .updateSuperProperty(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginIf, .beginIf): return {
-        guard case .beginIf(let l) = lhs, case .beginIf(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginElse, .beginElse): return {
-        guard case .beginElse(let l) = lhs, case .beginElse(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endIf, .endIf): return {
-        guard case .endIf(let l) = lhs, case .endIf(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginWhileLoopHeader, .beginWhileLoopHeader): return {
-        guard case .beginWhileLoopHeader(let l) = lhs, case .beginWhileLoopHeader(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginWhileLoopBody, .beginWhileLoopBody): return {
-        guard case .beginWhileLoopBody(let l) = lhs, case .beginWhileLoopBody(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endWhileLoop, .endWhileLoop): return {
-        guard case .endWhileLoop(let l) = lhs, case .endWhileLoop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginDoWhileLoopBody, .beginDoWhileLoopBody): return {
-        guard case .beginDoWhileLoopBody(let l) = lhs, case .beginDoWhileLoopBody(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginDoWhileLoopHeader, .beginDoWhileLoopHeader): return {
-        guard case .beginDoWhileLoopHeader(let l) = lhs, case .beginDoWhileLoopHeader(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endDoWhileLoop, .endDoWhileLoop): return {
-        guard case .endDoWhileLoop(let l) = lhs, case .endDoWhileLoop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginForLoopInitializer, .beginForLoopInitializer): return {
-        guard case .beginForLoopInitializer(let l) = lhs, case .beginForLoopInitializer(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginForLoopCondition, .beginForLoopCondition): return {
-        guard case .beginForLoopCondition(let l) = lhs, case .beginForLoopCondition(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginForLoopAfterthought, .beginForLoopAfterthought): return {
-        guard case .beginForLoopAfterthought(let l) = lhs, case .beginForLoopAfterthought(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginForLoopBody, .beginForLoopBody): return {
-        guard case .beginForLoopBody(let l) = lhs, case .beginForLoopBody(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endForLoop, .endForLoop): return {
-        guard case .endForLoop(let l) = lhs, case .endForLoop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginForInLoop, .beginForInLoop): return {
-        guard case .beginForInLoop(let l) = lhs, case .beginForInLoop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endForInLoop, .endForInLoop): return {
-        guard case .endForInLoop(let l) = lhs, case .endForInLoop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginForOfLoop, .beginForOfLoop): return {
-        guard case .beginForOfLoop(let l) = lhs, case .beginForOfLoop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginForOfLoopWithDestruct, .beginForOfLoopWithDestruct): return {
-        guard case .beginForOfLoopWithDestruct(let l) = lhs, case .beginForOfLoopWithDestruct(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endForOfLoop, .endForOfLoop): return {
-        guard case .endForOfLoop(let l) = lhs, case .endForOfLoop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginRepeatLoop, .beginRepeatLoop): return {
-        guard case .beginRepeatLoop(let l) = lhs, case .beginRepeatLoop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endRepeatLoop, .endRepeatLoop): return {
-        guard case .endRepeatLoop(let l) = lhs, case .endRepeatLoop(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loopBreak, .loopBreak): return {
-        guard case .loopBreak(let l) = lhs, case .loopBreak(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loopContinue, .loopContinue): return {
-        guard case .loopContinue(let l) = lhs, case .loopContinue(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginTry, .beginTry): return {
-        guard case .beginTry(let l) = lhs, case .beginTry(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginCatch, .beginCatch): return {
-        guard case .beginCatch(let l) = lhs, case .beginCatch(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginFinally, .beginFinally): return {
-        guard case .beginFinally(let l) = lhs, case .beginFinally(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endTryCatchFinally, .endTryCatchFinally): return {
-        guard case .endTryCatchFinally(let l) = lhs, case .endTryCatchFinally(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.throwException, .throwException): return {
-        guard case .throwException(let l) = lhs, case .throwException(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginCodeString, .beginCodeString): return {
-        guard case .beginCodeString(let l) = lhs, case .beginCodeString(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endCodeString, .endCodeString): return {
-        guard case .endCodeString(let l) = lhs, case .endCodeString(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginBlockStatement, .beginBlockStatement): return {
-        guard case .beginBlockStatement(let l) = lhs, case .beginBlockStatement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endBlockStatement, .endBlockStatement): return {
-        guard case .endBlockStatement(let l) = lhs, case .endBlockStatement(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginSwitch, .beginSwitch): return {
-        guard case .beginSwitch(let l) = lhs, case .beginSwitch(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginSwitchCase, .beginSwitchCase): return {
-        guard case .beginSwitchCase(let l) = lhs, case .beginSwitchCase(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.beginSwitchDefaultCase, .beginSwitchDefaultCase): return {
-        guard case .beginSwitchDefaultCase(let l) = lhs, case .beginSwitchDefaultCase(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endSwitchCase, .endSwitchCase): return {
-        guard case .endSwitchCase(let l) = lhs, case .endSwitchCase(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.endSwitch, .endSwitch): return {
-        guard case .endSwitch(let l) = lhs, case .endSwitch(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.switchBreak, .switchBreak): return {
-        guard case .switchBreak(let l) = lhs, case .switchBreak(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.loadNewTarget, .loadNewTarget): return {
-        guard case .loadNewTarget(let l) = lhs, case .loadNewTarget(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.print, .print): return {
-        guard case .print(let l) = lhs, case .print(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.explore, .explore): return {
-        guard case .explore(let l) = lhs, case .explore(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.probe, .probe): return {
-        guard case .probe(let l) = lhs, case .probe(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      case (.fixup, .fixup): return {
-        guard case .fixup(let l) = lhs, case .fixup(let r) = rhs else { preconditionFailure() }
-        return l == r
-      }()
-      default: return false
-      }
-    }
-  #endif
   }
 
   public init() {}
 }
 
-public struct Fuzzilli_Protobuf_Program {
+public struct Fuzzilli_Protobuf_Program: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -2416,12 +1775,6 @@ public struct Fuzzilli_Protobuf_Program {
 
   fileprivate var _storage = _StorageClass.defaultInstance
 }
-
-#if swift(>=5.5) && canImport(_Concurrency)
-extension Fuzzilli_Protobuf_Instruction: @unchecked Sendable {}
-extension Fuzzilli_Protobuf_Instruction.OneOf_Operation: @unchecked Sendable {}
-extension Fuzzilli_Protobuf_Program: @unchecked Sendable {}
-#endif  // swift(>=5.5) && canImport(_Concurrency)
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
@@ -2609,6 +1962,15 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
     177: .same(proto: "explore"),
     178: .same(proto: "probe"),
     179: .same(proto: "fixup"),
+    180: .same(proto: "beginClassPrivateInstanceGetter"),
+    181: .same(proto: "beginClassPrivateInstanceSetter"),
+    182: .same(proto: "beginClassPrivateStaticGetter"),
+    183: .same(proto: "beginClassPrivateStaticSetter"),
+    184: .same(proto: "endClassPrivateInstanceGetter"),
+    185: .same(proto: "endClassPrivateInstanceSetter"),
+    186: .same(proto: "endClassPrivateStaticGetter"),
+    187: .same(proto: "endClassPrivateStaticSetter"),
+    188: .same(proto: "privateName"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4927,6 +4289,123 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .fixup(v)
         }
       }()
+      case 180: try {
+        var v: Fuzzilli_Protobuf_BeginClassPrivateInstanceGetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .beginClassPrivateInstanceGetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .beginClassPrivateInstanceGetter(v)
+        }
+      }()
+      case 181: try {
+        var v: Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .beginClassPrivateInstanceSetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .beginClassPrivateInstanceSetter(v)
+        }
+      }()
+      case 182: try {
+        var v: Fuzzilli_Protobuf_BeginClassPrivateStaticGetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .beginClassPrivateStaticGetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .beginClassPrivateStaticGetter(v)
+        }
+      }()
+      case 183: try {
+        var v: Fuzzilli_Protobuf_BeginClassPrivateStaticSetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .beginClassPrivateStaticSetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .beginClassPrivateStaticSetter(v)
+        }
+      }()
+      case 184: try {
+        var v: Fuzzilli_Protobuf_EndClassPrivateInstanceGetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .endClassPrivateInstanceGetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .endClassPrivateInstanceGetter(v)
+        }
+      }()
+      case 185: try {
+        var v: Fuzzilli_Protobuf_EndClassPrivateInstanceSetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .endClassPrivateInstanceSetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .endClassPrivateInstanceSetter(v)
+        }
+      }()
+      case 186: try {
+        var v: Fuzzilli_Protobuf_EndClassPrivateStaticGetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .endClassPrivateStaticGetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .endClassPrivateStaticGetter(v)
+        }
+      }()
+      case 187: try {
+        var v: Fuzzilli_Protobuf_EndClassPrivateStaticSetter?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .endClassPrivateStaticSetter(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .endClassPrivateStaticSetter(v)
+        }
+      }()
+      case 188: try {
+        var v: Fuzzilli_Protobuf_PrivateName?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .privateName(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .privateName(v)
+        }
+      }()
       default: break
       }
     }
@@ -5653,6 +5132,42 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
       guard case .fixup(let v)? = self.operation else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 179)
     }()
+    case .beginClassPrivateInstanceGetter?: try {
+      guard case .beginClassPrivateInstanceGetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 180)
+    }()
+    case .beginClassPrivateInstanceSetter?: try {
+      guard case .beginClassPrivateInstanceSetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 181)
+    }()
+    case .beginClassPrivateStaticGetter?: try {
+      guard case .beginClassPrivateStaticGetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 182)
+    }()
+    case .beginClassPrivateStaticSetter?: try {
+      guard case .beginClassPrivateStaticSetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 183)
+    }()
+    case .endClassPrivateInstanceGetter?: try {
+      guard case .endClassPrivateInstanceGetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 184)
+    }()
+    case .endClassPrivateInstanceSetter?: try {
+      guard case .endClassPrivateInstanceSetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 185)
+    }()
+    case .endClassPrivateStaticGetter?: try {
+      guard case .endClassPrivateStaticGetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 186)
+    }()
+    case .endClassPrivateStaticSetter?: try {
+      guard case .endClassPrivateStaticSetter(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 187)
+    }()
+    case .privateName?: try {
+      guard case .privateName(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 188)
+    }()
     case nil: break
     }
     try unknownFields.traverse(visitor: &visitor)
@@ -5681,7 +5196,15 @@ extension Fuzzilli_Protobuf_Program: SwiftProtobuf.Message, SwiftProtobuf._Messa
     var _comments: Dictionary<Int32,String> = [:]
     var _parent: Fuzzilli_Protobuf_Program? = nil
 
-    static let defaultInstance = _StorageClass()
+    #if swift(>=5.10)
+      // This property is used as the initial default value for new instances of the type.
+      // The type itself is protecting the reference to its storage via CoW semantics.
+      // This will force a copy to be made of this reference when the first mutation occurs;
+      // hence, it is safe to mark this as `nonisolated(unsafe)`.
+      static nonisolated(unsafe) let defaultInstance = _StorageClass()
+    #else
+      static let defaultInstance = _StorageClass()
+    #endif
 
     private init() {}
 

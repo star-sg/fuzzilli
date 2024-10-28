@@ -627,9 +627,17 @@ class ProgramBuilderTests: XCTestCase {
             cls.addInstanceGetter(for: "foobar") { this in }
             XCTAssert(cls.instanceGetters.contains("foobar"))
 
+            XCTAssertFalse(cls.privateInstanceGetters.contains("baz"))
+            cls.addPrivateInstanceGetter(for: "baz") { this in }
+            XCTAssert(cls.privateInstanceGetters.contains("baz"))
+
             XCTAssertFalse(cls.instanceSetters.contains("foobar"))
             cls.addInstanceSetter(for: "foobar") { this, v in }
             XCTAssert(cls.instanceSetters.contains("foobar"))
+
+            XCTAssertFalse(cls.privateInstanceSetters.contains("baz"))
+            cls.addPrivateInstanceSetter(for: "baz") { this, v in }
+            XCTAssert(cls.privateInstanceSetters.contains("baz"))
 
             XCTAssertFalse(cls.staticProperties.contains("foo"))
             cls.addStaticProperty("foo", value: i)
@@ -651,9 +659,17 @@ class ProgramBuilderTests: XCTestCase {
             cls.addStaticGetter(for: "foobar") { this in }
             XCTAssert(cls.staticGetters.contains("foobar"))
 
+            XCTAssertFalse(cls.privateStaticGetters.contains("foobaz"))
+            cls.addPrivateStaticGetter(for: "foobaz") { this in }
+            XCTAssert(cls.privateStaticGetters.contains("foobaz"))
+
             XCTAssertFalse(cls.staticSetters.contains("foobar"))
             cls.addStaticSetter(for: "foobar") { this, v in }
             XCTAssert(cls.staticSetters.contains("foobar"))
+
+            XCTAssertFalse(cls.privateStaticSetters.contains("foobaz"))
+            cls.addPrivateStaticSetter(for: "foobaz") { this, v in }
+            XCTAssert(cls.privateStaticSetters.contains("foobaz"))
 
             // All private fields, regardless of whether they are per-instance or static and whether they are properties or methods use the same
             // namespace and each entry must be unique in that namespace. For example, there cannot be both a `#foo` and `static #foo` field.
@@ -697,7 +713,7 @@ class ProgramBuilderTests: XCTestCase {
         }
 
         let program = b.finalize()
-        XCTAssertEqual(program.size, 32)
+        XCTAssertEqual(program.size, 40)
     }
 
     func testSwitchBlockBuilding() {
@@ -1456,9 +1472,6 @@ class ProgramBuilderTests: XCTestCase {
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
 
-        // This test requires conservative building mode. See comments below.
-        b.mode = .conservative
-
         //
         // Original Program
         //
@@ -1485,8 +1498,6 @@ class ProgramBuilderTests: XCTestCase {
             b.doReturn(r)
         }
         // This function is not compatible since it requires more parameters.
-        // However, in .aggressive building mode we may still take it since it MayBe
-        // compatible (as in, the 2nd parameter may not be used, for example).
         b.buildPlainFunction(with: .parameters(n: 2)) { args in
             let r = b.binary(args[0], args[1], with: .Exp)
             b.doReturn(r)
@@ -1522,9 +1533,6 @@ class ProgramBuilderTests: XCTestCase {
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
 
-        // This test behaves differently depending on the builder mode.
-        b.mode = chooseUniform(from: [.aggressive, .conservative])
-
         //
         // Original Program
         //
@@ -1545,10 +1553,7 @@ class ProgramBuilderTests: XCTestCase {
         //
         b.probabilityOfRemappingAnInstructionsOutputsDuringSplicing = 1.0
         // In the host program, we have a function with one parameter of an explicit type.
-        // In aggressive mode, we still take this function since it MayBe a compatible function (from
-        // a theoretical standpoint because it may still be called with an integer, but from a practical
-        // point-of-view because it may may actually also work with different arguments).
-        // However in conservative mode, we won't take it since it's not guaranteed to be compatible.
+        // For splicint, we therefore won't take this function since it's not guaranteed to be compatible.
         b.buildPlainFunction(with: .parameters(.integer)) { args in
             let two = b.loadInt(2)
             let r = b.binary(args[0], two, with: .Mul)
@@ -1562,32 +1567,19 @@ class ProgramBuilderTests: XCTestCase {
         // Expected Program
         //
         let expected: Program
-        switch b.mode {
-        case .aggressive:
-            // The host function MayBe compatible, so take it.
-            f = b.buildPlainFunction(with: .parameters(n: 1)) { args in
-                let two = b.loadInt(2)
-                let r = b.binary(args[0], two, with: .Mul)
-                b.doReturn(r)
-            }
-            n = b.loadInt(42)
-            b.callFunction(f, withArgs: [n])
-            expected = b.finalize()
-        case .conservative:
-            // The host function isn't guaranteed to be compatible, so don't take it.
-            b.buildPlainFunction(with: .parameters(n: 1)) { args in
-                let two = b.loadInt(2)
-                let r = b.binary(args[0], two, with: .Mul)
-                b.doReturn(r)
-            }
-            n = b.loadInt(42)
-            let f = b.buildPlainFunction(with: .parameters(n: 1)) { args in
-                let print = b.loadBuiltin("print")
-                b.callFunction(print, withArgs: args)
-            }
-            b.callFunction(f, withArgs: [n])
-            expected = b.finalize()
+        // The host function isn't guaranteed to be compatible, so don't take it.
+        b.buildPlainFunction(with: .parameters(n: 1)) { args in
+            let two = b.loadInt(2)
+            let r = b.binary(args[0], two, with: .Mul)
+            b.doReturn(r)
         }
+        n = b.loadInt(42)
+        f = b.buildPlainFunction(with: .parameters(n: 1)) { args in
+            let print = b.loadBuiltin("print")
+            b.callFunction(print, withArgs: args)
+        }
+        b.callFunction(f, withArgs: [n])
+        expected = b.finalize()
 
         XCTAssertEqual(FuzzILLifter().lift(actual), FuzzILLifter().lift(expected))
         XCTAssertEqual(actual, expected)
@@ -1598,13 +1590,10 @@ class ProgramBuilderTests: XCTestCase {
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
 
-        // This test behaves differently depending on the builder mode.
-        b.mode = chooseUniform(from: [.aggressive, .conservative])
-
         //
         // Original Program
         //
-        let i = b.loadInt(42)
+        var i = b.loadInt(42)
         splicePoint = b.indexOfNextInstruction()
         b.unary(.PostInc, i)
         let original = b.finalize()
@@ -1614,19 +1603,10 @@ class ProgramBuilderTests: XCTestCase {
         //
         b.probabilityOfRemappingAnInstructionsOutputsDuringSplicing = 1.0
 
-        // There are no variables known to have the type that we're looking for (.integer),
-        // but there are variables that may be of that type (because they are .anything or
-        // .number in this example), so we expect these to be used in aggressive building
-        // mode. However, in conservative mode we won't use them because it's not guaranteed
-        // that they are compatible.
+        // For splicing, we will not use a variable of an unknown type as replacement.
         let unknown = b.loadBuiltin("unknown")
         XCTAssertEqual(b.type(of: unknown), .anything)
-        if probability(0.5) {
-            // Any union type that includes .integer should work for this example.
-            b.setType(ofVariable: unknown, to: .number)
-            XCTAssertEqual(b.type(of: unknown), .number)
-        }
-        b.loadBool(true)        // This should never be used as replacement as it definitely has a different type
+        b.loadBool(true)        // This should also never be used as replacement as it definitely has a different type
         b.splice(from: original, at: splicePoint, mergeDataFlow: true)
         let actual = b.finalize()
 
@@ -1634,19 +1614,11 @@ class ProgramBuilderTests: XCTestCase {
         // Expected Program
         //
         let expected: Program
-        switch b.mode {
-        case .aggressive:
-            let unknown = b.loadBuiltin("unknown")
-            b.loadBool(true)
-            b.unary(.PostInc, unknown)
-            expected = b.finalize()
-        case .conservative:
-            b.loadBuiltin("unknown")
-            b.loadBool(true)
-            let i = b.loadInt(42)
-            b.unary(.PostInc, i)
-            expected = b.finalize()
-        }
+        b.loadBuiltin("unknown")
+        b.loadBool(true)
+        i = b.loadInt(42)
+        b.unary(.PostInc, i)
+        expected = b.finalize()
 
         XCTAssertEqual(actual, expected)
     }
@@ -1655,8 +1627,6 @@ class ProgramBuilderTests: XCTestCase {
         var splicePoint = -1
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
-        // This test requires .conservative mode, see below.
-        b.mode = .conservative
 
         //
         // Original Program
@@ -1674,9 +1644,7 @@ class ProgramBuilderTests: XCTestCase {
 
         // In this case, all existing variables are known to definitely have a different
         // type than the one we're looking for (.integer) when trying to replace the outputs
-        // of the LoadInt operations. In this case it's not obvious what the best way to
-        // handle this is, so currently we don't replace the outputs in such cases if we're
-        // in conservative splicing mode (otherwise, we'd pick any other variable).
+        // of the LoadInt operations. In this case we don't replace the outputs in such cases.
         b.loadString("foobar")
         b.loadBool(true)
         b.splice(from: original, at: splicePoint, mergeDataFlow: true)
@@ -1922,7 +1890,6 @@ class ProgramBuilderTests: XCTestCase {
         var splicePoint = -1
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
-        b.mode = .conservative
 
         //
         // Original Program
@@ -2018,8 +1985,6 @@ class ProgramBuilderTests: XCTestCase {
         var splicePoint = -1
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
-        // We enable conservative mode to exercise the canMutate checks within the splice loop
-        b.mode = .conservative
 
         //
         // Original Program
@@ -2091,7 +2056,6 @@ class ProgramBuilderTests: XCTestCase {
         var splicePoint = -1
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
-        b.mode = .conservative
 
         //
         // Original Program
@@ -2254,7 +2218,6 @@ class ProgramBuilderTests: XCTestCase {
         var splicePoint = -1
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
-        b.mode = .conservative
 
         //
         // Original Program
@@ -2303,7 +2266,6 @@ class ProgramBuilderTests: XCTestCase {
         var splicePoint = -1
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
-        b.mode = .conservative
 
         //
         // Original Program
@@ -2331,7 +2293,6 @@ class ProgramBuilderTests: XCTestCase {
         var splicePoint = -1
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
-        b.mode = .conservative
 
         //
         // Original Program
@@ -2376,7 +2337,6 @@ class ProgramBuilderTests: XCTestCase {
         var splicePoint = -1
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
-        b.mode = .conservative
 
         //
         // Original Program
@@ -2412,7 +2372,6 @@ class ProgramBuilderTests: XCTestCase {
         var splicePoint = -1
         let fuzzer = makeMockFuzzer()
         let b = fuzzer.makeBuilder()
-        b.mode = .conservative
 
         //
         // Original Program
@@ -2452,5 +2411,128 @@ class ProgramBuilderTests: XCTestCase {
         }
         let result = b.finalize()
         XCTAssert(result.code.contains(where: { $0.op is BeginSwitchCase }))
+    }
+
+    func testArgumentGenerationForKnownSignature() {
+        let env = JavaScriptEnvironment()
+        let fuzzer = makeMockFuzzer(environment: env)
+        let b = fuzzer.makeBuilder()
+
+        b.loadInt(42)
+
+        let constructor = b.loadBuiltin("DataView")
+        let signature = env.type(ofBuiltin: "DataView").signature!
+
+        let variables = b.findOrGenerateArguments(forSignature: signature)
+
+        XCTAssertTrue(b.type(of: variables[0]).Is(.object(ofGroup: "ArrayBuffer")))
+        if (variables.count > 1) {
+            XCTAssertTrue(b.type(of: variables[1]).Is(.number))
+        }
+
+        b.construct(constructor, withArgs: variables)
+    }
+
+    func testArgumentGenerationForKnownSignatureWithLimit() {
+        let env = JavaScriptEnvironment()
+        let config = Configuration(logLevel: .error)
+        let fuzzer = makeMockFuzzer(config: config, environment: env)
+        let b = fuzzer.makeBuilder()
+
+        b.loadInt(42)
+
+        let typeA: ILType = .object(withProperties: ["a", "b"])
+        let typeB: ILType = .object(withProperties: ["c", "d"])
+        let typeC: ILType = .object(withProperties: ["e", "f"])
+
+        let signature: Signature = [.plain(typeA), .plain(typeB)] => .undefined
+        let signature2: Signature = [.plain(typeC), .plain(typeC)] => .undefined
+
+        var args = b.findOrGenerateArguments(forSignature: signature)
+        XCTAssertEqual(args.count, 2)
+
+        // check that args have the right types
+        XCTAssert(b.type(of: args[0]).Is(typeA))
+        XCTAssert(b.type(of: args[1]).Is(typeB))
+
+        let previous = b.numberOfVisibleVariables
+
+        args = b.findOrGenerateArguments(forSignature: signature2, maxNumberOfVariablesToGenerate: 1)
+        XCTAssertEqual(args.count, 2)
+
+        // Ensure first object has the right type, and that we only generated one more variable
+        XCTAssert(b.type(of: args[0]).Is(typeC))
+        XCTAssertEqual(b.numberOfVisibleVariables, previous + 1)
+    }
+
+    func testPrivateName() {
+        let env = JavaScriptEnvironment()
+        let fuzzer = makeMockFuzzer(environment: env)
+        let b = fuzzer.makeBuilder()
+
+        let i = b.loadInt(64)
+
+        let classA = b.buildClassDefinition { cls in
+            XCTAssertFalse(cls.privateFields.contains("foo"))
+            cls.addPrivateInstanceProperty("foo", value: i)
+            XCTAssert(cls.privateFields.contains("foo"))
+        }
+
+        let classB = b.buildClassDefinition { cls in
+            XCTAssertFalse(cls.privateFields.contains("bar"))
+            cls.addPrivateInstanceProperty("bar", value: i)
+            XCTAssert(cls.privateFields.contains("bar"))
+        }
+
+        let classC = b.buildClassDefinition { cls in
+            XCTAssertFalse(cls.privateFields.contains("foobar"))
+            cls.addPrivateInstanceProperty("foobar", value: i)
+            XCTAssert(cls.privateFields.contains("foobar"))
+            cls.addInstanceMethod("check", with: .parameters(n: 2)) { args in
+                b.testIn(b.privateName("foobar"), args[0])
+                b.testIn(b.privateName("foobar"), args[1])
+            }
+        }
+
+        let o1 = b.construct(classA)
+        let o2 = b.construct(classB)
+        let o3 = b.construct(classC)
+
+        b.callMethod("check", on: o3, withArgs: [o1, o2])
+        // b.dumpCurrentProgram()
+    }
+
+    func testNodeType() {
+        let additionalBuiltins = [ "d8.dom.Div" : ILType.object(withProperties: ["nodeType"]) ]
+        let env = JavaScriptEnvironment(additionalBuiltins: additionalBuiltins)
+        let fuzzer = makeMockFuzzer(environment: env)
+        let b = fuzzer.makeBuilder()
+
+        let c = b.buildClassDefinition { cls in
+            cls.addInstanceMethod("foo", with: .parameters(n: 0)) { args in
+                b.doReturn(b.getSuperProperty("nodeType"))
+            }
+        }
+
+        let c0 = b.construct(c)
+        let proto = b.getProperty("prototype", of: c)
+        let f = b.getProperty("foo", of: proto)
+
+        b.eval("%PrepareFunctionForOptimization(%@)", with: [f])
+        b.callMethod("foo", on: c0)
+
+        let domdiv = b.loadBuiltin("d8.dom.Div")
+        let c1 = b.construct(domdiv)
+        b.setProperty("__proto__", of: proto, to: c1)
+
+        let c2 = b.construct(c)
+        b.buildTryCatchFinally(tryBody: {
+            b.callMethod("foo", on: c2)
+        }, catchBody: {e in })
+        b.eval("%OptimizeMaglevOnNextCall(%@)", with: [f])
+        b.callMethod("foo", on: c2)
+        b.dumpCurrentProgram()
+        print("====================")
+        print(JavaScriptLifter(prefix: "", suffix: "", ecmaVersion: .es6).lift(b.finalize()))
     }
 }

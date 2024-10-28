@@ -313,10 +313,14 @@ public struct JSTyper: Analyzer {
              .beginClassConstructor,
              .beginClassInstanceMethod,
              .beginClassInstanceGetter,
+             .beginClassPrivateInstanceGetter,
              .beginClassInstanceSetter,
+             .beginClassPrivateInstanceSetter,
              .beginClassStaticMethod,
              .beginClassStaticGetter,
+             .beginClassPrivateStaticGetter,
              .beginClassStaticSetter,
+             .beginClassPrivateStaticSetter,
              .beginClassPrivateInstanceMethod,
              .beginClassPrivateStaticMethod:
             activeFunctionDefinitions.push(instr)
@@ -335,10 +339,14 @@ public struct JSTyper: Analyzer {
              .endClassConstructor,
              .endClassInstanceMethod,
              .endClassInstanceGetter,
+             .endClassPrivateInstanceGetter,
              .endClassInstanceSetter,
+             .endClassPrivateInstanceSetter,
              .endClassStaticMethod,
              .endClassStaticGetter,
+             .endClassPrivateStaticGetter,
              .endClassStaticSetter,
+             .endClassPrivateStaticSetter,
              .endClassPrivateInstanceMethod,
              .endClassPrivateStaticMethod:
             //
@@ -548,7 +556,20 @@ public struct JSTyper: Analyzer {
             assert(instr.numInnerOutputs == 1)
             activeClassDefinitions.top.instanceType.add(property: op.propertyName)
 
+        case .beginClassPrivateInstanceGetter(let op):
+            // The first inner output is the explicit |this| parameter for the constructor
+            set(instr.innerOutput(0), activeClassDefinitions.top.instanceType)
+            assert(instr.numInnerOutputs == 1)
+            activeClassDefinitions.top.instanceType.add(property: op.propertyName)
+
         case .beginClassInstanceSetter(let op):
+            // The first inner output is the explicit |this| parameter for the constructor
+            set(instr.innerOutput(0), activeClassDefinitions.top.instanceType)
+            assert(instr.numInnerOutputs == 2)
+            processParameterDeclarations(instr.innerOutputs(1...), parameters: inferSubroutineParameterList(of: op, at: instr.index))
+            activeClassDefinitions.top.instanceType.add(property: op.propertyName)
+
+        case .beginClassPrivateInstanceSetter(let op):
             // The first inner output is the explicit |this| parameter for the constructor
             set(instr.innerOutput(0), activeClassDefinitions.top.instanceType)
             assert(instr.numInnerOutputs == 2)
@@ -575,7 +596,20 @@ public struct JSTyper: Analyzer {
             assert(instr.numInnerOutputs == 1)
             activeClassDefinitions.top.classType.add(property: op.propertyName)
 
+        case .beginClassPrivateStaticGetter(let op):
+            // The first inner output is the explicit |this| parameter for the constructor
+            set(instr.innerOutput(0), activeClassDefinitions.top.classType)
+            assert(instr.numInnerOutputs == 1)
+            activeClassDefinitions.top.classType.add(property: op.propertyName)
+
         case .beginClassStaticSetter(let op):
+            // The first inner output is the explicit |this| parameter for the constructor
+            set(instr.innerOutput(0), activeClassDefinitions.top.classType)
+            assert(instr.numInnerOutputs == 2)
+            processParameterDeclarations(instr.innerOutputs(1...), parameters: inferSubroutineParameterList(of: op, at: instr.index))
+            activeClassDefinitions.top.classType.add(property: op.propertyName)
+
+        case .beginClassPrivateStaticSetter(let op):
             // The first inner output is the explicit |this| parameter for the constructor
             set(instr.innerOutput(0), activeClassDefinitions.top.classType)
             assert(instr.numInnerOutputs == 2)
@@ -763,6 +797,10 @@ public struct JSTyper: Analyzer {
             set(instr.output, inferMethodSignature(of: op.methodName, on: currentSuperType()).outputType)
 
         case .getPrivateProperty:
+            // We currently don't track the types of private properties
+            set(instr.output, .anything)
+
+        case .privateName:
             // We currently don't track the types of private properties
             set(instr.output, .anything)
 

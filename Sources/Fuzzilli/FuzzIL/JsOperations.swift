@@ -552,8 +552,23 @@ final class BeginClassInstanceGetter: BeginAnySubroutine {
     }
 }
 
+final class BeginClassPrivateInstanceGetter: BeginAnySubroutine {
+    override var opcode: Opcode { .beginClassPrivateInstanceGetter(self) }
+
+    let propertyName: String
+
+    init(propertyName: String) {
+        self.propertyName = propertyName
+        super.init(parameters: Parameters(count: 0), numInnerOutputs: 1, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
+    }
+}
+
 final class EndClassInstanceGetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassInstanceGetter(self) }
+}
+
+final class EndClassPrivateInstanceGetter: EndAnySubroutine {
+    override var opcode: Opcode { .endClassPrivateInstanceGetter(self) }
 }
 
 final class BeginClassInstanceSetter: BeginAnySubroutine {
@@ -568,8 +583,23 @@ final class BeginClassInstanceSetter: BeginAnySubroutine {
     }
 }
 
+final class BeginClassPrivateInstanceSetter: BeginAnySubroutine {
+    override var opcode: Opcode { .beginClassPrivateInstanceSetter(self) }
+
+    let propertyName: String
+
+    init(propertyName: String) {
+        self.propertyName = propertyName
+        super.init(parameters: Parameters(count: 1), numInnerOutputs: 2, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
+    }
+}
+
 final class EndClassInstanceSetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassInstanceSetter(self) }
+}
+
+final class EndClassPrivateInstanceSetter: EndAnySubroutine {
+    override var opcode: Opcode { .endClassPrivateInstanceSetter(self) }
 }
 
 final class ClassAddStaticProperty: JsOperation {
@@ -658,8 +688,23 @@ final class BeginClassStaticGetter: BeginAnySubroutine {
     }
 }
 
+final class BeginClassPrivateStaticGetter: BeginAnySubroutine {
+    override var opcode: Opcode { .beginClassPrivateStaticGetter(self) }
+
+    let propertyName: String
+
+    init(propertyName: String) {
+        self.propertyName = propertyName
+        super.init(parameters: Parameters(count: 0), numInnerOutputs: 1, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
+    }
+}
+
 final class EndClassStaticGetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassStaticGetter(self) }
+}
+
+final class EndClassPrivateStaticGetter: EndAnySubroutine {
+    override var opcode: Opcode { .endClassPrivateStaticGetter(self) }
 }
 
 final class BeginClassStaticSetter: BeginAnySubroutine {
@@ -674,8 +719,23 @@ final class BeginClassStaticSetter: BeginAnySubroutine {
     }
 }
 
+final class BeginClassPrivateStaticSetter: BeginAnySubroutine {
+    override var opcode: Opcode { .beginClassPrivateStaticSetter(self) }
+
+    let propertyName: String
+
+    init(propertyName: String) {
+        self.propertyName = propertyName
+        super.init(parameters: Parameters(count: 1), numInnerOutputs: 2, attributes: [.isBlockStart, .isMutable], requiredContext: .classDefinition, contextOpened: [.javascript, .subroutine, .method, .classMethod])
+    }
+}
+
 final class EndClassStaticSetter: EndAnySubroutine {
     override var opcode: Opcode { .endClassStaticSetter(self) }
+}
+
+final class EndClassPrivateStaticSetter: EndAnySubroutine {
+    override var opcode: Opcode { .endClassPrivateStaticSetter(self) }
 }
 
 final class ClassAddPrivateInstanceProperty: JsOperation {
@@ -2317,5 +2377,15 @@ final class Fixup: JsInternalOperation {
         self.action = action
         self.originalOperation = originalOperation
         super.init(numInputs: numArguments, numOutputs: hasOutput ? 1 : 0)
+    }
+}
+
+final class PrivateName: JsOperation {
+    override var opcode: Opcode { .privateName(self) }
+
+    let _name: String
+    init(_ name: String) {
+        self._name = name
+        super.init(numOutputs: 1, attributes: .isMutable, requiredContext: .classMethod)
     }
 }

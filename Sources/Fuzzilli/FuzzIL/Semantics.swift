@@ -151,16 +151,24 @@ extension Operation {
             return endOp is EndClassInstanceMethod
         case .beginClassInstanceGetter:
             return endOp is EndClassInstanceGetter
+        case .beginClassPrivateInstanceGetter:
+            return endOp is EndClassPrivateInstanceGetter
         case .beginClassInstanceSetter:
             return endOp is EndClassInstanceSetter
+        case .beginClassPrivateInstanceSetter:
+            return endOp is EndClassPrivateInstanceSetter
         case .beginClassStaticInitializer:
             return endOp is EndClassStaticInitializer
         case .beginClassStaticMethod:
             return endOp is EndClassStaticMethod
         case .beginClassStaticGetter:
             return endOp is EndClassStaticGetter
+        case .beginClassPrivateStaticGetter:
+            return endOp is EndClassPrivateStaticGetter
         case .beginClassStaticSetter:
             return endOp is EndClassStaticSetter
+        case .beginClassPrivateStaticSetter:
+            return endOp is EndClassPrivateStaticSetter
         case .beginClassPrivateInstanceMethod:
             return endOp is EndClassPrivateInstanceMethod
         case .beginClassPrivateStaticMethod:

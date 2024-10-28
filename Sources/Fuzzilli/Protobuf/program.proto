@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -203,6 +203,15 @@ message Instruction {
         Explore explore = 177;
         Probe probe = 178;
         Fixup fixup = 179;
+        BeginClassPrivateInstanceGetter = 180;
+        BeginClassPrivateInstanceSetter = 181;
+        BeginClassPrivateStaticGetter = 182;
+        BeginClassPrivateStaticSetter = 183;
+        EndClassPrivateInstanceGetter = 184;
+        EndClassPrivateInstanceSetter = 185;
+        EndClassPrivateStaticGetter = 186;
+        EndClassPrivateStaticSetter = 187;
+        PrivateName = 188;
     }
 }
 

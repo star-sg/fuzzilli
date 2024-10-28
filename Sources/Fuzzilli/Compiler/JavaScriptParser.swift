@@ -53,7 +53,7 @@ public class JavaScriptParser {
         try runParserScript(withArguments: [astProtobufDefinitionPath, path, outputFilePath])
         let data = try Data(contentsOf: URL(fileURLWithPath: outputFilePath))
         try FileManager.default.removeItem(atPath: outputFilePath)
-        return try AST(serializedData: data)
+        return try AST(serializedBytes: data)
     }
 
     private func runParserScript(withArguments arguments: [String]) throws {
@@ -61,7 +61,7 @@ public class JavaScriptParser {
         let task = Process()
         // Don't set standardOutput: we only need stderr for error reporting and
         // capturing stdout here may cause a deadlock if the pipe becomes full.
-        // task.standardOutput = output
+        task.standardOutput = FileHandle.nullDevice
         task.standardError = output
         task.arguments = [parserScriptPath] + arguments
         // TODO: move this method into the NodeJS class instead of manually invoking the node.js binary here

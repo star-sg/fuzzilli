@@ -514,6 +514,24 @@ public let CodeGenerators: [CodeGenerator] = [
         }
     },
 
+    RecursiveCodeGenerator("ClassPrivateInstanceGetterGenerator", inContext: .classDefinition) { b in
+        assert(b.context.contains(.classDefinition) && !b.context.contains(.javascript))
+
+        var propertyName: String
+        var attempts = 0
+        repeat {
+            guard attempts < 10 else { return }
+            propertyName = b.randomCustomPropertyName()
+            attempts += 1
+        } while b.currentClassDefinition.privateFields.contains(propertyName) ||
+                b.currentClassDefinition.privateInstanceGetters.contains(propertyName)
+
+        b.currentClassDefinition.addPrivateInstanceGetter(for: propertyName) { this in
+            b.buildRecursive()
+            b.doReturn(b.randomVariable())
+        }
+    },
+
     RecursiveCodeGenerator("ClassInstanceSetterGenerator", inContext: .classDefinition) { b in
         assert(b.context.contains(.classDefinition) && !b.context.contains(.javascript))
 
@@ -527,6 +545,24 @@ public let CodeGenerators: [CodeGenerator] = [
         } while b.currentClassDefinition.instanceProperties.contains(propertyName) || b.currentClassDefinition.instanceSetters.contains(propertyName)
 
         b.currentClassDefinition.addInstanceSetter(for: propertyName) { this, v in
+            b.buildRecursive()
+        }
+    },
+
+    RecursiveCodeGenerator("ClassPrivateInstanceSetterGenerator", inContext: .classDefinition) { b in
+        assert(b.context.contains(.classDefinition) && !b.context.contains(.javascript))
+
+        // Try to find a property that hasn't already been added and for which a setter has not yet been installed.
+        var propertyName: String
+        var attempts = 0
+        repeat {
+            guard attempts < 10 else { return }
+            propertyName = b.randomCustomPropertyName()
+            attempts += 1
+        } while b.currentClassDefinition.privateFields.contains(propertyName) ||
+                b.currentClassDefinition.privateInstanceSetters.contains(propertyName)
+
+        b.currentClassDefinition.addPrivateInstanceSetter(for: propertyName) { this, v in
             b.buildRecursive()
         }
     },
@@ -621,6 +657,25 @@ public let CodeGenerators: [CodeGenerator] = [
         }
     },
 
+    RecursiveCodeGenerator("ClassPrivateStaticGetterGenerator", inContext: .classDefinition) { b in
+        assert(b.context.contains(.classDefinition) && !b.context.contains(.javascript))
+
+        // Try to find a property that hasn't already been added and for which a getter has not yet been installed.
+        var propertyName: String
+        var attempts = 0
+        repeat {
+            guard attempts < 10 else { return }
+            propertyName = b.randomCustomPropertyName()
+            attempts += 1
+        } while b.currentClassDefinition.privateFields.contains(propertyName) ||
+                b.currentClassDefinition.privateStaticGetters.contains(propertyName)
+
+        b.currentClassDefinition.addPrivateStaticGetter(for: propertyName) { this in
+            b.buildRecursive()
+            b.doReturn(b.randomVariable())
+        }
+    },
+
     RecursiveCodeGenerator("ClassStaticSetterGenerator", inContext: .classDefinition) { b in
         assert(b.context.contains(.classDefinition) && !b.context.contains(.javascript))
 
@@ -634,6 +689,24 @@ public let CodeGenerators: [CodeGenerator] = [
         } while b.currentClassDefinition.staticProperties.contains(propertyName) || b.currentClassDefinition.staticSetters.contains(propertyName)
 
         b.currentClassDefinition.addStaticSetter(for: propertyName) { this, v in
+            b.buildRecursive()
+        }
+    },
+
+    RecursiveCodeGenerator("ClassPrivateStaticSetterGenerator", inContext: .classDefinition) { b in
+        assert(b.context.contains(.classDefinition) && !b.context.contains(.javascript))
+
+        // Try to find a property that hasn't already been added and for which a setter has not yet been installed.
+        var propertyName: String
+        var attempts = 0
+        repeat {
+            guard attempts < 10 else { return }
+            propertyName = b.randomCustomPropertyName()
+            attempts += 1
+        } while b.currentClassDefinition.privateFields.contains(propertyName) ||
+                b.currentClassDefinition.privateStaticSetters.contains(propertyName)
+
+        b.currentClassDefinition.addPrivateStaticSetter(for: propertyName) { this, v in
             b.buildRecursive()
         }
     },
@@ -747,6 +820,10 @@ public let CodeGenerators: [CodeGenerator] = [
     // We don't treat this as a ValueGenerator since it doesn't create a new value, it only accesses an existing one.
     CodeGenerator("BuiltinGenerator") { b in
         b.loadBuiltin(b.randomBuiltin())
+    },
+
+    CodeGenerator("BuiltinOverwriteGenerator", inputs: .one) { b, value in
+        b.storeNamedVariable(b.randomBuiltin(), value)
     },
 
     RecursiveCodeGenerator("PlainFunctionGenerator") { b in
@@ -1210,6 +1287,17 @@ public let CodeGenerators: [CodeGenerator] = [
         }, catchBody: { e in })
     },
 
+    CodeGenerator("PrivateNameInOperatorGenerator", inContext: .classMethod, inputs: .preferred(.object())) { b, obj in
+        guard !b.currentClassDefinition.privateProperties.isEmpty else { return }
+        let propertyName = chooseUniform(from: b.currentClassDefinition.privateProperties)
+        let prop = b.privateName(propertyName)
+        guard let target = b.randomVariable(ofType: .object()) else { return }
+
+        b.buildTryCatchFinally(tryBody: {
+            b.testIn(prop, target)
+        }, catchBody: {e in })
+    },
+
     CodeGenerator("PrivatePropertyAssignmentGenerator", inContext: .classMethod, inputs: .preferred(.object(), .anything)) { b, obj, value in
         // See LoadPrivatePropertyGenerator for an explanation.
         guard !b.currentClassDefinition.privateProperties.isEmpty else { return }
@@ -1371,8 +1459,6 @@ public let CodeGenerators: [CodeGenerator] = [
     },
 
     RecursiveCodeGenerator("ForOfWithDestructLoopGenerator", inputs: .preferred(.iterable)) { b, obj in
-        // Don't run this generator in conservative mode, until we can track array element types
-        guard b.mode != .conservative else { return }
         var indices: [Int64] = []
         for idx in 0..<Int64.random(in: 1..<5) {
             withProbability(0.8) {
@@ -1797,6 +1883,37 @@ public let CodeGenerators: [CodeGenerator] = [
     CodeGenerator("LoadNewTargetGenerator", inContext: .subroutine) { b in
         assert(b.context.contains(.subroutine))
         b.loadNewTarget()
+    },
+
+    // TODO: think about merging this with the regular ConstructorCallGenerator.
+    CodeGenerator("ApiConstructorCallGenerator", inputs: .required(.constructor())) { b, c in
+        let signature = b.type(of: c).signature ?? Signature.forUnknownFunction
+
+        b.buildTryCatchFinally(tryBody: {
+            let args = b.findOrGenerateArguments(forSignature: signature)
+            b.construct(c, withArgs: args)
+        }, catchBody: { _ in })
+    },
+
+    // TODO: think about merging this with the regular MethodCallGenerator.
+    CodeGenerator("ApiMethodCallGenerator", inputs: .required(.object())) { b, o in
+        let methodName = b.type(of: o).randomMethod() ?? b.randomMethodName()
+
+        let signature = b.methodSignature(of: methodName, on: o)
+
+        b.buildTryCatchFinally(tryBody: {
+            let args = b.findOrGenerateArguments(forSignature: signature)
+            b.callMethod(methodName, on: o, withArgs: args)
+        }, catchBody: { _ in })
+    },
+
+    CodeGenerator("ApiFunctionCallGenerator", inputs: .required(.function())) { b, f in
+        let signature = b.type(of: f).signature ?? Signature.forUnknownFunction
+
+        b.buildTryCatchFinally(tryBody: {
+            let args = b.findOrGenerateArguments(forSignature: signature)
+            b.callFunction(f, withArgs: args)
+        }, catchBody: { _ in })
     }
 ]
 

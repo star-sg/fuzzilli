@@ -34,18 +34,6 @@ public class ProgramBuilder {
     /// The parent program for the program being constructed.
     private let parent: Program?
 
-    public enum Mode {
-        /// In this mode, the builder will try as hard as possible to generate semantically valid code.
-        /// However, the generated code is likely not as diverse as in aggressive mode.
-        case conservative
-        /// In this mode, the builder tries to generate more diverse code. However, the generated
-        /// code likely has a lower probability of being semantically correct.
-        case aggressive
-
-    }
-    /// The mode of this builder
-    public var mode: Mode
-
     public var context: Context {
         return contextAnalyzer.context
     }
@@ -97,6 +85,14 @@ public class ProgramBuilder {
 
     /// Type inference for JavaScript variables.
     private var jsTyper: JSTyper
+
+    /// Argument generation budget.
+    /// This budget is used in `findOrGenerateArguments(forSignature)` and tracks the upper limit of variables that that function should emit.
+    /// If that upper limit is reached the function will stop generating new variables and use existing ones instead.
+    /// If this value is set to nil, there is no argument generation happening, every argument generation should enter the recursive function (findOrGenerateArgumentsInternal) through the public non-internal one.
+    private var argumentGenerationVariableBudget: Int? = nil
+    /// This is the top most signature that was requested when `findOrGeneratorArguments(forSignature)` was called, this is helpful for debugging.
+    private var argumentGenerationSignature: Signature? = nil
 
     /// Stack of active object literals.
     ///
@@ -152,10 +148,9 @@ public class ProgramBuilder {
     }
 
     /// Constructs a new program builder for the given fuzzer.
-    init(for fuzzer: Fuzzer, parent: Program?, mode: Mode) {
+    init(for fuzzer: Fuzzer, parent: Program?) {
         self.fuzzer = fuzzer
         self.jsTyper = JSTyper(for: fuzzer.environment)
-        self.mode = mode
         self.parent = parent
     }
 
@@ -477,6 +472,140 @@ public class ProgramBuilder {
         return .parameters(params)
     }
 
+    public func findOrGenerateArguments(forSignature signature: Signature, maxNumberOfVariablesToGenerate: Int = 100) -> [Variable] {
+        assert(context.contains(.javascript))
+
+        argumentGenerationVariableBudget = numVariables + maxNumberOfVariablesToGenerate
+        argumentGenerationSignature = signature
+
+        defer {
+            argumentGenerationVariableBudget = nil
+            argumentGenerationSignature = nil
+        }
+
+        return findOrGenerateArgumentsInternal(forSignature: signature)
+    }
+
+    private func findOrGenerateArgumentsInternal(forSignature: Signature) -> [Variable] {
+
+        var args: [Variable] = []
+
+        // This should be called whenever we have a type that has known information about its properties but we don't have a constructor for it.
+        // This can be the case for configuration objects, e.g. objects that can be passed into DOMAPIs.
+        func createObjectWithProperties(_ type: ILType) -> Variable  {
+            assert(type.MayBe(.object()))
+
+            // Before we do any generation below, let's take into account that we already create a variable with this invocation, i.e. the createObject at the end.
+            // Therefore we need to decrease the budget here temporarily.
+            self.argumentGenerationVariableBudget! -= 1
+            // We defer the increase again, because at that point the variable is actually visible, i.e. `numVariables` was increased through the `createObject` call.
+            defer { self.argumentGenerationVariableBudget! += 1 }
+
+            var properties: [String: Variable] = [:]
+
+            for propertyName in type.properties {
+                // If we have an object that has a group, we should get a type here, otherwise if we don't have a group, we will get .anything.
+                let propType = fuzzer.environment.type(ofProperty: propertyName, on: type)
+                properties[propertyName] = generateType(propType)
+            }
+
+            return createObject(with: properties)
+        }
+
+        func createObjectWithGroup(type: ILType) -> Variable {
+            let group = type.group!
+
+            // We can be sure that we have such a builtin with a signature because the Environment checks this during initialization.
+            let signature = fuzzer.environment.type(ofBuiltin: group).signature!
+            let constructor = loadBuiltin(group)
+            let arguments = findOrGenerateArgumentsInternal(forSignature: signature)
+            let constructed = construct(constructor, withArgs: arguments)
+
+            return constructed
+        }
+
+        func generateType(_ type: ILType) -> Variable {
+            if probability(0.5) {
+                if let existingVariable = randomVariable(ofType: type) {
+                    return existingVariable
+                }
+            }
+
+            if numVariables >= argumentGenerationVariableBudget! {
+                logger.warning("Reached variable generation limit in generateType for Signature: \(argumentGenerationSignature!), returning a random variable for use as type \(type).")
+                return randomVariable(forUseAs: type)
+            }
+
+            // We only need to check against all base types from TypeSystem.swift, this works because we use .MayBe
+            // TODO: Not sure how we should handle merge types, e.g. .string + .object(...).
+            let typeGenerators: [(ILType, () -> Variable)] = [
+                (.integer, { return self.loadInt(self.randomInt()) }),
+                (.string, { return self.loadString(self.randomString()) }),
+                (.boolean, { return self.loadBool(probability(0.5)) }),
+                (.bigint, { return self.loadBigInt(self.randomInt()) }),
+                (.float, { return self.loadFloat(self.randomFloat()) }),
+                (.regexp, {
+                     let (pattern, flags) = self.randomRegExpPatternAndFlags()
+                     return self.loadRegExp(pattern, flags)
+                 }),
+                (.iterable, { return self.createArray(with: self.randomVariables(upTo: 5)) }),
+                (.function(), {
+                     // TODO: We could technically generate a full function here but then we would enter the full code generation logic which could do anything.
+                     // Because we want to avoid this, we will just pick anything that can be a function.
+                     return self.randomVariable(forUseAs: .function())
+                 }),
+                (.undefined, { return self.loadUndefined() }),
+                (.constructor(), {
+                     // TODO: We have the same issue as above for functions.
+                     return self.randomVariable(forUseAs: .constructor())
+                 }),
+                (.object(), {
+                     // If we have a group on this object and we have a builtin, that means we can construct it with new.
+                     if let group = type.group, self.fuzzer.environment.hasBuiltin(group) && self.fuzzer.environment.type(ofBuiltin: group).Is(.constructor()) {
+                         return createObjectWithGroup(type: type)
+                     } else {
+                         // Otherwise this is one of the following:
+                         // 1. an object with more type information, i.e. it has a group, but no associated builtin, e.g. we cannot construct it with new.
+                         // 2. an object without a group, but it has some required fields.
+                         // In either case, we try to construct such an object.
+                         return createObjectWithProperties(type)
+                     }
+                 })
+            ]
+
+            // Make sure that we walk over these tests and their generators randomly.
+            // The requested type could be a Union of other types and as such we want to randomly generate one of them, therefore we also use the MayBe test below.
+            for (t, generate) in typeGenerators.shuffled() {
+                if type.MayBe(t) {
+                    let variable = generate()
+                    return variable
+                }
+            }
+
+            logger.warning("Type \(type) was not handled, returning random variable.")
+            return randomVariable(forUseAs: type)
+        }
+
+        outer: for parameter in forSignature.parameters {
+            switch parameter {
+            case .plain(let t):
+                args.append(generateType(t))
+            case .opt(let t):
+                if probability(0.5) {
+                    args.append(generateType(t))
+                } else {
+                    // We decided to not provide an optional parameter, so we can stop here.
+                    break outer
+                }
+            case .rest(let t):
+                for _ in 0...Int.random(in: 1...3) {
+                    args.append(generateType(t))
+                }
+            }
+        }
+
+        return args
+    }
 
     ///
     /// Access to variables.
@@ -697,7 +826,7 @@ public class ProgramBuilder {
     /// Hide the specified variable, preventing it from being used as input by subsequent code.
     ///
     /// Hiding a variable prevents it from being returned from `randomVariable()` and related functions, which
-    /// in turn prevents it from being used as input for later instructins, unless the hidden variable is explicitly specified
+    /// in turn prevents it from being used as input for later instructions, unless the hidden variable is explicitly specified
     /// as input, which is still allowed.
     ///
     /// This can be useful for example if a CodeGenerator needs to create temporary values that should not be used
@@ -826,7 +955,7 @@ public class ProgramBuilder {
 
     /// Adopts an instruction from the program that is currently configured for adoption into the program being constructed.
     public func adopt(_ instr: Instruction) {
-        internalAppend(Instruction(instr.op, inouts: adopt(instr.inouts)))
+        internalAppend(Instruction(instr.op, inouts: adopt(instr.inouts), flags: instr.flags))
     }
 
     /// Append an instruction at the current position.
@@ -860,7 +989,7 @@ public class ProgramBuilder {
 
     /// Splice code from the given program into the current program.
     ///
-    /// Splicing computes a set of dependend (through dataflow) instructions in one program (called a "slice") and inserts it at the current position in this program.
+    /// Splicing computes a set of dependent (through dataflow) instructions in one program (called a "slice") and inserts it at the current position in this program.
     ///
     /// If the optional index is specified, the slice starting at that instruction is used. Otherwise, a random slice is computed.
     /// If mergeDataFlow is true, the dataflows of the two programs are potentially integrated by replacing some variables in the slice with "compatible" variables in the host program.
@@ -996,10 +1125,8 @@ public class ProgramBuilder {
                 assert(!instr.hasOneOutput || v != instr.output || !(instr.op is BeginAnySubroutine) || (type.signature?.outputType ?? .anything) == .anything)
                 // Try to find a compatible variable in the host program.
                 let replacement: Variable
-                if mode == .conservative, let match = randomVariable(ofType: type) {
+                if let match = randomVariable(ofType: type) {
                     replacement = match
-                } else if mode == .aggressive {
-                    replacement = randomVariable(forUseAs: type)
                 } else {
                     // No compatible variable found
                     continue
@@ -1126,7 +1253,7 @@ public class ProgramBuilder {
                 variableMap[output] = nextVariable()
             }
             let inouts = instr.inouts.map({ variableMap[$0]! })
-            append(Instruction(instr.op, inouts: inouts))
+            append(Instruction(instr.op, inouts: inouts, flags: instr.flags))
         }
 
         trace("Splicing done")
@@ -1477,7 +1604,7 @@ public class ProgramBuilder {
             inouts.append(nextVariable())
         }
 
-        return internalAppend(Instruction(op, inouts: inouts))
+        return internalAppend(Instruction(op, inouts: inouts, flags: .empty))
     }
 
     @discardableResult
@@ -1649,6 +1776,11 @@ public class ProgramBuilder {
         // property and method names for private property accesses and private method calls.
         public fileprivate(set) var privateProperties: [String] = []
         public fileprivate(set) var privateMethods: [String] = []
+        public fileprivate(set) var privateInstanceGetters: [String] = []
+        public fileprivate(set) var privateInstanceSetters: [String] = []
+        public fileprivate(set) var privateStaticGetters: [String] = []
+        public fileprivate(set) var privateStaticSetters: [String] = []
+
         public var privateFields: [String] {
             return privateProperties + privateMethods
         }
@@ -1694,10 +1826,22 @@ public class ProgramBuilder {
             b.emit(EndClassInstanceGetter())
         }
 
+        public func addPrivateInstanceGetter(for name: String, _ body: (_ this: Variable) -> ()) {
+            let instr = b.emit(BeginClassPrivateInstanceGetter(propertyName: name))
+            body(instr.innerOutput)
+            b.emit(EndClassPrivateInstanceGetter())
+        }
+
         public func addInstanceSetter(for name: String, _ body: (_ this: Variable, _ val: Variable) -> ()) {
             let instr = b.emit(BeginClassInstanceSetter(propertyName: name))
             body(instr.innerOutput(0), instr.innerOutput(1))
             b.emit(EndClassInstanceSetter())
+        }
+
+        public func addPrivateInstanceSetter(for name: String, _ body: (_ this: Variable, _ val: Variable) -> ()) {
+            let instr = b.emit(BeginClassPrivateInstanceSetter(propertyName: name))
+            body(instr.innerOutput(0), instr.innerOutput(1))
+            b.emit(EndClassPrivateInstanceSetter())
         }
 
         public func addStaticProperty(_ name: String, value: Variable? = nil) {
@@ -1734,10 +1878,22 @@ public class ProgramBuilder {
             b.emit(EndClassStaticGetter())
         }
 
+        public func addPrivateStaticGetter(for name: String, _ body: (_ this: Variable) -> ()) {
+            let instr = b.emit(BeginClassPrivateStaticGetter(propertyName: name))
+            body(instr.innerOutput)
+            b.emit(EndClassPrivateStaticGetter())
+        }
+
         public func addStaticSetter(for name: String, _ body: (_ this: Variable, _ val: Variable) -> ()) {
             let instr = b.emit(BeginClassStaticSetter(propertyName: name))
             body(instr.innerOutput(0), instr.innerOutput(1))
             b.emit(EndClassStaticSetter())
+        }
+
+        public func addPrivateStaticSetter(for name: String, _ body: (_ this: Variable, _ val: Variable) -> ()) {
+            let instr = b.emit(BeginClassPrivateStaticSetter(propertyName: name))
+            body(instr.innerOutput(0), instr.innerOutput(1))
+            b.emit(EndClassPrivateStaticSetter())
         }
 
         public func addPrivateInstanceProperty(_ name: String, value: Variable? = nil) {
@@ -2435,6 +2591,10 @@ public class ProgramBuilder {
         emit(Print(), withInputs: [value])
     }
 
+    @discardableResult
+    public func privateName(_ name: String) -> Variable {
+        return emit(PrivateName(name)).output
+    }
 
     /// Returns the next free variable.
     func nextVariable() -> Variable {
@@ -2541,8 +2701,12 @@ public class ProgramBuilder {
             activeClassDefinitions.top.instanceMethods.append(op.methodName)
         case .beginClassInstanceGetter(let op):
             activeClassDefinitions.top.instanceGetters.append(op.propertyName)
+        case .beginClassPrivateInstanceGetter(let op):
+            activeClassDefinitions.top.privateInstanceGetters.append(op.propertyName)
         case .beginClassInstanceSetter(let op):
             activeClassDefinitions.top.instanceSetters.append(op.propertyName)
+        case .beginClassPrivateInstanceSetter(let op):
+            activeClassDefinitions.top.privateInstanceSetters.append(op.propertyName)
         case .classAddStaticProperty(let op):
             activeClassDefinitions.top.staticProperties.append(op.propertyName)
         case .classAddStaticElement(let op):
@@ -2553,8 +2717,12 @@ public class ProgramBuilder {
             activeClassDefinitions.top.staticMethods.append(op.methodName)
         case .beginClassStaticGetter(let op):
             activeClassDefinitions.top.staticGetters.append(op.propertyName)
+        case .beginClassPrivateStaticGetter(let op):
+            activeClassDefinitions.top.privateStaticGetters.append(op.propertyName)
         case .beginClassStaticSetter(let op):
             activeClassDefinitions.top.staticSetters.append(op.propertyName)
+        case .beginClassPrivateStaticSetter(let op):
+            activeClassDefinitions.top.privateStaticSetters.append(op.propertyName)
         case .classAddPrivateInstanceProperty(let op):
             activeClassDefinitions.top.privateProperties.append(op.propertyName)
         case .beginClassPrivateInstanceMethod(let op):
