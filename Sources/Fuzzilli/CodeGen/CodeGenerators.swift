@@ -1293,9 +1293,7 @@ public let CodeGenerators: [CodeGenerator] = [
         let prop = b.privateName(propertyName)
         guard let target = b.randomVariable(ofType: .object()) else { return }
 
-        b.buildTryCatchFinally(tryBody: {
-            b.testIn(prop, target)
-        }, catchBody: {e in })
+        b.testIn(prop, target)
     },
 
     CodeGenerator("PrivatePropertyAssignmentGenerator", inContext: .classMethod, inputs: .preferred(.object(), .anything)) { b, obj, value in
