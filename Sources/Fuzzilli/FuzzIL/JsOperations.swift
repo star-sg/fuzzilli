@@ -2389,3 +2389,16 @@ final class PrivateName: JsOperation {
         super.init(numOutputs: 1, attributes: .isMutable, requiredContext: .classMethod)
     }
 }
+
+final class DefineModuleVariables: JsOperation {
+    override var opcode: Opcode { .defineModuleVariables(self) }
+
+    let imports: [String: String]
+    let source: String
+
+    init(with imports: [String: String], from source: String) {
+        self.imports = imports
+        self.source = source
+        super.init(attributes: .isPure)
+    }
+}

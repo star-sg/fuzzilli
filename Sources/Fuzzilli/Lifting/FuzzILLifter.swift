@@ -787,6 +787,10 @@ public class FuzzILLifter: Lifter {
 
         case .privateName(let op):
            w.emit("\(output()) <- PrivateName '\(op._name)'")
+
+        case .defineModuleVariables(let op):
+            let pairedStrings = op.imports.map { "\($0) as \($1)" }
+            w.emit("DefineModuleVariables (\(pairedStrings.joined(separator: ", "))) from \"\(op.source)\"")
         }
     }
 

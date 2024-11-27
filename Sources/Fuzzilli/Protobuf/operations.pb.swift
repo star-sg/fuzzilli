@@ -2615,6 +2615,15 @@ public struct Fuzzilli_Protobuf_PrivateName: Sendable {
   public init() {}
 }
 
+public struct Fuzzilli_Protobuf_DefineModuleVariables: Sendable {
+  public var imports: [String : String] = [:]
+  public var source: String = String()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate let _protobuf_package = "fuzzilli.protobuf"
@@ -7892,14 +7901,45 @@ extension Fuzzilli_Protobuf_PrivateName: SwiftProtobuf.Message, SwiftProtobuf._M
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self._name.isEmpty {
-      try visitor.visitSingularStringField(value: self._name, fieldNumber: 1)
-    }
+    try visitor.visitSingularStringField(value: self._name, fieldNumber: 1)
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Fuzzilli_Protobuf_PrivateName, rhs: Fuzzilli_Protobuf_PrivateName) -> Bool {
     if lhs._name != rhs._name {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Fuzzilli_Protobuf_DefineModuleVariables: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".DefineModuleVariables"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "imports"),
+    2: .same(proto: "source")
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+        case 1: try { try decoder.decodeMapField(fieldType: _ProtobufMap<ProtobufString, ProtobufString>.self, value: &self.imports) }()
+        case 2: try { try decoder.decodeSingularStringField(value: &self.source) }()
+        default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.imports.isEmpty {
+      try visitor.visitMapField(fieldType: _ProtobufMap<ProtobufString, ProtobufString>.self, value: self.imports, fieldNumber: 1)
+    }
+    try visitor.visitSingularStringField(value: self.source, fieldNumber: 2)
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Fuzzilli_Protobuf_DefineModuleVariables, rhs: Fuzzilli_Protobuf_DefineModuleVariables) -> Bool {
+    if lhs.imports != rhs.imports {return false}
+    if lhs.source != rhs.source {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

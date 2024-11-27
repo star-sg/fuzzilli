@@ -1544,6 +1544,14 @@ public struct Fuzzilli_Protobuf_Instruction: Sendable {
     set {operation = .privateName(newValue)}
   }
 
+  public var defineModuleVariables: Fuzzilli_Protobuf_DefineModuleVariables {
+    get {
+      if case .defineModuleVariables(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_DefineModuleVariables()
+    }
+    set {operation = .defineModuleVariables(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Operation: Equatable, Sendable {
@@ -1734,7 +1742,7 @@ public struct Fuzzilli_Protobuf_Instruction: Sendable {
     case probe(Fuzzilli_Protobuf_Probe)
     case fixup(Fuzzilli_Protobuf_Fixup)
     case privateName(Fuzzilli_Protobuf_PrivateName)
-
+    case defineModuleVariables(Fuzzilli_Protobuf_DefineModuleVariables)
   }
 
   public init() {}
@@ -1971,6 +1979,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
     186: .same(proto: "endClassPrivateStaticGetter"),
     187: .same(proto: "endClassPrivateStaticSetter"),
     188: .same(proto: "privateName"),
+    189: .same(proto: "defineModuleVariables"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4406,6 +4415,19 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .privateName(v)
         }
       }()
+      case 189: try {
+        var v: Fuzzilli_Protobuf_DefineModuleVariables?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .defineModuleVariables(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .defineModuleVariables(v)
+        }
+      }()
       default: break
       }
     }
@@ -5167,6 +5189,10 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
     case .privateName?: try {
       guard case .privateName(let v)? = self.operation else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 188)
+    }()
+    case .defineModuleVariables?: try {
+      guard case .defineModuleVariables(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 189)
     }()
     case nil: break
     }

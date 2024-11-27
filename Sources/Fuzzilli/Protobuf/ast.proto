@@ -225,6 +225,35 @@ message SwitchCase {
     repeated Statement consequent = 2;
 }
 
+message ImportNamespaceSpecifier {
+    Identifier local = 1;
+}
+
+message ImportSpecifier {
+    Identifier local = 1;
+    oneof imported {
+        Identifier identifier = 2;
+        StringLiteral stringLiteral = 3;
+    }
+}
+
+message ImportDefaultSpecifier {
+    Identifier local = 1;
+}
+
+message ImportDeclarationType {
+    oneof importType {
+        ImportNamespaceSpecifier namespace = 1;
+        ImportDefaultSpecifier default_ = 2;
+        ImportSpecifier normal = 3; 
+    }
+}
+
+message ImportDeclaration {
+    repeated ImportDeclarationType types = 1;
+    StringLiteral source = 2;
+}
+
 message Statement {
     oneof statement {
         EmptyStatement emptyStatement = 1;
@@ -246,6 +275,7 @@ message Statement {
         ThrowStatement throwStatement = 17;
         WithStatement withStatement = 18;
         SwitchStatement switchStatement = 19;
+        ImportDeclaration importDeclaration = 20;
     }
 }
 

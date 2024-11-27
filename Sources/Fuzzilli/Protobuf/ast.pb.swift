@@ -955,6 +955,122 @@ public struct Compiler_Protobuf_SwitchCase: Sendable {
   fileprivate var _test: Compiler_Protobuf_Expression? = nil
 }
 
+public struct Compiler_Protobuf_ImportNamespaceSpecifier: @unchecked Sendable {
+  public var local: Compiler_Protobuf_Identifier {
+    get {return _local ?? Compiler_Protobuf_Identifier()}
+    set {_local = newValue}
+  }
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _local: Compiler_Protobuf_Identifier? = nil
+}
+
+public struct Compiler_Protobuf_ImportSpecifier: @unchecked Sendable {
+  public var local: Compiler_Protobuf_Identifier {
+    get {return _local ?? Compiler_Protobuf_Identifier()}
+    set {_local = newValue}
+  }
+
+  public var imported: OneOf_Imported? = nil
+
+  public var identifier: Compiler_Protobuf_Identifier {
+    get {
+      if case .identifier(let v)? = imported { return v }
+      return Compiler_Protobuf_Identifier()
+    }
+    set { imported = .identifier(newValue) }
+  }
+
+  public var stringLiteral: Compiler_Protobuf_StringLiteral {
+    get {
+      if case .stringLiteral(let v)? = imported { return v }
+      return Compiler_Protobuf_StringLiteral()
+    }
+    set { imported = .stringLiteral(newValue) }
+  }
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public enum OneOf_Imported: Equatable, Sendable {
+    case identifier(Compiler_Protobuf_Identifier)
+    case stringLiteral(Compiler_Protobuf_StringLiteral)
+  }
+
+  public init() {}
+
+  fileprivate var _local: Compiler_Protobuf_Identifier? = nil
+}
+
+public struct Compiler_Protobuf_ImportDefaultSpecifier: @unchecked Sendable {
+  public var local: Compiler_Protobuf_Identifier {
+    get {return _local ?? Compiler_Protobuf_Identifier()}
+    set {_local = newValue}
+  }
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _local: Compiler_Protobuf_Identifier? = nil
+}
+
+public struct Compiler_Protobuf_ImportDeclarationType: @unchecked Sendable {
+  public var importType: OneOf_ImportType? = nil
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public var namespace: Compiler_Protobuf_ImportNamespaceSpecifier {
+    get {
+      if case .namespace(let v)? = importType { return v }
+      return Compiler_Protobuf_ImportNamespaceSpecifier()
+    }
+    set { importType = .namespace(newValue) }
+  }
+
+  public var default_: Compiler_Protobuf_ImportDefaultSpecifier {
+    get {
+      if case .default_(let v)? = importType { return v }
+      return Compiler_Protobuf_ImportDefaultSpecifier()
+    }
+    set { importType = .default_(newValue) }
+  }
+
+  public var normal: Compiler_Protobuf_ImportSpecifier {
+    get {
+      if case .normal(let v)? = importType { return v }
+      return Compiler_Protobuf_ImportSpecifier()
+    }
+    set { importType = .normal(newValue) }
+  }
+
+  public enum OneOf_ImportType: Equatable, Sendable {
+    case namespace(Compiler_Protobuf_ImportNamespaceSpecifier)
+    case default_(Compiler_Protobuf_ImportDefaultSpecifier)
+    case normal(Compiler_Protobuf_ImportSpecifier)
+  }
+
+  public init() {}
+
+}
+
+public struct Compiler_Protobuf_ImportDeclaration: @unchecked Sendable {
+  public var types: [Compiler_Protobuf_ImportDeclarationType] = []
+
+  public var mod_source: Compiler_Protobuf_StringLiteral {
+    get {return _mod_source ?? Compiler_Protobuf_StringLiteral()}
+    set {_mod_source = newValue}
+  }
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _mod_source: Compiler_Protobuf_StringLiteral? = nil
+}
+
 public struct Compiler_Protobuf_Statement: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -1117,6 +1233,14 @@ public struct Compiler_Protobuf_Statement: @unchecked Sendable {
     set {_uniqueStorage()._statement = .switchStatement(newValue)}
   }
 
+  public var importDeclaration: Compiler_Protobuf_ImportDeclaration {
+    get {
+      if case .importDeclaration(let v)? = _storage._statement {return v}
+      return Compiler_Protobuf_ImportDeclaration()
+    }
+    set {_uniqueStorage()._statement = .importDeclaration(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Statement: Equatable, Sendable {
@@ -1139,7 +1263,7 @@ public struct Compiler_Protobuf_Statement: @unchecked Sendable {
     case throwStatement(Compiler_Protobuf_ThrowStatement)
     case withStatement(Compiler_Protobuf_WithStatement)
     case switchStatement(Compiler_Protobuf_SwitchStatement)
-
+    case importDeclaration(Compiler_Protobuf_ImportDeclaration)
   }
 
   public init() {}
@@ -4272,6 +4396,245 @@ extension Compiler_Protobuf_SwitchCase: SwiftProtobuf.Message, SwiftProtobuf._Me
   }
 }
 
+extension Compiler_Protobuf_ImportNamespaceSpecifier: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ImportNamespaceSpecifier"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "local")
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &self._local) }()
+        default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try { if let v = self._local {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Compiler_Protobuf_ImportNamespaceSpecifier, rhs: Compiler_Protobuf_ImportNamespaceSpecifier) -> Bool {
+    if lhs._local != rhs._local { return false }
+    if lhs.unknownFields != rhs.unknownFields { return false }
+    return true
+  }
+}
+
+extension Compiler_Protobuf_ImportSpecifier: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ImportSpecifier"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "local"),
+    2: .same(proto: "identifier"),
+    3: .same(proto: "stringLiteral")
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &self._local) }()
+        case 2: try {
+          var v: Compiler_Protobuf_Identifier?
+          var hadOneofValue = false
+          if let current = self.imported {
+            hadOneofValue = true
+            if case .identifier(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            self.imported = .identifier(v)
+          }
+        }()
+        case 3: try {
+          var v: Compiler_Protobuf_StringLiteral?
+          var hadOneofValue = false
+          if let current = self.imported {
+            hadOneofValue = true
+            if case .stringLiteral(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            self.imported = .stringLiteral(v)
+          }
+        }()
+        default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    switch self.imported {
+      case .identifier?: try {
+        guard case .identifier(let v)? = self.imported else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+      }()
+      case .stringLiteral?: try {
+        guard case .stringLiteral(let v)? = self.imported else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+      }()
+      case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Compiler_Protobuf_ImportSpecifier, rhs: Compiler_Protobuf_ImportSpecifier) -> Bool {
+    if lhs.imported != rhs.imported {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Compiler_Protobuf_ImportDefaultSpecifier: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ImportDefaultSpecifier"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "local")
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &self._local) }()
+        default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try { if let v = self._local {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Compiler_Protobuf_ImportDefaultSpecifier, rhs: Compiler_Protobuf_ImportDefaultSpecifier) -> Bool {
+    if lhs._local != rhs._local { return false }
+    if lhs.unknownFields != rhs.unknownFields { return false }
+    return true
+  }
+}
+
+extension Compiler_Protobuf_ImportDeclarationType: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ImportDeclarationType"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "namespace"),
+    2: .same(proto: "default_"),
+    3: .same(proto: "normal")
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+        case 1: try {
+          var v: Compiler_Protobuf_ImportNamespaceSpecifier?
+          var hadOneofValue = false
+          if let current = self.importType {
+            hadOneofValue = true
+            if case .namespace(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            self.importType = .namespace(v)
+          }
+        }()
+        case 2: try {
+          var v: Compiler_Protobuf_ImportDefaultSpecifier?
+          var hadOneofValue = false
+          if let current = self.importType {
+            hadOneofValue = true
+            if case .default_(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            self.importType = .default_(v)
+          }
+        }()
+        case 3: try {
+          var v: Compiler_Protobuf_ImportSpecifier?
+          var hadOneofValue = false
+          if let current = self.importType {
+            hadOneofValue = true
+            if case .normal(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            self.importType = .normal(v)
+          }
+        }()
+        default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    switch self.importType {
+    case .namespace?: try {
+      guard case .namespace(let v)? = self.importType else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    }()
+    case .default_?: try {
+      guard case .default_(let v)? = self.importType else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case .normal?: try {
+      guard case .normal(let v)? = self.importType else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Compiler_Protobuf_ImportDeclarationType, rhs: Compiler_Protobuf_ImportDeclarationType) -> Bool {
+    if lhs.importType != rhs.importType {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Compiler_Protobuf_ImportDeclaration: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ImportDeclaration"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "types"),
+    2: .same(proto: "source")
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+        case 1: try { try decoder.decodeRepeatedMessageField(value: &self.types) }()
+        case 2: try { try decoder.decodeSingularMessageField(value: &self._mod_source) }()
+        default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.types.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.types, fieldNumber: 1)
+    }
+    try { if let v = self._mod_source {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Compiler_Protobuf_ImportDeclaration, rhs: Compiler_Protobuf_ImportDeclaration) -> Bool {
+    if lhs.types != rhs.types {return false}
+    if lhs._mod_source != rhs._mod_source {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Statement"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -4294,6 +4657,7 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
     17: .same(proto: "throwStatement"),
     18: .same(proto: "withStatement"),
     19: .same(proto: "switchStatement"),
+    20: .same(proto: "importDeclaration")
   ]
 
   fileprivate class _StorageClass {
@@ -4578,6 +4942,19 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
             _storage._statement = .switchStatement(v)
           }
         }()
+        case 20: try {
+          var v: Compiler_Protobuf_ImportDeclaration?
+          var hadOneofValue = false
+          if let current = _storage._statement {
+            hadOneofValue = true
+            if case .importDeclaration(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._statement = .importDeclaration(v)
+          }
+        }()
         default: break
         }
       }
@@ -4666,6 +5043,10 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
       case .switchStatement?: try {
         guard case .switchStatement(let v)? = _storage._statement else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 19)
+      }()
+      case .importDeclaration?: try {
+        guard case .importDeclaration(let v)? = _storage._statement else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 20)
       }()
       case nil: break
       }

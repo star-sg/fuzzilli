@@ -581,6 +581,29 @@ public class JavaScriptCompiler {
                 emit(EndSwitchCase(fallsThrough: true)) 
             }
             emit(EndSwitch())
+        case .importDeclaration(let importDeclaration):
+            var imports: [String : String] = [:]
+            for type in importDeclaration.types {
+                switch type.importType! {
+                    case .namespace(let decl):
+                        imports["*"] = decl.local.name
+                        break
+                    case .default_(let decl):
+                        imports[decl.local.name] = decl.local.name
+                        break
+                    case .normal(let decl):
+                        switch decl.imported! {
+                            case .identifier(let id):
+                                imports[id.name] = decl.local.name
+                                break
+                            case .stringLiteral(let s):
+                                imports[s.value] = decl.local.name
+                        }
+                        break
+                }
+            }
+
+            emit(DefineModuleVariables(with: imports, from: importDeclaration.mod_source.value))
         }
     }
 

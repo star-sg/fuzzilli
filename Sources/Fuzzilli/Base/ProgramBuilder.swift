@@ -2596,6 +2596,10 @@ public class ProgramBuilder {
         return emit(PrivateName(name)).output
     }
 
+    public func defineModuleVariables(_ imports: [String: String], _ source: String) {
+        emit(DefineModuleVariables(with: imports, from: source))
+    }
+
     /// Returns the next free variable.
     func nextVariable() -> Variable {
         assert(numVariables < Code.maxNumberOfVariables, "Too many variables")

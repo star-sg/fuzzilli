@@ -424,6 +424,41 @@ function parse(script, proto) {
                 switchCase.consequent = node.consequent.map(visitStatement);
                 return switchCase;
             }
+            case 'ImportDeclaration': {
+                let specifiers = [];
+                for (let specifier of node.specifiers) {
+                    let tmp = {};
+                    switch (specifier.type) {
+                        case 'ImportSpecifier': {
+                            tmp.local = specifier.local;
+                            tmp.imported = {};
+                            if (specifier.imported.type == 'Identifier')
+                                tmp.identifier = specifier.imported;
+                            else
+                                tmp.stringLiteral = specifier.imported;
+                            specifiers.push(make("ImportDeclarationType", {"normal": make("ImportSpecifier", tmp)}));
+                            break;
+                        }
+                        case 'ImportDefaultSpecifier': {
+                            tmp.local = specifier.local;
+                            specifiers.push(make("ImportDeclarationType", {"default_": make("ImportDefaultSpecifier", tmp)}));
+                            break
+                        }
+                        case 'ImportNamespaceSpecifier': {
+                            tmp.local = specifier.local;
+                            specifiers.push(make("ImportDeclarationType", {"namespace": make("ImportNamespaceSpecifier", tmp)}));
+                            break
+                        }
+                        default: {
+                            throw "Unhandled specifier type " + specifier.type;
+                        }
+                    }
+                }
+                return makeStatement("ImportDeclaration", {
+                    "types": specifiers,
+                    "source": node.source
+                });
+            }
             default: {
                 dump(node);
                 throw "Unhandled node type " + node.type;
@@ -500,7 +535,6 @@ function parse(script, proto) {
                                 throw "Unknown property key type: " + field.key.type;
                             }
                         }
-                        console.log(field);
                         fields.push(make('ObjectField', { property: make('ObjectProperty', property) }));
                     } else {
                         assert(field.type === 'ObjectMethod', "Expected field.type to be exactly 'ObjectMethod'");

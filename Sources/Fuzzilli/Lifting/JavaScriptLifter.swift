@@ -1315,6 +1315,10 @@ public class JavaScriptLifter: Lifter {
             case .privateName(let op):
                 let expr = MemberExpression.new() + "#" + op._name
                 w.assign(expr, to: instr.output)
+
+            case .defineModuleVariables(let op):
+                let pairedStrings = op.imports.map { "\($0) as \($1)" }
+                w.emit("import \(pairedStrings.joined(separator: ", ")) from \"\(op.source)\"")
             }
 
             // Handling of guarded operations, part 2: emit the guarded operation and surround it with a try-catch.
