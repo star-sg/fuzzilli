@@ -223,86 +223,7 @@ function parse(script, proto) {
                 return makeStatement('FunctionDeclaration', { name, type, parameters, body });
             }
             case 'ClassDeclaration': {
-                let cls = {};
-                cls.name = node.id.name;
-                if (node.superClass !== null) {
-                    cls.superClass = visitExpression(node.superClass);
-                }
-                cls.fields = [];
-                for (let field of node.body.body) {
-                    if (field.type === 'ClassProperty') {
-                        let property = {};
-                        property.isStatic = field.static;
-                        if (field.value !== null) {
-                          property.value = visitExpression(field.value);
-                        }
-                        if (field.computed) {
-                            property.expression = visitExpression(field.key);
-                        } else {
-                            if (field.key.type === 'Identifier') {
-                                property.name = field.key.name;
-                            } else if (field.key.type === 'NumericLiteral') {
-                                property.index = field.key.value;
-                            } else if (field.key.type === 'StringLiteral') {
-                                property.name = field.key.value;
-                            } else {
-                                throw "Unknown property key type: " + field.key.type + " in class declaration";
-                            }
-                        }
-                        cls.fields.push(make('ClassField', { property: make('ClassProperty', property) }));
-                    } else if (field.type === 'ClassMethod') {
-                        assert(!field.shorthand, 'Expected field.shorthand to be false');
-                        assert(!field.computed, 'Expected field.computed to be false');
-                        assert(!field.generator, 'Expected field.generator to be false');
-                        assert(!field.async, 'Expected field.async to be false');
-                        assert(field.key.type === 'Identifier', "Expected field.key.type to be exactly 'Identifier'");
-
-                        let method = field;
-                        field = {};
-                        let name = method.key.name;
-                        let isStatic = method.static;
-                        if (method.kind === 'constructor') {
-                            assert(method.body.type === 'BlockStatement', "Expected method.body.type to be exactly 'BlockStatement'");
-                            assert(name === 'constructor', "Expected name to be exactly 'constructor'");
-                            assert(!isStatic, "Expected isStatic to be false");
-
-                            let parameters = method.params.map(visitParameter);
-                            let body = method.body.body.map(visitStatement);
-                            field.ctor = make('ClassConstructor', { parameters, body });
-                        } else if (method.kind === 'method') {
-                            assert(method.body.type === 'BlockStatement', "Expected method.body.type to be exactly 'BlockStatement'");
-
-                            let parameters = method.params.map(visitParameter);
-                            let body = method.body.body.map(visitStatement);
-                            field.method = make('ClassMethod', { name, isStatic, parameters, body });
-                        } else if (method.kind === 'get') {
-                            assert(method.params.length === 0, "Expected method.params.length to be exactly 0");
-                            assert(!method.generator && !method.async, "Expected both conditions to hold: !method.generator and !method.async");
-                            assert(method.body.type === 'BlockStatement', "Expected method.body.type to be exactly 'BlockStatement'");
-
-                            let body = method.body.body.map(visitStatement);
-                            field.getter = make('ClassGetter', { name, isStatic, body });
-                        } else if (method.kind === 'set') {
-                            assert(method.params.length === 1, "Expected method.params.length to be exactly 1");
-                            assert(!method.generator && !method.async, "Expected both conditions to hold: !method.generator and !method.async");
-                            assert(method.body.type === 'BlockStatement', "Expected method.body.type to be exactly 'BlockStatement'");
-
-                            let parameter = visitParameter(method.params[0]);
-                            let body = method.body.body.map(visitStatement);
-                            field.setter = make('ClassSetter', { name, isStatic, parameter, body });
-                        } else {
-                            throw "Unknown method kind: " + method.kind;
-                        }
-                        cls.fields.push(make('ClassField', field));
-                    } else if (field.type === 'StaticBlock') {
-                        let body = field.body.map(visitStatement);
-                        let staticInitializer = make('ClassStaticInitializer', { body });
-                        cls.fields.push(make('ClassField', { staticInitializer }));
-                    } else {
-                        throw "Unsupported class declaration field: " + field.type;
-                    }
-                }
-                return makeStatement('ClassDeclaration', cls);
+                return makeStatement('ClassDeclaration', processClass(node));
             }
             case 'ReturnStatement': {
                 if (node.argument !== null) {
@@ -615,8 +536,13 @@ function parse(script, proto) {
                 if (node.computed) {
                     out.expression = visitExpression(node.property);
                 } else {
-                    assert(node.property.type === 'Identifier', "Expected node.property.type to be exactly 'Identifier'");
-                    out.name = node.property.name;
+                    assert((node.property.type === 'PrivateName') || (node.property.type === 'Identifier'), "Expected node.property.type to be exactly 'Identifier' or 'PrivateName'");
+                    if (node.property.type === 'PrivateName') {
+                        out.privateName = make("PrivateName", { identifier: node.property.id });
+                    }
+                    else {
+                        out.name = node.property.name;
+                    }
                 }
                 out.isOptional = node.type === 'OptionalMemberExpression';
                 return makeExpression('MemberExpression', out);

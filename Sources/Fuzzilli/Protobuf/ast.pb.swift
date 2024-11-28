@@ -1711,6 +1711,15 @@ public struct Compiler_Protobuf_MemberExpression: @unchecked Sendable {
     set {_uniqueStorage()._property = .expression(newValue)}
   }
 
+  /// A private property
+  public var privateName: Compiler_Protobuf_PrivateName {
+    get {
+      if case .privateName(let v)? = _storage._property {return v}
+      return Compiler_Protobuf_PrivateName()
+    }
+    set {_uniqueStorage()._property = .privateName(newValue)}
+  }
+
   public var isOptional: Bool {
     get {return _storage._isOptional}
     set {_uniqueStorage()._isOptional = newValue}
@@ -1723,7 +1732,8 @@ public struct Compiler_Protobuf_MemberExpression: @unchecked Sendable {
     case name(String)
     /// A computed property or element.
     case expression(Compiler_Protobuf_Expression)
-
+    /// A private property
+    case privateName(Compiler_Protobuf_PrivateName)
   }
 
   public init() {}
@@ -5891,7 +5901,8 @@ extension Compiler_Protobuf_MemberExpression: SwiftProtobuf.Message, SwiftProtob
     1: .same(proto: "object"),
     2: .same(proto: "name"),
     3: .same(proto: "expression"),
-    4: .same(proto: "isOptional"),
+    4: .same(proto: "privateName"),
+    5: .same(proto: "isOptional"),
   ]
 
   fileprivate class _StorageClass {
@@ -5955,7 +5966,20 @@ extension Compiler_Protobuf_MemberExpression: SwiftProtobuf.Message, SwiftProtob
             _storage._property = .expression(v)
           }
         }()
-        case 4: try { try decoder.decodeSingularBoolField(value: &_storage._isOptional) }()
+        case 4: try {
+          var v: Compiler_Protobuf_PrivateName?
+          var hadOneofValue = false
+          if let current = _storage._property {
+            hadOneofValue = true
+            if case .privateName(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._property = .privateName(v)
+          }
+        }()
+        case 5: try { try decoder.decodeSingularBoolField(value: &_storage._isOptional) }()
         default: break
         }
       }
@@ -5980,10 +6004,14 @@ extension Compiler_Protobuf_MemberExpression: SwiftProtobuf.Message, SwiftProtob
         guard case .expression(let v)? = _storage._property else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
       }()
+      case .privateName?: try {
+        guard case .privateName(let v)? = _storage._property else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
+      }()
       case nil: break
       }
       if _storage._isOptional != false {
-        try visitor.visitSingularBoolField(value: _storage._isOptional, fieldNumber: 4)
+        try visitor.visitSingularBoolField(value: _storage._isOptional, fieldNumber: 5)
       }
     }
     try unknownFields.traverse(visitor: &visitor)

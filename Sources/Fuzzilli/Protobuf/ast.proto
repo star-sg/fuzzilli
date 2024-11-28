@@ -382,8 +382,10 @@ message MemberExpression {
         string name = 2;
         // A computed property or element.
         Expression expression = 3;
+        // A private property
+        PrivateName privateName = 4;
     }
-    bool isOptional = 4;
+    bool isOptional = 5;
 }
 
 message UnaryExpression {

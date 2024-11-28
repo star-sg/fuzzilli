@@ -974,6 +974,12 @@ public class JavaScriptCompiler {
                             emit(SetComputedProperty(), withInputs: [object, property, rhs])
                         }
                     }
+                case .privateName(let privateName):
+                    if let op = assignmentOperator {
+                        emit(UpdatePrivateProperty(propertyName: privateName.id.name, operator: op), withInputs: [object, rhs])
+                    } else {
+                        emit(SetPrivateProperty(propertyName: privateName.id.name), withInputs: [object, rhs])
+                    }
                 }
 
 
@@ -1219,6 +1225,11 @@ public class JavaScriptCompiler {
                     } else {
                         return emit(CallComputedMethod(numArguments: arguments.count, isGuarded: callExpression.isOptional), withInputs: [object, method] + arguments).output
                     }
+                case .privateName(let privateName):
+                    if isSpreading {
+                        throw CompilerError.unsupportedFeatureError("Unsupported calling spread private method")
+                    }
+                    return emit(CallPrivateMethod(methodName: privateName.id.name, numArguments: arguments.count), withInputs: [object] + arguments).output
                 }
             // Now check if it is a V8 intrinsic function
             } else if case .v8IntrinsicIdentifier(let v8Intrinsic) = callExpression.callee.expression {
@@ -1259,6 +1270,8 @@ public class JavaScriptCompiler {
                     let property = try compileExpression(expr)
                     return emit(GetComputedProperty(isGuarded: memberExpression.isOptional), withInputs: [object, property]).output
                 }
+            case .privateName(let privateName):
+                return emit(GetPrivateProperty(propertyName: privateName.id.name), withInputs: [object]).output
             }
 
         case .unaryExpression(let unaryExpression):
@@ -1286,6 +1299,8 @@ public class JavaScriptCompiler {
                             let property = try compileExpression(expr)
                             return emit(DeleteComputedProperty(isGuarded: true), withInputs: [object, property]).output
                         }
+                    case .privateName(_):
+                        throw CompilerError.unsupportedFeatureError("Unsupport delete private property")
                     }
                            
                 default:
