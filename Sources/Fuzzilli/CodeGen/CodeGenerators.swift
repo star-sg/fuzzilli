@@ -848,7 +848,9 @@ public let CodeGenerators: [CodeGenerator] = [
             if probability(0.5) {
                 b.yield(b.randomVariable())
             } else {
-                b.yieldEach(b.randomVariable())
+                let randomVariables = b.randomVariables(n: Int.random(in: 1...5))
+                let array = b.createArray(with: randomVariables)
+                b.yieldEach(array)
             }
             b.doReturn(b.randomVariable())
         }
@@ -880,7 +882,9 @@ public let CodeGenerators: [CodeGenerator] = [
             if probability(0.5) {
                 b.yield(b.randomVariable())
             } else {
-                b.yieldEach(b.randomVariable())
+                let randomVariables = b.randomVariables(n: Int.random(in: 1...5))
+                let array = b.createArray(with: randomVariables)
+                b.yieldEach(array)
             }
             b.doReturn(b.randomVariable())
         }
@@ -1150,16 +1154,16 @@ public let CodeGenerators: [CodeGenerator] = [
 
     CodeGenerator("YieldGenerator", inContext: .generatorFunction, inputs: .one) { b, val in
         assert(b.context.contains(.generatorFunction))
-        if probability(0.5) {
-            if probability(0.9) {
-                b.yield(val)
-            } else {
-                b.yield()
-            }
+        if probability(0.9) {
+            b.yield(val)
         } else {
-            // TODO only do this when the value is iterable?
-            b.yieldEach(val)
+            b.yield()
         }
+    },
+
+    CodeGenerator("YieldEachGenerator", inContext: .generatorFunction, inputs: .required(.iterable)) { b, val in
+        assert(b.context.contains(.generatorFunction))
+        b.yieldEach(val)
     },
 
     CodeGenerator("AwaitGenerator", inContext: .asyncFunction, inputs: .one) { b, val in

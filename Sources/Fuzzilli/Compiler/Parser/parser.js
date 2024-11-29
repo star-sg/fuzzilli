@@ -519,6 +519,12 @@ function parse(script, proto) {
             }
             case 'CallExpression':
             case 'OptionalCallExpression': {
+                if (node.callee.type === 'Super') {
+                    let arguments = node.arguments.map(visitExpression);
+                    let isOptional = node.type === 'OptionalCallExpression';
+                    return makeExpression('CallSuperConstructor', { arguments, isOptional });
+                }
+
                 let callee = visitExpression(node.callee);
                 let arguments = node.arguments.map(visitExpression);
                 let isOptional = node.type === 'OptionalCallExpression';
@@ -531,6 +537,18 @@ function parse(script, proto) {
             }
             case 'MemberExpression':
             case 'OptionalMemberExpression': {
+                if (node.object && node.object.type === 'Super') {
+                    let out = {};
+                    if (node.computed) {
+                        out.expression = visitExpression(node.property);
+                    } else {
+                        assert(node.property.type === 'Identifier', "Expected node.property.type to be exactly 'Identifier'");
+                        assert(node.property.name != 'Super', "super.super(...) is not allowed");
+                        out.name = node.property.name;
+                    }
+                    out.isOptional = node.type === 'OptionalMemberExpression';
+                    return makeExpression('SuperMemberExpression', out);
+                }
                 let object = visitExpression(node.object);
                 let out = { object };
                 if (node.computed) {
@@ -609,6 +627,10 @@ function parse(script, proto) {
                 }
 
                 return makeExpression('ArrayPattern', { elements: elements});
+            }
+            case 'AwaitExpression': {
+                let argument = visitExpression(node.argument);
+                return makeExpression('AwaitExpression', { argument });
             }
             default: {
                 dump(node);
