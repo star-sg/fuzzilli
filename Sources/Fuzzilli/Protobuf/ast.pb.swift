@@ -6798,8 +6798,8 @@ extension Compiler_Protobuf_Expression: SwiftProtobuf.Message, SwiftProtobuf._Me
     23: .same(proto: "sequenceExpression"),
     24: .same(proto: "v8IntrinsicIdentifier"),
     25: .same(proto: "ternaryExpression"),
-    26: .same(proto: "privateName"),
-    27: .same(proto: "classExpression")
+    1026: .same(proto: "privateName"),
+    1027: .same(proto: "classExpression")
   ]
 
   fileprivate class _StorageClass {
@@ -7162,7 +7162,7 @@ extension Compiler_Protobuf_Expression: SwiftProtobuf.Message, SwiftProtobuf._Me
             _storage._expression = .ternaryExpression(v)
           }
         }()
-        case 26: try {
+        case 1026: try {
           var v: Compiler_Protobuf_PrivateName?
           var hadOneofValue = false
           if let current = _storage._expression {
@@ -7175,7 +7175,7 @@ extension Compiler_Protobuf_Expression: SwiftProtobuf.Message, SwiftProtobuf._Me
             _storage._expression = .privateName(v)
           }
         }()
-        case 27: try {
+        case 1027: try {
           var v: Compiler_Protobuf_ClassExpression?
           var hadOneofValue = false
           if let current = _storage._expression {
@@ -7303,11 +7303,11 @@ extension Compiler_Protobuf_Expression: SwiftProtobuf.Message, SwiftProtobuf._Me
       }()
       case .privateName?: try {
         guard case .privateName(let v)? = _storage._expression else { preconditionFailure() }
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 26)
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1026)
       }()
       case .classExpression?: try {
         guard case .classExpression(let v)? = _storage._expression else { preconditionFailure() }
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 27)
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1027)
       }()
       case nil: break
       }

@@ -462,7 +462,7 @@ message Expression {
         SequenceExpression sequenceExpression = 23;
         V8IntrinsicIdentifier v8IntrinsicIdentifier = 24;
         TernaryExpression ternaryExpression = 25;
-        PrivateName privateName = 26;
-        ClassExpression classExpression = 27;
+        PrivateName privateName = 1026;
+        ClassExpression classExpression = 1027;
     }
 }
