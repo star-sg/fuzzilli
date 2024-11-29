@@ -1544,12 +1544,20 @@ public struct Fuzzilli_Protobuf_Instruction: Sendable {
     set {operation = .privateName(newValue)}
   }
 
-  public var defineModuleVariables: Fuzzilli_Protobuf_DefineModuleVariables {
+  public var importModuleVariables: Fuzzilli_Protobuf_ImportModuleVariables {
     get {
-      if case .defineModuleVariables(let v)? = operation {return v}
-      return Fuzzilli_Protobuf_DefineModuleVariables()
+      if case .importModuleVariables(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_ImportModuleVariables()
     }
-    set {operation = .defineModuleVariables(newValue)}
+    set {operation = .importModuleVariables(newValue)}
+  }
+
+  public var exportModuleVariables: Fuzzilli_Protobuf_ExportModuleVariables {
+    get {
+      if case .exportModuleVariables(let v)? = operation {return v}
+      return Fuzzilli_Protobuf_ExportModuleVariables()
+    }
+    set {operation = .exportModuleVariables(newValue)}
   }
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1742,7 +1750,8 @@ public struct Fuzzilli_Protobuf_Instruction: Sendable {
     case probe(Fuzzilli_Protobuf_Probe)
     case fixup(Fuzzilli_Protobuf_Fixup)
     case privateName(Fuzzilli_Protobuf_PrivateName)
-    case defineModuleVariables(Fuzzilli_Protobuf_DefineModuleVariables)
+    case importModuleVariables(Fuzzilli_Protobuf_ImportModuleVariables)
+    case exportModuleVariables(Fuzzilli_Protobuf_ExportModuleVariables)
   }
 
   public init() {}
@@ -4416,16 +4425,29 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
         }
       }()
       case 189: try {
-        var v: Fuzzilli_Protobuf_DefineModuleVariables?
+        var v: Fuzzilli_Protobuf_ImportModuleVariables?
         var hadOneofValue = false
         if let current = self.operation {
           hadOneofValue = true
-          if case .defineModuleVariables(let m) = current {v = m}
+          if case .importModuleVariables(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.operation = .defineModuleVariables(v)
+          self.operation = .importModuleVariables(v)
+        }
+      }()
+      case 190: try {
+        var v: Fuzzilli_Protobuf_ExportModuleVariables?
+        var hadOneofValue = false
+        if let current = self.operation {
+          hadOneofValue = true
+          if case .exportModuleVariables(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.operation = .exportModuleVariables(v)
         }
       }()
       default: break
@@ -5190,9 +5212,13 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
       guard case .privateName(let v)? = self.operation else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 188)
     }()
-    case .defineModuleVariables?: try {
-      guard case .defineModuleVariables(let v)? = self.operation else { preconditionFailure() }
+    case .importModuleVariables?: try {
+      guard case .importModuleVariables(let v)? = self.operation else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 189)
+    }()
+    case .exportModuleVariables?: try {
+      guard case .exportModuleVariables(let v)? = self.operation else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 190)
     }()
     case nil: break
     }

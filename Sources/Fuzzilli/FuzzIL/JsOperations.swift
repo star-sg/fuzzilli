@@ -2390,8 +2390,8 @@ final class PrivateName: JsOperation {
     }
 }
 
-final class DefineModuleVariables: JsOperation {
-    override var opcode: Opcode { .defineModuleVariables(self) }
+final class ImportModuleVariables: JsOperation {
+    override var opcode: Opcode { .importModuleVariables(self) }
 
     let imports: [String: String]
     let source: String
@@ -2400,5 +2400,13 @@ final class DefineModuleVariables: JsOperation {
         self.imports = imports
         self.source = source
         super.init(attributes: .isPure)
+    }
+}
+
+final class ExportModuleVariables: JsOperation {
+    override var opcode: Opcode { .exportModuleVariables(self) }
+
+    init(numVariables: Int = 0) {
+        super.init(numInputs: numVariables, firstVariadicInput: 0, attributes: [.isPure, .isVariadic])
     }
 }

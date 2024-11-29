@@ -786,11 +786,14 @@ public class FuzzILLifter: Lifter {
             w.emit("Print \(input(0))")
 
         case .privateName(let op):
-           w.emit("\(output()) <- PrivateName '\(op._name)'")
+            w.emit("\(output()) <- PrivateName '\(op._name)'")
 
-        case .defineModuleVariables(let op):
+        case .importModuleVariables(let op):
             let pairedStrings = op.imports.map { "\($0) as \($1)" }
-            w.emit("DefineModuleVariables (\(pairedStrings.joined(separator: ", "))) from \"\(op.source)\"")
+            w.emit("ImportModuleVariables (\(pairedStrings.joined(separator: ", "))) from \"\(op.source)\"")
+        
+        case .exportModuleVariables(_):
+            w.emit("ExportModuleVariables <- (\(liftExportVariables(instr.variadicInputs)))")
         }
     }
 
@@ -824,6 +827,15 @@ public class FuzzILLifter: Lifter {
         }
 
         return w.code
+    }
+
+    private func liftExportVariables(_ vars: ArraySlice<Variable>) -> String {
+        var variables = [String]()
+        for (_, v) in vars.enumerated() {
+            let _v = lift(v)
+            variables.append(_v)
+        }
+        return variables.joined(separator: ", ")
     }
 
     private func liftCallArguments(_ args: ArraySlice<Variable>, spreading spreads: [Bool] = []) -> String {

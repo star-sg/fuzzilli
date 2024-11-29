@@ -854,11 +854,13 @@ extension Instruction: ProtobufConvertible {
                 fatalError("Print operations should not be serialized")
             case .privateName(let op):
                 $0.privateName = Fuzzilli_Protobuf_PrivateName.with { $0._name = op._name }
-            case .defineModuleVariables(let op):
-                $0.defineModuleVariables = Fuzzilli_Protobuf_DefineModuleVariables.with {
+            case .importModuleVariables(let op):
+                $0.importModuleVariables = Fuzzilli_Protobuf_ImportModuleVariables.with {
                     $0.imports = op.imports
                     $0.source = op.source
                 }
+            case .exportModuleVariables(_):
+                $0.exportModuleVariables = Fuzzilli_Protobuf_ExportModuleVariables()
             }
         }
 
@@ -1295,8 +1297,10 @@ extension Instruction: ProtobufConvertible {
             fatalError("unreachable")
         case .privateName(let p):
             op = PrivateName(p._name)
-        case .defineModuleVariables(let p):
-            op = DefineModuleVariables(with: p.imports, from: p.source)
+        case .importModuleVariables(let p):
+            op = ImportModuleVariables(with: p.imports, from: p.source)
+        case .exportModuleVariables(_):
+            op = ExportModuleVariables()
         }
 
         guard op.numInputs + op.numOutputs + op.numInnerOutputs == inouts.count else {

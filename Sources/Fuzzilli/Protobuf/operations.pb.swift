@@ -2615,10 +2615,16 @@ public struct Fuzzilli_Protobuf_PrivateName: Sendable {
   public init() {}
 }
 
-public struct Fuzzilli_Protobuf_DefineModuleVariables: Sendable {
+public struct Fuzzilli_Protobuf_ImportModuleVariables: Sendable {
   public var imports: [String : String] = [:]
   public var source: String = String()
 
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public struct Fuzzilli_Protobuf_ExportModuleVariables: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -7912,8 +7918,8 @@ extension Fuzzilli_Protobuf_PrivateName: SwiftProtobuf.Message, SwiftProtobuf._M
   }
 }
 
-extension Fuzzilli_Protobuf_DefineModuleVariables: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".DefineModuleVariables"
+extension Fuzzilli_Protobuf_ImportModuleVariables: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ImportModuleVariables"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "imports"),
     2: .same(proto: "source")
@@ -7937,9 +7943,27 @@ extension Fuzzilli_Protobuf_DefineModuleVariables: SwiftProtobuf.Message, SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Fuzzilli_Protobuf_DefineModuleVariables, rhs: Fuzzilli_Protobuf_DefineModuleVariables) -> Bool {
+  public static func ==(lhs: Fuzzilli_Protobuf_ImportModuleVariables, rhs: Fuzzilli_Protobuf_ImportModuleVariables) -> Bool {
     if lhs.imports != rhs.imports {return false}
     if lhs.source != rhs.source {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Fuzzilli_Protobuf_ExportModuleVariables: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ExportModuleVariables"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while try decoder.nextFieldNumber() != nil {}
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Fuzzilli_Protobuf_ExportModuleVariables, rhs: Fuzzilli_Protobuf_ExportModuleVariables) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

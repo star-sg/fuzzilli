@@ -603,7 +603,16 @@ public class JavaScriptCompiler {
                 }
             }
 
-            emit(DefineModuleVariables(with: imports, from: importDeclaration.mod_source.value))
+            emit(ImportModuleVariables(with: imports, from: importDeclaration.mod_source.value))
+        case .exportDeclaration(let exportDeclaration):
+            var exports: [Variable] = []
+            for export in exportDeclaration.specifiers {
+                if let v = lookupIdentifier(export.local.name) {
+                    exports.append(v)
+                }
+            }
+
+            emit(ExportModuleVariables(numVariables: exports.count), withInputs: exports)
         }
     }
 

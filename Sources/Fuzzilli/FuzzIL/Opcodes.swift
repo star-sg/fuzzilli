@@ -214,5 +214,6 @@ enum Opcode {
     case endClassPrivateStaticGetter(EndClassPrivateStaticGetter)
     case endClassPrivateStaticSetter(EndClassPrivateStaticSetter)
     case privateName(PrivateName)
-    case defineModuleVariables(DefineModuleVariables)
+    case importModuleVariables(ImportModuleVariables)
+    case exportModuleVariables(ExportModuleVariables)
 }

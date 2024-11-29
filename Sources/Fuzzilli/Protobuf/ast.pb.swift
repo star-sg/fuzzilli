@@ -1071,6 +1071,33 @@ public struct Compiler_Protobuf_ImportDeclaration: @unchecked Sendable {
   fileprivate var _mod_source: Compiler_Protobuf_StringLiteral? = nil
 }
 
+public struct Compiler_Protobuf_ExportSpecifier: @unchecked Sendable {
+  public var local: Compiler_Protobuf_Identifier {
+    get {return _local ?? Compiler_Protobuf_Identifier()}
+    set {_local = newValue}
+  }
+
+  public var exported: Compiler_Protobuf_Identifier {
+    get {return _exported ?? Compiler_Protobuf_Identifier()}
+    set {_exported = newValue}
+  }
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+
+  fileprivate var _local: Compiler_Protobuf_Identifier? = nil
+  fileprivate var _exported: Compiler_Protobuf_Identifier? = nil
+}
+
+public struct Compiler_Protobuf_ExportDeclaration: @unchecked Sendable {
+  public var specifiers: [Compiler_Protobuf_ExportSpecifier] = []
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
 public struct Compiler_Protobuf_Statement: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -1241,6 +1268,14 @@ public struct Compiler_Protobuf_Statement: @unchecked Sendable {
     set {_uniqueStorage()._statement = .importDeclaration(newValue)}
   }
 
+  public var exportDeclaration: Compiler_Protobuf_ExportDeclaration {
+    get {
+      if case .exportDeclaration(let v)? = _storage._statement {return v}
+      return Compiler_Protobuf_ExportDeclaration()
+    }
+    set {_uniqueStorage()._statement = .exportDeclaration(newValue)}
+  }
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Statement: Equatable, Sendable {
@@ -1264,6 +1299,7 @@ public struct Compiler_Protobuf_Statement: @unchecked Sendable {
     case withStatement(Compiler_Protobuf_WithStatement)
     case switchStatement(Compiler_Protobuf_SwitchStatement)
     case importDeclaration(Compiler_Protobuf_ImportDeclaration)
+    case exportDeclaration(Compiler_Protobuf_ExportDeclaration)
   }
 
   public init() {}
@@ -4635,6 +4671,70 @@ extension Compiler_Protobuf_ImportDeclaration: SwiftProtobuf.Message, SwiftProto
   }
 }
 
+extension Compiler_Protobuf_ExportSpecifier: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ExportSpecifier"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "local"),
+    2: .same(proto: "exported")
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+        case 1: try { try decoder.decodeSingularMessageField(value: &self._local) }()
+        case 2: try { try decoder.decodeSingularMessageField(value: &self._exported) }()
+        default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try { if let v = self._local {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try { if let v = self._exported {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Compiler_Protobuf_ExportSpecifier, rhs: Compiler_Protobuf_ExportSpecifier) -> Bool {
+    if lhs.local != rhs.local {return false}
+    if lhs.exported != rhs.exported {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Compiler_Protobuf_ExportDeclaration: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ExportDeclaration"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "specifiers")
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+        case 1: try { try decoder.decodeRepeatedMessageField(value: &self.specifiers) }()
+        default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.specifiers.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.specifiers, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Compiler_Protobuf_ExportDeclaration, rhs: Compiler_Protobuf_ExportDeclaration) -> Bool {
+    if lhs.specifiers != rhs.specifiers {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Statement"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
@@ -4657,7 +4757,8 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
     17: .same(proto: "throwStatement"),
     18: .same(proto: "withStatement"),
     19: .same(proto: "switchStatement"),
-    20: .same(proto: "importDeclaration")
+    20: .same(proto: "importDeclaration"),
+    21: .same(proto: "exportDeclaration")
   ]
 
   fileprivate class _StorageClass {
@@ -4955,6 +5056,19 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
             _storage._statement = .importDeclaration(v)
           }
         }()
+        case 21: try {
+          var v: Compiler_Protobuf_ExportDeclaration?
+          var hadOneofValue = false
+          if let current = _storage._statement {
+            hadOneofValue = true
+            if case .exportDeclaration(let m) = current {v = m}
+          }
+          try decoder.decodeSingularMessageField(value: &v)
+          if let v = v {
+            if hadOneofValue {try decoder.handleConflictingOneOf()}
+            _storage._statement = .exportDeclaration(v)
+          }
+        }()
         default: break
         }
       }
@@ -5047,6 +5161,10 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
       case .importDeclaration?: try {
         guard case .importDeclaration(let v)? = _storage._statement else { preconditionFailure() }
         try visitor.visitSingularMessageField(value: v, fieldNumber: 20)
+      }()
+      case .exportDeclaration?: try {
+        guard case .exportDeclaration(let v)? = _storage._statement else { preconditionFailure() }
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 21)
       }()
       case nil: break
       }

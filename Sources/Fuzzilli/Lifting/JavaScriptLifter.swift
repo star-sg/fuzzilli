@@ -1316,9 +1316,15 @@ public class JavaScriptLifter: Lifter {
                 let expr = MemberExpression.new() + "#" + op._name
                 w.assign(expr, to: instr.output)
 
-            case .defineModuleVariables(let op):
+            case .importModuleVariables(let op):
                 let pairedStrings = op.imports.map { "\($0) as \($1)" }
                 w.emit("import \(pairedStrings.joined(separator: ", ")) from \"\(op.source)\"")
+
+            case .exportModuleVariables(_):
+                let vars = inputs.enumerated().map { (index, _) in
+                    return inputAsIdentifier(index) 
+                }
+                w.emit("export { \(liftExportVariables(vars)) }")
             }
 
             // Handling of guarded operations, part 2: emit the guarded operation and surround it with a try-catch.
@@ -1423,6 +1429,18 @@ public class JavaScriptLifter: Lifter {
         if op.isStrict {
             w.emit("'use strict';")
         }
+    }
+
+    private func liftExportVariables<Arguments: Sequence>(_ vars: Arguments) -> String where Arguments.Element == Expression {
+        var variables = [String]()
+        var aliases = [String]()
+        for (_, a) in vars.enumerated() {
+            let _v = a.text
+            variables.append(_v)
+            aliases.append("mod_" + _v)
+        }
+        let pairedStrings = zip(variables, aliases).map { "\($0) as \($1)" }
+        return pairedStrings.joined(separator: ", ")
     }
 
     private func liftCallArguments<Arguments: Sequence>(_ args: Arguments, spreading spreads: [Bool] = []) -> String where Arguments.Element == Expression {

@@ -779,7 +779,10 @@ message PrivateName {
     string _name = 1;
 }
 
-message DefineModuleVariables {
+message ImportModuleVariables {
     map<string, string> imports = 1;
     string source = 2;
+}
+
+message ExportModuleVariables {
 }

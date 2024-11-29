@@ -2596,8 +2596,8 @@ public class ProgramBuilder {
         return emit(PrivateName(name)).output
     }
 
-    public func defineModuleVariables(_ imports: [String: String], _ source: String) {
-        emit(DefineModuleVariables(with: imports, from: source))
+    public func importModuleVariables(_ imports: [String: String], _ source: String) {
+        emit(ImportModuleVariables(with: imports, from: source))
     }
 
     /// Returns the next free variable.

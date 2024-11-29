@@ -431,7 +431,6 @@ function parse(script, proto) {
                     switch (specifier.type) {
                         case 'ImportSpecifier': {
                             tmp.local = specifier.local;
-                            tmp.imported = {};
                             if (specifier.imported.type == 'Identifier')
                                 tmp.identifier = specifier.imported;
                             else
@@ -458,6 +457,24 @@ function parse(script, proto) {
                     "types": specifiers,
                     "source": node.source
                 });
+            }
+            case 'ExportNamedDeclaration': {
+                let specifiers = [];
+                for (let specifier of node.specifiers) {
+                    let tmp = {};
+                    switch (specifier.type) {
+                        case 'ExportSpecifier': {
+                            tmp.local = specifier.local;
+                            tmp.exported = specifier.exported;
+                            specifiers.push(make("ExportSpecifier", tmp));
+                            break;
+                        }
+                        default: {
+                            throw "Unhandled export specifier type " + specifier.type;
+                        }
+                    }
+                }
+                return makeStatement("ExportDeclaration", { "specifiers": specifiers });
             }
             default: {
                 dump(node);
