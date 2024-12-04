@@ -311,9 +311,9 @@ public class JavaScriptCompiler {
                         }
                     } else {
                         if getter.isStatic {
-                            emit(EndClassPrivateStaticGetter())
+                            emit(EndClassStaticGetter())
                         } else {
-                            emit(EndClassPrivateInstanceGetter())
+                            emit(EndClassInstanceGetter())
                         }
                     }
 
