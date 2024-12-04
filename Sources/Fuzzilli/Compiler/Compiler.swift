@@ -589,7 +589,7 @@ public class JavaScriptCompiler {
                         imports["*"] = decl.local.name
                         break
                     case .default_(let decl):
-                        imports[decl.local.name] = decl.local.name
+                        imports[decl.local.name] = ""
                         break
                     case .normal(let decl):
                         switch decl.imported! {

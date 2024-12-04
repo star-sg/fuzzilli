@@ -147,6 +147,9 @@ public class ProgramBuilder {
         }
     }
 
+    public var isModule: Bool = false
+    public var importedNames: [String] = []
+
     /// Constructs a new program builder for the given fuzzer.
     init(for fuzzer: Fuzzer, parent: Program?) {
         self.fuzzer = fuzzer
@@ -168,6 +171,8 @@ public class ProgramBuilder {
         jsTyper.reset()
         activeObjectLiterals.removeAll()
         activeClassDefinitions.removeAll()
+        isModule = false
+        importedNames.removeAll()
     }
 
     /// Finalizes and returns the constructed program, then resets this builder so it can be reused for building another program.
@@ -2600,6 +2605,10 @@ public class ProgramBuilder {
         emit(ImportModuleVariables(with: imports, from: source))
     }
 
+    public func exportModuleVariables(withVars vars: [Variable] = []) {
+        emit(ExportModuleVariables(numVariables: vars.count), withInputs: vars)
+    }
+
     /// Returns the next free variable.
     func nextVariable() -> Variable {
         assert(numVariables < Code.maxNumberOfVariables, "Too many variables")
@@ -2630,6 +2639,22 @@ public class ProgramBuilder {
     /// Analyze the given instruction. Should be called directly after appending the instruction to the code.
     private func analyze(_ instr: Instruction) {
         assert(code.lastInstruction.op === instr.op)
+
+        switch instr.op.opcode {
+        case .importModuleVariables(let op):
+            importedNames = op.imports.keys.compactMap { name -> String? in
+                if name == "*" {
+                    return "mod_all"
+                } else {
+                    return name
+                }
+            }
+            isModule = true
+        case .exportModuleVariables(_):
+            isModule = true
+        default: break
+        }
+
         updateVariableAnalysis(instr)
         contextAnalyzer.analyze(instr)
         updateBuilderState(instr)
