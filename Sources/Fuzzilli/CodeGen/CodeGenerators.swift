@@ -1917,6 +1917,17 @@ public let CodeGenerators: [CodeGenerator] = [
     CodeGenerator("ImportModuleVariablesGenerator") { b in 
         if b.context == .javascript && !b.isModule && !b.fuzzer.corpus.isEmpty {
             let valid_program = b.fuzzer.corpus.randomElementForSplicing()
+            do {
+                let filename = b.fuzzer.getFilenameFromUUID(valid_program.id)
+                if !filename.isEmpty {
+                    try b.fuzzer.parser?.runParserModuleScript(withArguments: [filename])
+                } else {
+                    return
+                }
+            } catch {
+                return
+            }
+
             let sub_builder = b.fuzzer.makeBuilder()
             sub_builder.append(valid_program)
 
@@ -1949,8 +1960,8 @@ public let CodeGenerators: [CodeGenerator] = [
                         random_import_vars = imported_vars
                     }
 
-                    let source = "data:text/javascript," + b.fuzzer.lifter.lift(sub_builder.finalize()).replacingOccurrences(of: "\n", with: "")
-                    b.importModuleVariables(random_import_vars, source)
+                    let module = "data:text/javascript," + b.fuzzer.lifter.lift(sub_builder.finalize()).replacingOccurrences(of: "\n", with: "")
+                    b.importModuleVariables(random_import_vars, module)
                 }
             }
         }

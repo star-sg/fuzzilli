@@ -473,6 +473,17 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
     // Minimizer to minimize crashes and interesting programs.
     let minimizer = Minimizer()
 
+    // Check whether if the code can be used as module
+    guard let nodejs = JavaScriptExecutor(type: .nodejs) else {
+        print("Could not find the NodeJS executable.")
+        exit(-1)
+    }
+
+    guard let parser = JavaScriptParser(executor: nodejs) else {
+        print("The JavaScript parser does not appear to be working. See Sources/Fuzzilli/Compiler/Parser/README.md for instructions on how to set it up.")
+        exit(-1)
+    }
+
     // Construct the fuzzer instance.
     return Fuzzer(configuration: configuration,
                   scriptRunner: runner,
@@ -484,7 +495,8 @@ func makeFuzzer(with configuration: Configuration) -> Fuzzer {
                   environment: environment,
                   lifter: lifter,
                   corpus: corpus,
-                  minimizer: minimizer)
+                  minimizer: minimizer,
+                  parser: parser)
 }
 
 // The configuration of the main fuzzer instance.

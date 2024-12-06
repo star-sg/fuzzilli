@@ -2640,6 +2640,14 @@ public class ProgramBuilder {
     private func analyze(_ instr: Instruction) {
         assert(code.lastInstruction.op === instr.op)
 
+        updateModuleAnalysis(instr)
+        updateVariableAnalysis(instr)
+        contextAnalyzer.analyze(instr)
+        updateBuilderState(instr)
+        jsTyper.analyze(instr)
+    }
+
+    private func updateModuleAnalysis(_ instr: Instruction) {
         switch instr.op.opcode {
         case .importModuleVariables(let op):
             importedNames = op.imports.keys.compactMap { name -> String? in
@@ -2654,11 +2662,6 @@ public class ProgramBuilder {
             isModule = true
         default: break
         }
-
-        updateVariableAnalysis(instr)
-        contextAnalyzer.analyze(instr)
-        updateBuilderState(instr)
-        jsTyper.analyze(instr)
     }
 
     private func updateVariableAnalysis(_ instr: Instruction) {
