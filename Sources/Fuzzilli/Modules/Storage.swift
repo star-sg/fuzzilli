@@ -156,7 +156,7 @@ public class Storage: Module {
         let code = fuzzer.lifter.lift(program, withOptions: options)
         let url = URL(fileURLWithPath: "\(directory)/\(filename).js")
         createFile(url, withContent: code)
-        cachedFilename[program.id] = url.path()
+        cachedFilename[program.id] = url.path
 
         // Also store the FuzzIL program in its protobuf format. This can later be imported again or inspected using the FuzzILTool
         do {
