@@ -199,5 +199,5 @@ public let codeGeneratorWeights = [
     "ApiFunctionCallGenerator":                 15,
 
     // Module generators
-    "ImportModuleVariablesGenerator":           70,
+    "ImportModuleVariablesGenerator":           100,
 ]

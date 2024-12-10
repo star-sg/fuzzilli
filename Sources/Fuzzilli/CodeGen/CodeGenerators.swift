@@ -1915,7 +1915,7 @@ public let CodeGenerators: [CodeGenerator] = [
     },
 
     CodeGenerator("ImportModuleVariablesGenerator") { b in 
-        if b.context == .javascript && !b.isModule && !b.fuzzer.corpus.isEmpty {
+        if b.blockDeep == 0 && !b.isModule && !b.fuzzer.corpus.isEmpty && !b.cannotBeStrict {
             let valid_program = b.fuzzer.corpus.randomElementForSplicing()
             do {
                 let filename = b.fuzzer.getFilenameFromUUID(valid_program.id)
@@ -1928,10 +1928,14 @@ public let CodeGenerators: [CodeGenerator] = [
                 return
             }
 
+            if valid_program.size > 100 { // Only consider to import a small program
+                return
+            }
+
             let sub_builder = b.fuzzer.makeBuilder()
             sub_builder.append(valid_program)
 
-            if !sub_builder.isModule && valid_program.size <= 100 { // Only consider to import a small program
+            if !sub_builder.isModule {
                 let number_of_exported_vars = sub_builder.numberOfVisibleVariables
                 var exported_vars = sub_builder.randomVariables(upTo: number_of_exported_vars)
 

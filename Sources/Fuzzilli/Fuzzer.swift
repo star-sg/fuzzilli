@@ -495,6 +495,12 @@ public class Fuzzer {
         let execution = runner.run(script, withTimeout: timeout ?? config.timeout)
         dispatchEvent(events.PostExecute, data: execution)
 
+        if execution.outcome != .succeeded && execution.stdout.contains("import") {
+            print(script)
+            print(execution.stdout)
+            print(execution.stderr)
+        }
+
         return execution
     }
 
