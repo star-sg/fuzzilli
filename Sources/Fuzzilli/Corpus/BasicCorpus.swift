@@ -39,6 +39,9 @@ public class BasicCorpus: ComponentBase, Collection, Corpus {
     private var programs: RingBuffer<Program>
     private var ages: RingBuffer<Int>
 
+    /// The current set of interesting programs used for module import
+    private var smallPrograms: RingBuffer<Program>
+
     /// Counts the total number of entries in the corpus.
     private var totalEntryCounter = 0
 
@@ -52,6 +55,8 @@ public class BasicCorpus: ComponentBase, Collection, Corpus {
 
         self.programs = RingBuffer(maxSize: maxSize)
         self.ages = RingBuffer(maxSize: maxSize)
+
+        self.smallPrograms = RingBuffer(maxSize: 1000)
 
         super.init(name: "Corpus")
     }
@@ -85,8 +90,20 @@ public class BasicCorpus: ComponentBase, Collection, Corpus {
             programs.append(program)
             ages.append(0)
 
+            if program.size < 100 {
+                smallPrograms.append(program)
+            }
+
             totalEntryCounter += 1
         }
+    }
+
+    /// Returns a random small program from this corpus for use in importing module
+    public func randomElementForModule() -> Program {
+        let idx = Int.random(in: 0..<smallPrograms.count)
+        let program = smallPrograms[idx]
+        assert(!program.isEmpty)
+        return program
     }
 
     /// Returns a random program from this corpus for use in splicing to another program
@@ -120,6 +137,7 @@ public class BasicCorpus: ComponentBase, Collection, Corpus {
         let newPrograms = try decodeProtobufCorpus(buffer)
         programs.removeAll()
         ages.removeAll()
+        smallPrograms.removeAll()
         newPrograms.forEach(addInternal)
     }
 
@@ -127,18 +145,23 @@ public class BasicCorpus: ComponentBase, Collection, Corpus {
         assert(!fuzzer.config.staticCorpus)
         var newPrograms = RingBuffer<Program>(maxSize: programs.maxSize)
         var newAges = RingBuffer<Int>(maxSize: ages.maxSize)
+        var newSmallPrograms = RingBuffer<Program>(maxSize: ages.maxSize)
 
         for i in 0..<programs.count {
             let remaining = programs.count - i
             if ages[i] < minMutationsPerSample || remaining <= (minSize - newPrograms.count) {
                 newPrograms.append(programs[i])
                 newAges.append(ages[i])
+                if programs[i].size < 100 {
+                    newSmallPrograms.append(programs[i])
+                }
             }
         }
 
         logger.info("Corpus cleanup finished: \(self.programs.count) -> \(newPrograms.count)")
         programs = newPrograms
         ages = newAges
+        smallPrograms = newSmallPrograms
     }
 
     public var startIndex: Int {

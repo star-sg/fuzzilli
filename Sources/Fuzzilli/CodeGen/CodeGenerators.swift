@@ -1916,7 +1916,7 @@ public let CodeGenerators: [CodeGenerator] = [
 
     CodeGenerator("ImportModuleVariablesGenerator") { b in 
         if b.blockDeep == 0 && !b.isModule && !b.fuzzer.corpus.isEmpty && !b.cannotBeStrict {
-            let valid_program = b.fuzzer.corpus.randomElementForSplicing()
+            let valid_program = b.fuzzer.corpus.randomElementForModule()
             do {
                 let filename = b.fuzzer.getFilenameFromUUID(valid_program.id)
                 if !filename.isEmpty {
@@ -1925,10 +1925,6 @@ public let CodeGenerators: [CodeGenerator] = [
                     return
                 }
             } catch {
-                return
-            }
-
-            if valid_program.size > 100 { // Only consider to import a small program
                 return
             }
 
