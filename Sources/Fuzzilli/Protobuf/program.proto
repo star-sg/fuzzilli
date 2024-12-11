@@ -203,17 +203,18 @@ message Instruction {
         Explore explore = 177;
         Probe probe = 178;
         Fixup fixup = 179;
-        BeginClassPrivateInstanceGetter = 180;
-        BeginClassPrivateInstanceSetter = 181;
-        BeginClassPrivateStaticGetter = 182;
-        BeginClassPrivateStaticSetter = 183;
-        EndClassPrivateInstanceGetter = 184;
-        EndClassPrivateInstanceSetter = 185;
-        EndClassPrivateStaticGetter = 186;
-        EndClassPrivateStaticSetter = 187;
-        PrivateName = 188;
-        ImportModuleVariables = 189;
-        ExportModuleVariables = 190;
+
+        BeginClassPrivateInstanceGetter = 1026;
+        BeginClassPrivateInstanceSetter = 1027;
+        BeginClassPrivateStaticGetter = 1028;
+        BeginClassPrivateStaticSetter = 1029;
+        EndClassPrivateInstanceGetter = 1030;
+        EndClassPrivateInstanceSetter = 1031;
+        EndClassPrivateStaticGetter = 1032;
+        EndClassPrivateStaticSetter = 1033;
+        PrivateName = 1034;
+        ImportModuleVariables = 1035;
+        ExportModuleVariables = 1036;
     }
 }
 

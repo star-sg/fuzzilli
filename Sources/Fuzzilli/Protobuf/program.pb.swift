@@ -1979,16 +1979,17 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
     177: .same(proto: "explore"),
     178: .same(proto: "probe"),
     179: .same(proto: "fixup"),
-    180: .same(proto: "beginClassPrivateInstanceGetter"),
-    181: .same(proto: "beginClassPrivateInstanceSetter"),
-    182: .same(proto: "beginClassPrivateStaticGetter"),
-    183: .same(proto: "beginClassPrivateStaticSetter"),
-    184: .same(proto: "endClassPrivateInstanceGetter"),
-    185: .same(proto: "endClassPrivateInstanceSetter"),
-    186: .same(proto: "endClassPrivateStaticGetter"),
-    187: .same(proto: "endClassPrivateStaticSetter"),
-    188: .same(proto: "privateName"),
-    189: .same(proto: "defineModuleVariables"),
+    1026: .same(proto: "beginClassPrivateInstanceGetter"),
+    1027: .same(proto: "beginClassPrivateInstanceSetter"),
+    1028: .same(proto: "beginClassPrivateStaticGetter"),
+    1029: .same(proto: "beginClassPrivateStaticSetter"),
+    1030: .same(proto: "endClassPrivateInstanceGetter"),
+    1031: .same(proto: "endClassPrivateInstanceSetter"),
+    1032: .same(proto: "endClassPrivateStaticGetter"),
+    1033: .same(proto: "endClassPrivateStaticSetter"),
+    1034: .same(proto: "privateName"),
+    1035: .same(proto: "importModuleVariables"),
+    1036: .same(proto: "exportModuleVariables"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4307,7 +4308,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .fixup(v)
         }
       }()
-      case 180: try {
+      case 1026: try {
         var v: Fuzzilli_Protobuf_BeginClassPrivateInstanceGetter?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4320,7 +4321,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .beginClassPrivateInstanceGetter(v)
         }
       }()
-      case 181: try {
+      case 1027: try {
         var v: Fuzzilli_Protobuf_BeginClassPrivateInstanceSetter?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4333,7 +4334,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .beginClassPrivateInstanceSetter(v)
         }
       }()
-      case 182: try {
+      case 1028: try {
         var v: Fuzzilli_Protobuf_BeginClassPrivateStaticGetter?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4346,7 +4347,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .beginClassPrivateStaticGetter(v)
         }
       }()
-      case 183: try {
+      case 1029: try {
         var v: Fuzzilli_Protobuf_BeginClassPrivateStaticSetter?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4359,7 +4360,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .beginClassPrivateStaticSetter(v)
         }
       }()
-      case 184: try {
+      case 1030: try {
         var v: Fuzzilli_Protobuf_EndClassPrivateInstanceGetter?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4372,7 +4373,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .endClassPrivateInstanceGetter(v)
         }
       }()
-      case 185: try {
+      case 1031: try {
         var v: Fuzzilli_Protobuf_EndClassPrivateInstanceSetter?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4385,7 +4386,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .endClassPrivateInstanceSetter(v)
         }
       }()
-      case 186: try {
+      case 1032: try {
         var v: Fuzzilli_Protobuf_EndClassPrivateStaticGetter?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4398,7 +4399,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .endClassPrivateStaticGetter(v)
         }
       }()
-      case 187: try {
+      case 1033: try {
         var v: Fuzzilli_Protobuf_EndClassPrivateStaticSetter?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4411,7 +4412,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .endClassPrivateStaticSetter(v)
         }
       }()
-      case 188: try {
+      case 1034: try {
         var v: Fuzzilli_Protobuf_PrivateName?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4424,7 +4425,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .privateName(v)
         }
       }()
-      case 189: try {
+      case 1035: try {
         var v: Fuzzilli_Protobuf_ImportModuleVariables?
         var hadOneofValue = false
         if let current = self.operation {
@@ -4437,7 +4438,7 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
           self.operation = .importModuleVariables(v)
         }
       }()
-      case 190: try {
+      case 1036: try {
         var v: Fuzzilli_Protobuf_ExportModuleVariables?
         var hadOneofValue = false
         if let current = self.operation {
@@ -5178,47 +5179,47 @@ extension Fuzzilli_Protobuf_Instruction: SwiftProtobuf.Message, SwiftProtobuf._M
     }()
     case .beginClassPrivateInstanceGetter?: try {
       guard case .beginClassPrivateInstanceGetter(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 180)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1026)
     }()
     case .beginClassPrivateInstanceSetter?: try {
       guard case .beginClassPrivateInstanceSetter(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 181)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1027)
     }()
     case .beginClassPrivateStaticGetter?: try {
       guard case .beginClassPrivateStaticGetter(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 182)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1028)
     }()
     case .beginClassPrivateStaticSetter?: try {
       guard case .beginClassPrivateStaticSetter(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 183)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1029)
     }()
     case .endClassPrivateInstanceGetter?: try {
       guard case .endClassPrivateInstanceGetter(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 184)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1030)
     }()
     case .endClassPrivateInstanceSetter?: try {
       guard case .endClassPrivateInstanceSetter(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 185)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1031)
     }()
     case .endClassPrivateStaticGetter?: try {
       guard case .endClassPrivateStaticGetter(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 186)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1032)
     }()
     case .endClassPrivateStaticSetter?: try {
       guard case .endClassPrivateStaticSetter(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 187)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1033)
     }()
     case .privateName?: try {
       guard case .privateName(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 188)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1034)
     }()
     case .importModuleVariables?: try {
       guard case .importModuleVariables(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 189)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1035)
     }()
     case .exportModuleVariables?: try {
       guard case .exportModuleVariables(let v)? = self.operation else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 190)
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1036)
     }()
     case nil: break
     }
