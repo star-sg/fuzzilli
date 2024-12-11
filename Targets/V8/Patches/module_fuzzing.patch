@@ -1,0 +1,255 @@
+diff --git a/src/d8/d8.cc b/src/d8/d8.cc
+index 5816e165c10..5ac4dbf1b2f 100644
+--- a/src/d8/d8.cc
++++ b/src/d8/d8.cc
+@@ -18,6 +18,8 @@
+ #include <utility>
+ #include <vector>
+ 
++#include <regex>
++
+ #ifdef ENABLE_VTUNE_JIT_INTERFACE
+ #include "src/third_party/vtune/v8-vtune.h"
+ #endif
+@@ -1342,6 +1344,94 @@ MaybeLocal<Module> Shell::FetchModuleTree(Local<Module> referrer,
+   return module;
+ }
+ 
++#ifdef V8_FUZZILLI
++MaybeLocal<Module> Shell::FetchModuleTree(v8::Local<v8::Module> origin_module, v8::Local<v8::Context> context, Local<String> p_source_text, const std::string& module_specifier, ModuleType module_type) {
++  Isolate* isolate = context->GetIsolate();
++
++  const bool is_data_url = module_specifier.starts_with(kDataURLPrefix);
++  std::shared_ptr<ModuleEmbedderData> module_data = GetModuleDataFromContext(context);
++
++  auto source_text = p_source_text;
++
++  if (is_data_url) {
++    source_text = String::NewFromUtf8(
++        isolate, module_specifier.c_str() + strlen(kDataURLPrefix)).ToLocalChecked();
++  }
++
++  Local<String> resource_name = String::NewFromUtf8(isolate, module_specifier.c_str()).ToLocalChecked();
++  ScriptOrigin origin = CreateScriptOrigin(isolate, resource_name, ScriptType::kModule);
++
++  Local<Module> module;
++  if (module_type == ModuleType::kJavaScript) {
++    ScriptCompiler::Source source(source_text, origin);
++    if (!CompileString<Module>(isolate, context, source_text,
++                               origin)
++             .ToLocal(&module)) {
++      return MaybeLocal<Module>();
++    }
++  } else {
++    UNREACHABLE();
++  }
++
++
++  CHECK(
++      module_data->module_map
++          .insert(std::make_pair(std::make_pair(module_specifier, module_type),
++                                 Global<Module>(isolate, module)))
++          .second);
++  CHECK(module_data->module_to_specifier_map
++            .insert(std::make_pair(Global<Module>(isolate, module),
++                                   module_specifier))
++            .second);
++
++  if (is_data_url) return module;
++
++  Local<FixedArray> module_requests = module->GetModuleRequests();
++  for (int i = 0, length = module_requests->Length(); i < length; ++i) {
++    Local<ModuleRequest> module_request =
++        module_requests->Get(context, i).As<ModuleRequest>();
++    std::string specifier =
++        ToSTLString(isolate, module_request->GetSpecifier());
++
++    Local<FixedArray> import_attributes = module_request->GetImportAttributes();
++    ModuleType request_module_type =
++        ModuleEmbedderData::ModuleTypeFromImportSpecifierAndAttributes(
++            context, specifier, import_attributes, true);
++
++    if (request_module_type == ModuleType::kInvalid) {
++      ThrowError(isolate, "Invalid module type was asserted");
++      return MaybeLocal<Module>();
++    }
++
++    if (module_request->GetPhase() == ModuleImportPhase::kSource) {
++      if (module_data->module_source_map.count(
++              std::make_pair(specifier, request_module_type))) {
++        continue;
++      }
++
++      if (FetchModuleSource(module, context, specifier,
++                            request_module_type)
++              .IsEmpty()) {
++        return MaybeLocal<Module>();
++      }
++    } else {
++      if (module_data->module_map.count(
++              std::make_pair(specifier, request_module_type))) {
++        continue;
++      }
++
++      if (FetchModuleTree(module, context, module_request->GetSpecifier(), specifier,
++                          request_module_type)
++              .IsEmpty()) {
++        return MaybeLocal<Module>();
++      }
++    }
++  }
++
++  return module;
++}
++#endif
++
+ MaybeLocal<Value> Shell::JSONModuleEvaluationSteps(Local<Context> context,
+                                                    Local<Module> module) {
+   Isolate* isolate = context->GetIsolate();
+@@ -1780,6 +1870,99 @@ bool Shell::ExecuteModule(Isolate* isolate, const char* file_name) {
+   return true;
+ }
+ 
++#ifdef V8_FUZZILLI
++bool Shell::ExecuteModule(Isolate* isolate, Local<String> source_text, const char* file_name) {
++  HandleScope handle_scope(isolate);
++  Global<Module> global_root_module;
++  Global<Promise> global_result_promise;
++
++  TryCatch try_catch(isolate);
++
++  {
++    PerIsolateData* data = PerIsolateData::Get(isolate);
++    Local<Context> realm = data->realms_[data->realm_current_].Get(isolate);
++    Context::Scope context_scope(realm);
++
++    std::string absolute_path =
++        NormalizeModuleSpecifier(file_name, GetWorkingDirectory());
++
++    std::shared_ptr<ModuleEmbedderData> module_data =
++        GetModuleDataFromContext(realm);
++    Local<Module> root_module;
++    auto module_it = module_data->module_map.find(
++        std::make_pair(absolute_path, ModuleType::kJavaScript));
++    if (module_it != module_data->module_map.end()) {
++      root_module = module_it->second.Get(isolate);
++    } else if (!FetchModuleTree(Local<Module>(), realm, source_text, absolute_path,
++                                ModuleType::kJavaScript)
++                    .ToLocal(&root_module)) {
++      CHECK(try_catch.HasCaught());
++      ReportException(isolate, try_catch);
++      return false;
++    }
++    global_root_module.Reset(isolate, root_module);
++
++    module_data->origin = absolute_path;
++
++    MaybeLocal<Value> maybe_result;
++    if (root_module
++            ->InstantiateModule(realm, ResolveModuleCallback,
++                                ResolveModuleSourceCallback)
++            .FromMaybe(false)) {
++      maybe_result = root_module->Evaluate(realm);
++      CHECK(!maybe_result.IsEmpty());
++      global_result_promise.Reset(isolate,
++                                  maybe_result.ToLocalChecked().As<Promise>());
++    }
++  }
++
++  if (!global_result_promise.IsEmpty()) {
++    EmptyMessageQueues(isolate);
++  } else {
++    DCHECK(try_catch.HasCaught());
++    ReportException(isolate, try_catch);
++    return false;
++  }
++
++  while (isolate->HasPendingBackgroundTasks() ||
++         (i::ValueHelper::HandleAsValue(global_result_promise)->State() ==
++              Promise::kPending &&
++          reinterpret_cast<i::Isolate*>(isolate)
++                  ->default_microtask_queue()
++                  ->size() > 0)) {
++    Shell::CompleteMessageLoop(isolate);
++  }
++
++  {
++    Local<Promise> result_promise = global_result_promise.Get(isolate);
++    Local<Module> root_module = global_root_module.Get(isolate);
++
++    if (result_promise->State() == Promise::kRejected) {
++      if (!try_catch.HasCaught()) {
++        isolate->ThrowException(result_promise->Result());
++      } else {
++        DCHECK_EQ(try_catch.Exception(), result_promise->Result());
++      }
++      ReportException(isolate, try_catch);
++      return false;
++    }
++
++    auto [stalled_modules, stalled_messages] =
++        root_module->GetStalledTopLevelAwaitMessages(isolate);
++    DCHECK_EQ(stalled_modules.size(), stalled_messages.size());
++    if (stalled_messages.size() > 0) {
++      Local<Message> message = stalled_messages[0];
++      ReportException(isolate, message, v8::Exception::Error(message->Get()));
++      return false;
++    }
++  }
++
++  DCHECK(!try_catch.HasCaught());
++  return true;
++
++}
++#endif // V8_FUZZILLI
++
+ // Treat every line as a JSON value and parse it.
+ bool Shell::LoadJSON(Isolate* isolate, const char* file_name) {
+   HandleScope handle_scope(isolate);
+@@ -4848,7 +5031,17 @@ bool SourceGroup::Execute(Isolate* isolate) {
+             .ToLocalChecked();
+     delete[] buffer;
+     Shell::set_script_executed();
+-    if (!Shell::ExecuteString(isolate, source, file_name,
++
++    std::regex pattern("import (.*) from (.*)");
++    std::smatch sm;
++    v8::String::Utf8Value tmp_src(isolate, source);
++    v8::String::Utf8Value tmp_fname(isolate, file_name);
++    std::string _source(*tmp_src);
++    std::string _file_name(*tmp_fname);
++    if (std::regex_search(_source, sm, pattern)) {
++      if (!Shell::ExecuteModule(isolate, source, _file_name.c_str()))
++        return false;
++    } else if (!Shell::ExecuteString(isolate, source, file_name,
+                               Shell::kReportExceptions)) {
+       return false;
+     }
+diff --git a/src/d8/d8.h b/src/d8/d8.h
+index 87759f7a5ec..9b018c3f9a7 100644
+--- a/src/d8/d8.h
++++ b/src/d8/d8.h
+@@ -537,6 +537,11 @@ class Shell : public i::AllStatic {
+                             ReportExceptions report_exceptions,
+                             Global<Value>* out_result = nullptr);
+   static bool ExecuteModule(Isolate* isolate, const char* file_name);
++
++#ifdef V8_FUZZILLI
++  static bool ExecuteModule(Isolate* isolate, Local<String> source_text, const char *filename);
++#endif // V8_FUZZILLI
++
+   static bool LoadJSON(Isolate* isolate, const char* file_name);
+   static void ReportException(Isolate* isolate, Local<Message> message,
+                               Local<Value> exception);
+@@ -869,6 +874,11 @@ class Shell : public i::AllStatic {
+   static std::map<std::string, std::unique_ptr<ScriptCompiler::CachedData>>
+       cached_code_map_;
+   static std::atomic<int> unhandled_promise_rejections_;
++
++#ifdef V8_FUZZILLI
++  static MaybeLocal<Module> FetchModuleTree(v8::Local<v8::Module> origin_module, v8::Local<v8::Context> context, Local<String> source, const std::string& file_name, ModuleType module_type);
++#endif // V8_FUZZILLI
++
+ };
+ 
+ class FuzzerMonitor : public i::AllStatic {

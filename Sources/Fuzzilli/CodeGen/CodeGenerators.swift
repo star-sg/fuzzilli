@@ -1916,6 +1916,63 @@ public let CodeGenerators: [CodeGenerator] = [
             let args = b.findOrGenerateArguments(forSignature: signature)
             b.callFunction(f, withArgs: args)
         }, catchBody: { _ in })
+    },
+
+    CodeGenerator("ImportModuleVariablesGenerator") { b in 
+        if b.blockDeep == 0 && !b.isModule && !b.fuzzer.corpus.isEmpty && !b.cannotBeStrict {
+            let valid_program = b.fuzzer.corpus.randomElementForModule()
+            do {
+                let filename = b.fuzzer.getFilenameFromUUID(valid_program.id)
+                if !filename.isEmpty {
+                    try b.fuzzer.parser?.runParserModuleScript(withArguments: [filename])
+                } else {
+                    return
+                }
+            } catch {
+                return
+            }
+
+            let sub_builder = b.fuzzer.makeBuilder()
+            sub_builder.append(valid_program)
+
+            if !sub_builder.isModule {
+                let number_of_exported_vars = sub_builder.numberOfVisibleVariables
+                var exported_vars = sub_builder.randomVariables(upTo: number_of_exported_vars)
+
+                if !exported_vars.isEmpty {
+                    sub_builder.exportModuleVariables(withVars: exported_vars)
+
+                    var imported_vars: [String: String] = [:]
+                    if probability(0.5) {
+                        imported_vars["*"] = "mod_all"
+                    } else {
+                        exported_vars.enumerated().forEach { i, v in
+                            if imported_vars.isEmpty {
+                                imported_vars["default_var"] = ""
+                            } else {
+                                imported_vars["mod_" + String(i)] = "mod_" + String(i)
+                            }
+                        }
+                    }
+
+                    var random_import_vars: [String: String] = [:]
+                    if imported_vars.count > 1 {
+                        imported_vars.shuffled().prefix(Int.random(in: 1...(number_of_exported_vars - 1))).forEach { elem in
+                            random_import_vars[elem.key] = elem.value
+                        }
+                    } else {
+                        random_import_vars = imported_vars
+                    }
+
+                    let module = "data:text/javascript," + b.fuzzer.lifter.lift(sub_builder.finalize()).replacingOccurrences(of: "\n", with: "")
+                    b.importModuleVariables(random_import_vars, module)
+                }
+            }
+        }
+
+        if b.isModule {
+            b.loadNamedVariable(chooseUniform(from: b.importedNames))
+        }
     }
 ]
 

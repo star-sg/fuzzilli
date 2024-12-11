@@ -212,6 +212,8 @@ message Instruction {
         EndClassPrivateStaticGetter = 186;
         EndClassPrivateStaticSetter = 187;
         PrivateName = 188;
+        ImportModuleVariables = 189;
+        ExportModuleVariables = 190;
     }
 }
 

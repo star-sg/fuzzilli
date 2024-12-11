@@ -47,11 +47,17 @@ public class MarkovCorpus: ComponentBase, Corpus {
     // edge hits in each round, before dropout is applied
     private let desiredSelectionProportion = 8
 
+    /// The current set of interesting programs used for module import
+    private var smallPrograms: RingBuffer<Program>
+
     public init(covEvaluator: ProgramCoverageEvaluator, dropoutRate: Double) {
         self.dropoutRate = dropoutRate
         covEvaluator.enableEdgeTracking()
         self.covEvaluator = covEvaluator
         self.currentProg = Program()
+
+        self.smallPrograms = RingBuffer(maxSize: 1000)
+
         super.init(name: "MarkovCorpus")
     }
 
@@ -68,11 +74,24 @@ public class MarkovCorpus: ComponentBase, Corpus {
 
         prepareProgramForInclusion(program, index: self.size)
 
+        if program.size < 100 {
+            smallPrograms.append(program)
+        }
+
         allIncludedPrograms.append(program)
         for e in origCov.getEdges() {
             edgeMap[e] = program
         }
     }
+
+    /// Returns a random small program from this corpus for use in importing module
+    public func randomElementForModule() -> Program {
+        let idx = Int.random(in: 0..<smallPrograms.count)
+        let program = smallPrograms[idx]
+        assert(!program.isEmpty)
+        return program
+    }
+
 
     /// Split evenly between programs in the current queue and all programs available to the corpus
     public func randomElementForSplicing() -> Program {

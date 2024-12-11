@@ -31,6 +31,9 @@ public class JavaScriptParser {
     /// The path to the parse.js script that implements the actual parsing using babel.js.
     private let parserScriptPath: String
 
+    /// The path to the parse_module.js script the implements the check module using babel.js
+    private let parserModulePath: String
+
     public init?(executor: JavaScriptExecutor) {
         self.executor = executor
 
@@ -39,9 +42,12 @@ public class JavaScriptParser {
         // The Parser/ subdirectory is copied verbatim into the module bundle, see Package.swift.
         self.parserScriptPath = Bundle.module.path(forResource: "parser", ofType: "js", inDirectory: "Parser")!
 
+        self.parserModulePath = Bundle.module.path(forResource: "parser_module", ofType: "js", inDirectory: "Parser")!
+
         // Check if the parser works. If not, it's likely because its node.js dependencies have not been installed.
         do {
             try runParserScript(withArguments: [])
+            // try runParserModuleScript(withArguments: [])
         } catch {
             return nil
         }
@@ -65,6 +71,22 @@ public class JavaScriptParser {
         task.standardError = output
         task.arguments = [parserScriptPath] + arguments
         // TODO: move this method into the NodeJS class instead of manually invoking the node.js binary here
+        task.executableURL = URL(fileURLWithPath: executor.executablePath)
+        try task.run()
+        task.waitUntilExit()
+
+        let data = output.fileHandleForReading.readDataToEndOfFile()
+        guard task.terminationStatus == 0 else {
+            throw ParserError.parsingFailed(String(data: data, encoding: .utf8)!)
+        }
+    }
+
+    public func runParserModuleScript(withArguments arguments: [String]) throws {
+        let output = Pipe()
+        let task = Process()
+        task.standardOutput = FileHandle.nullDevice
+        task.standardError = output
+        task.arguments = [parserModulePath] + arguments
         task.executableURL = URL(fileURLWithPath: executor.executablePath)
         try task.run()
         task.waitUntilExit()

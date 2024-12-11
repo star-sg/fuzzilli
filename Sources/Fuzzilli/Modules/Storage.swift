@@ -31,6 +31,11 @@ public class Storage: Module {
     private unowned let fuzzer: Fuzzer
     private let logger: Logger
 
+    private var cachedFilename: [UUID: String] = [:]
+    public func getCachedFilename(_ id: UUID) -> String {
+        return cachedFilename[id] ?? ""
+    }
+
     public init(for fuzzer: Fuzzer, storageDir: String, statisticsExportInterval: Double? = nil) {
         self.storageDir = storageDir
         self.crashesDir = storageDir + "/crashes"
@@ -151,6 +156,7 @@ public class Storage: Module {
         let code = fuzzer.lifter.lift(program, withOptions: options)
         let url = URL(fileURLWithPath: "\(directory)/\(filename).js")
         createFile(url, withContent: code)
+        cachedFilename[program.id] = url.path
 
         // Also store the FuzzIL program in its protobuf format. This can later be imported again or inspected using the FuzzILTool
         do {

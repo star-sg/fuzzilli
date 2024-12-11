@@ -196,6 +196,8 @@ public func makeMockFuzzer(config maybeConfiguration: Configuration? = nil, engi
     // Minimizer to minimize crashes and interesting programs.
     let minimizer = Minimizer()
 
+
+
     // Use all builtin CodeGenerators
     let codeGenerators = WeightedList<CodeGenerator>(CodeGenerators.map { return ($0, codeGeneratorWeights[$0.name]!) })
 

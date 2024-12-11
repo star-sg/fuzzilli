@@ -147,6 +147,12 @@ public class ProgramBuilder {
         }
     }
 
+    /// Module stuffs
+    public var isModule: Bool = false
+    public var importedNames: [String] = []
+    public var cannotBeStrict: Bool = false
+    public var blockDeep = 0
+
     /// Constructs a new program builder for the given fuzzer.
     init(for fuzzer: Fuzzer, parent: Program?) {
         self.fuzzer = fuzzer
@@ -168,6 +174,11 @@ public class ProgramBuilder {
         jsTyper.reset()
         activeObjectLiterals.removeAll()
         activeClassDefinitions.removeAll()
+
+        blockDeep = 0
+        isModule = false
+        cannotBeStrict = false
+        importedNames.removeAll()
     }
 
     /// Finalizes and returns the constructed program, then resets this builder so it can be reused for building another program.
@@ -2596,6 +2607,14 @@ public class ProgramBuilder {
         return emit(PrivateName(name)).output
     }
 
+    public func importModuleVariables(_ imports: [String: String], _ source: String) {
+        emit(ImportModuleVariables(with: imports, from: source))
+    }
+
+    public func exportModuleVariables(withVars vars: [Variable] = []) {
+        emit(ExportModuleVariables(numVariables: vars.count), withInputs: vars)
+    }
+
     /// Returns the next free variable.
     func nextVariable() -> Variable {
         assert(numVariables < Code.maxNumberOfVariables, "Too many variables")
@@ -2626,10 +2645,39 @@ public class ProgramBuilder {
     /// Analyze the given instruction. Should be called directly after appending the instruction to the code.
     private func analyze(_ instr: Instruction) {
         assert(code.lastInstruction.op === instr.op)
+
+        updateModuleAnalysis(instr)
         updateVariableAnalysis(instr)
         contextAnalyzer.analyze(instr)
         updateBuilderState(instr)
         jsTyper.analyze(instr)
+    }
+
+    private func updateModuleAnalysis(_ instr: Instruction) {
+        switch instr.op.opcode {
+        case .importModuleVariables(let op):
+            importedNames = op.imports.keys.compactMap { name -> String? in
+                if name == "*" {
+                    return "mod_all"
+                } else {
+                    return name
+                }
+            }
+            isModule = true
+        case .exportModuleVariables(_):
+            isModule = true
+        case .beginWith(_),
+             .loadRegExp(_):
+            cannotBeStrict = true
+        default: break
+        }
+
+        if instr.isBlockStart {
+            blockDeep += 1
+        } else if instr.isBlockEnd {
+            assert(blockDeep > 0)
+            blockDeep -= 1
+        }
     }
 
     private func updateVariableAnalysis(_ instr: Instruction) {

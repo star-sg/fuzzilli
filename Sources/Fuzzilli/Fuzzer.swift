@@ -66,6 +66,18 @@ public class Fuzzer {
     /// The engine used for initial corpus generation (if performed).
     public let corpusGenerationEngine = GenerativeEngine()
 
+    /// The parser used to check valid code
+    public let parser: JavaScriptParser?
+
+    /// Get filename corpus based on program id
+    public func getFilenameFromUUID(_ id: UUID) -> String {
+        if let storage = modules["Storage"] as? Storage {
+            return storage.getCachedFilename(id)
+        } else {
+            return ""
+        }
+    }
+
     /// The possible states of a fuzzer.
     public enum State {
         // Initial state of the fuzzer. Will be changed to one of the below states during
@@ -157,7 +169,7 @@ public class Fuzzer {
     public init(
         configuration: Configuration, scriptRunner: ScriptRunner, engine: FuzzEngine, mutators: WeightedList<Mutator>,
         codeGenerators: WeightedList<CodeGenerator>, programTemplates: WeightedList<ProgramTemplate>, evaluator: ProgramEvaluator,
-        environment: Environment, lifter: Lifter, corpus: Corpus, minimizer: Minimizer, queue: DispatchQueue? = nil
+        environment: Environment, lifter: Lifter, corpus: Corpus, minimizer: Minimizer, parser: JavaScriptParser? = nil, queue: DispatchQueue? = nil
     ) {
         let uniqueId = UUID()
         self.id = uniqueId
@@ -176,6 +188,7 @@ public class Fuzzer {
         self.corpus = corpus
         self.runner = scriptRunner
         self.minimizer = minimizer
+        self.parser = parser
         self.logger = Logger(withLabel: "Fuzzer")
 
         // Register this fuzzer instance with its queue so that it is possible to

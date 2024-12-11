@@ -1315,6 +1315,36 @@ public class JavaScriptLifter: Lifter {
             case .privateName(let op):
                 let expr = MemberExpression.new() + "#" + op._name
                 w.assign(expr, to: instr.output)
+
+            case .importModuleVariables(let op):
+                var imports: [String] = []
+                var import_names: [String] = []
+
+                op.imports.forEach { key, value in
+                    if key == "*" {
+                        imports.append(key + " as " + value)
+                    } else if value.isEmpty  {
+                        imports.append(key)
+                    } else {
+                        import_names.append("\(key) as \(value)")
+                    }
+                }
+                
+                if !import_names.isEmpty {
+                    imports.append("{ " + import_names.joined(separator: ", ") + " }")
+                }
+                w.emit("import \(imports.joined(separator: ", ")) from \"\(op.source.replacingOccurrences(of: "\"", with: "'"))\";")
+
+            case .exportModuleVariables(_):
+                inputs.enumerated().forEach { (index, _) in
+                    if index == 0 {
+                        w.emit("\(w.constKeyword) default_var = \(input(0));")
+                        w.emit("export default default_var;")
+                    } else {
+                        w.emit("\(w.constKeyword) mod_\(index) = \(input(index));")
+                        w.emit("export { mod_\(index) };")
+                    }
+                }
             }
 
             // Handling of guarded operations, part 2: emit the guarded operation and surround it with a try-catch.

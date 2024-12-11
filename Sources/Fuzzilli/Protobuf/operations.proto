@@ -776,5 +776,13 @@ message Print {
 }
 
 message PrivateName {
-    string _name = 1
+    string _name = 1;
+}
+
+message ImportModuleVariables {
+    map<string, string> imports = 1;
+    string source = 2;
+}
+
+message ExportModuleVariables {
 }

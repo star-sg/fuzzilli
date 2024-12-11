@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import Foundation
+import Collections
 
 /// Protocol defining a Corpus for use in Fuzzilli
 /// It manages discovered programs, determines the next seed to target,
@@ -42,6 +43,9 @@ public protocol Corpus : ComponentBase {
     /// A corpus that supports fast state transfer needs to implement these two methods.
     func exportState() throws -> Data
     func importState(_ buffer: Data) throws
+
+    /// Returns a random small program from this corpus for use in importing module
+    func randomElementForModule() -> Program
 }
 
 extension Corpus {
