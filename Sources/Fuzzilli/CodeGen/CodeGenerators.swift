@@ -1919,7 +1919,7 @@ public let CodeGenerators: [CodeGenerator] = [
     },
 
     CodeGenerator("ImportModuleVariablesGenerator") { b in 
-        if b.blockDeep == 0 && !b.isModule && !b.fuzzer.corpus.isEmpty && !b.cannotBeStrict {
+        if b.blockDepth == 0 && !b.isModule && !b.fuzzer.corpus.isEmpty && !b.cannotBeStrict {
             let valid_program = b.fuzzer.corpus.randomElementForModule()
             do {
                 let filename = b.fuzzer.getFilenameFromUUID(valid_program.id)

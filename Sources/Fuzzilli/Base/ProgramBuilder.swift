@@ -151,7 +151,7 @@ public class ProgramBuilder {
     public var isModule: Bool = false
     public var importedNames: [String] = []
     public var cannotBeStrict: Bool = false
-    public var blockDeep = 0
+    public var blockDepth = 0
 
     /// Constructs a new program builder for the given fuzzer.
     init(for fuzzer: Fuzzer, parent: Program?) {
@@ -175,7 +175,7 @@ public class ProgramBuilder {
         activeObjectLiterals.removeAll()
         activeClassDefinitions.removeAll()
 
-        blockDeep = 0
+        blockDepth = 0
         isModule = false
         cannotBeStrict = false
         importedNames.removeAll()
@@ -2673,10 +2673,10 @@ public class ProgramBuilder {
         }
 
         if instr.isBlockStart {
-            blockDeep += 1
+            blockDepth += 1
         } else if instr.isBlockEnd {
-            assert(blockDeep > 0)
-            blockDeep -= 1
+            assert(blockDepth > 0)
+            blockDepth -= 1
         }
     }
 
