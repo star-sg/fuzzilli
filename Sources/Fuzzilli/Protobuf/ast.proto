@@ -284,8 +284,8 @@ message Statement {
         ThrowStatement throwStatement = 17;
         WithStatement withStatement = 18;
         SwitchStatement switchStatement = 19;
-        ImportDeclaration importDeclaration = 20;
-        ExportDeclaration exportDeclaration = 21;
+        ImportDeclaration importDeclaration = 1026;
+        ExportDeclaration exportDeclaration = 1027;
     }
 }
 

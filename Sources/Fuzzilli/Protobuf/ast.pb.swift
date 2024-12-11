@@ -4873,8 +4873,8 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
     17: .same(proto: "throwStatement"),
     18: .same(proto: "withStatement"),
     19: .same(proto: "switchStatement"),
-    20: .same(proto: "importDeclaration"),
-    21: .same(proto: "exportDeclaration")
+    1026: .same(proto: "importDeclaration"),
+    1027: .same(proto: "exportDeclaration")
   ]
 
   fileprivate class _StorageClass {
@@ -5159,7 +5159,7 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
             _storage._statement = .switchStatement(v)
           }
         }()
-        case 20: try {
+        case 1026: try {
           var v: Compiler_Protobuf_ImportDeclaration?
           var hadOneofValue = false
           if let current = _storage._statement {
@@ -5172,7 +5172,7 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
             _storage._statement = .importDeclaration(v)
           }
         }()
-        case 21: try {
+        case 1027: try {
           var v: Compiler_Protobuf_ExportDeclaration?
           var hadOneofValue = false
           if let current = _storage._statement {
@@ -5276,11 +5276,11 @@ extension Compiler_Protobuf_Statement: SwiftProtobuf.Message, SwiftProtobuf._Mes
       }()
       case .importDeclaration?: try {
         guard case .importDeclaration(let v)? = _storage._statement else { preconditionFailure() }
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 20)
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1026)
       }()
       case .exportDeclaration?: try {
         guard case .exportDeclaration(let v)? = _storage._statement else { preconditionFailure() }
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 21)
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 1027)
       }()
       case nil: break
       }
