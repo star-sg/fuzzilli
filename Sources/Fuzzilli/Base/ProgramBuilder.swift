@@ -2080,6 +2080,11 @@ public class ProgramBuilder {
     }
 
     @discardableResult
+    public func void(_ v: Variable) -> Variable {
+        return emit(Void_(), withInputs: [v]).output
+    }
+
+    @discardableResult
     public func testInstanceOf(_ v: Variable, _ type: Variable) -> Variable {
         return emit(TestInstanceOf(), withInputs: [v, type]).output
     }

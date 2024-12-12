@@ -201,4 +201,6 @@ public let codeGeneratorWeights = [
 
     // Module generators
     "ImportModuleVariablesGenerator":           40,
+
+    "VoidGenerator":                            1,
 ]
