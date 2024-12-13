@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import Foundation
-import Collections
 
 /// Protocol defining a Corpus for use in Fuzzilli
 /// It manages discovered programs, determines the next seed to target,
