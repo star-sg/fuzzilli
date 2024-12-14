@@ -140,8 +140,11 @@ extension Program: ProtobufConvertible, Comparable {
     }
 
     public static func == (lhs: Program, rhs: Program) -> Bool {
-        return lhs.asProtobuf() == rhs.asProtobuf()
+        let code1 = lhs.code.map({ $0.asProtobuf() })
+        let code2 = rhs.code.map({ $0.asProtobuf() })
+        return code1 == code2
     }
+
     public static func < (lhs: Program, rhs: Program) -> Bool {
         return lhs.size < rhs.size
     }
