@@ -605,6 +605,8 @@ let v8Profile = Profile(
         ("fuzzilli('FUZZILLI_CRASH', 3)", .shouldCrash),
         // Check that DEBUG is defined.
         ("fuzzilli('FUZZILLI_CRASH', 8)", .shouldCrash),
+        // Check that we can fuzz module or not
+        ("import { a } from \"data:text/javascript, let a = 10; export { a };\"", .shouldSucceed),
 
         // TODO we could try to check that OOM crashes are ignored here ( with.shouldNotCrash).
     ],
