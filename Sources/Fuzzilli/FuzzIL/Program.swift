@@ -84,7 +84,7 @@ public final class Program {
     }
 }
 
-extension Program: ProtobufConvertible, Comparable {
+extension Program: ProtobufConvertible {
     public typealias ProtobufType = Fuzzilli_Protobuf_Program
 
     func asProtobuf(opCache: OperationCache? = nil) -> ProtobufType {
@@ -137,15 +137,5 @@ extension Program: ProtobufConvertible, Comparable {
 
     public convenience init(from proto: ProtobufType) throws {
         try self.init(from: proto, opCache: nil)
-    }
-
-    public static func == (lhs: Program, rhs: Program) -> Bool {
-        let code1 = lhs.code.map({ $0.asProtobuf() })
-        let code2 = rhs.code.map({ $0.asProtobuf() })
-        return code1 == code2
-    }
-
-    public static func < (lhs: Program, rhs: Program) -> Bool {
-        return lhs.size < rhs.size
     }
 }

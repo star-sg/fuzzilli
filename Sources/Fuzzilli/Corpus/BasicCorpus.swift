@@ -100,6 +100,10 @@ public class BasicCorpus: ComponentBase, Collection, Corpus {
 
     /// Returns a random small program from this corpus for use in importing module
     public func randomElementForModule() -> Program {
+        if smallPrograms.isEmpty {
+            return randomElementForSplicing()
+        }
+
         let idx = Int.random(in: 0..<smallPrograms.count)
         let program = smallPrograms[idx]
         assert(!program.isEmpty)

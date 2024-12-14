@@ -2531,8 +2531,11 @@ class ProgramBuilderTests: XCTestCase {
         }, catchBody: {e in })
         b.eval("%OptimizeMaglevOnNextCall(%@)", with: [f])
         b.callMethod("foo", on: c2)
+
+        /*
         b.dumpCurrentProgram()
         print("====================")
         print(JavaScriptLifter(prefix: "", suffix: "", ecmaVersion: .es6).lift(b.finalize()))
+        */
     }
 }
